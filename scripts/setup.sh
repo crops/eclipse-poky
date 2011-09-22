@@ -118,7 +118,7 @@ RSEDATE="-201006071030"
 RSENAME=RSE-SDK-${RSEVER}.zip
 if [ ! -f eclipse/plugins/org.eclipse.rse.sdk_3.2.0.v201003151933.jar ]; then
   echo "Getting RSE SDK..."
-  wget "http://download.eclipse.org/dsdp/tm/downloads/drops/${RSEREL}${RSEVER}${RSEDATE}/${RSENAME}"
+  wget "http://archive.eclipse.org/dsdp/tm/downloads/drops/${RSEREL}${RSEVER}${RSEDATE}/${RSENAME}"
   unzip -o ${RSENAME}
   rm ${RSENAME}
 fi
