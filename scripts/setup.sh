@@ -207,13 +207,13 @@ UPDATE_SITE="http://download.eclipse.org/releases/indigo"
 echo "Install AutoTool..."
 update_feature_remote ${UPDATE_SITE} org.eclipse.linuxtools.cdt.autotools.feature.group ${ATVER}
 
-#TMF
-TMFREL="0.4.0"
-TMFREL_MAX="0.5.0"
-TMFDATE="201202152032"
+#lttng
+LTTNGREL="0.4.0"
+#TMFREL_MAX="0.5.0"
+LTTNGDATE="201202152032"
 UPDATE_SITE="http://download.eclipse.org/releases/indigo"
-echo "Install TMF..."
-update_feature_remote ${UPDATE_SITE} org.eclipse.linuxtools.tmf.feature.group ${TMFREL}.${TMFDATE} ${TMFREL_MAX}
+echo "Install lttng..."
+update_feature_remote ${UPDATE_SITE} org.eclipse.linuxtools.lttng.feature.group ${TMFREL}.${TMFDATE}
 
 echo ""
 echo "Your build environment is successfully created."
