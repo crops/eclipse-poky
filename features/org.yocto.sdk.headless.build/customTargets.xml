@@ -65,27 +65,29 @@
 	<!-- ===================================================================== -->
 	<target name="preSetup">
 		<delete dir="${buildDirectory}/plugins"/>
-		<exec dir="${buildDirectory}" executable="svn" failonerror="true">
-		    <arg value="export"/>
-			<arg value="-r"/>
-			<arg value="1855"/>
-		    <arg value="http://dev.eclipse.org/svnroot/dsdp/org.eclipse.tm.tcf/trunk/plugins/org.eclipse.tm.tcf"/>
-		    <arg value="plugins/org.eclipse.tm.tcf"/>
-	  	</exec>
-		<exec dir="${buildDirectory}" executable="svn" failonerror="true">
-		    <arg value="export"/>
-			<arg value="-r"/>
-			<arg value="1855"/>
-		    <arg value="http://dev.eclipse.org/svnroot/dsdp/org.eclipse.tm.tcf/trunk/plugins/org.eclipse.tm.tcf.core"/>
-		    <arg value="plugins/org.eclipse.tm.tcf.core"/>
-	  	</exec>
-		<exec dir="${buildDirectory}" executable="svn" failonerror="true">
-		    <arg value="export"/>
-			<arg value="-r"/>
-			<arg value="1855"/>
-		    <arg value="http://dev.eclipse.org/svnroot/dsdp/org.eclipse.tm.tcf/trunk/plugins/org.eclipse.tm.tcf.rse"/>
-		    <arg value="plugins/org.eclipse.tm.tcf.rse"/>
-		</exec>
+		<mkdir dir="${buildDirectory}/plugins"/>
+                <exec dir="${buildDirectory}" executable="git" failonerror="true">
+                        <arg value="clone"/>
+                        <arg value="git://git.eclipse.org/gitroot/tcf/org.eclipse.tcf.git"/>
+                </exec>
+                <exec dir="${buildDirectory}/org.eclipse.tcf" executable="git" failonerror="true">
+                        <arg value="checkout"/>
+                        <arg value="CDT_8_0_1"/>
+                </exec>
+                <exec dir="${buildDirectory}/org.eclipse.tcf" executable="git" failonerror="true">
+                        <arg value="cherry-pick"/>
+                        <arg value="203628236fdeb56c35554e984adc1dbef84f7dbe"/>
+                </exec>
+                <move todir="${buildDirectory}/plugins/org.eclipse.tm.tcf">
+                        <fileset dir="${buildDirectory}/org.eclipse.tcf/plugins/org.eclipse.tm.tcf"/>
+                </move>
+                <move todir="${buildDirectory}/plugins/org.eclipse.tm.tcf.core">
+                        <fileset dir="${buildDirectory}/org.eclipse.tcf/plugins/org.eclipse.tm.tcf.core"/>
+                </move>
+                <move todir="${buildDirectory}/plugins/org.eclipse.tm.tcf.rse">
+                        <fileset dir="${buildDirectory}/org.eclipse.tcf/plugins/org.eclipse.tm.tcf.rse"/>
+                </move>
+                <delete dir="{buildDirectory}/org.eclipse.tcf" verbose="true"/>
 		<copy todir="${buildDirectory}/plugins" failonerror="true">
 		    <fileset dir="${otherSrcDirectory}/plugins"/>
 		</copy>

@@ -20,7 +20,7 @@ case ${uname_s}${uname_m} in
   Linuxx86_64*) ep_arch=linux-gtk-x86_64 
                 cdt_arch=linux.x86_64
                 ;;
-  Linuxx86*) ep_arch=linux-gtk
+  Linuxi686*) ep_arch=linux-gtk
              cdt_arch=linux.x86
              ;;
   *)
@@ -31,8 +31,8 @@ esac
 
 # prepare the base Eclipse installation in folder "eclipse"
 ep_rel="R-"
-ep_ver=3.7
-ep_date="-201106131736"
+ep_ver=3.7.2
+ep_date="-201202080800"
 P2_disabled=false
 P2_no_dropins=false
 if [ ! -f eclipse/plugins/org.eclipse.swt_3.7.0.v3735b.jar ]; then
@@ -124,8 +124,8 @@ update_feature_remote()
 
 #RSE SDK
 RSEREL="R-"
-RSEVER="3.3"
-RSEDATE="-201106080935"
+RSEVER="3.3.2"
+RSEDATE="-201202061000"
 RSENAME=RSE-SDK-${RSEVER}.zip
 if [ ! -f eclipse/plugins/org.eclipse.rse.sdk_3.3.0.*.jar ]; then
   echo "Getting RSE SDK..."
