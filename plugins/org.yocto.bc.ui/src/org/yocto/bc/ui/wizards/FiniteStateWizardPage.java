@@ -4,6 +4,8 @@ import java.util.Map;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -13,13 +15,13 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
 public abstract class FiniteStateWizardPage extends WizardPage {
-    protected Map model = null;
+    protected Map<String, Object> model = null;
     protected FiniteStateWizard wizard = null;
     private static boolean previousState = false;
     /**
      * @param pageName
      */
-    protected FiniteStateWizardPage(String name, Map model) {
+    protected FiniteStateWizardPage(String name, Map<String, Object> model) {
         super(name);
         this.model = model;
         this.setPageComplete(false);
@@ -96,7 +98,7 @@ public abstract class FiniteStateWizardPage extends WizardPage {
 		super.setVisible(arg0);
 	}
 	
-    public class ValidationListener implements SelectionListener, ModifyListener, Listener, ISelectionChangedListener {
+    public class ValidationListener implements SelectionListener, ModifyListener, Listener, ISelectionChangedListener, FocusListener {
 
         /*
          * (non-Javadoc)
@@ -104,7 +106,7 @@ public abstract class FiniteStateWizardPage extends WizardPage {
          * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.events.SelectionEvent)
          */
         public void widgetSelected(SelectionEvent e) {
-            validate();
+//            validate();
         }
 
         /*
@@ -145,5 +147,14 @@ public abstract class FiniteStateWizardPage extends WizardPage {
         public void selectionChanged(SelectionChangedEvent event) {
             validate();
         }
+
+		@Override
+		public void focusGained(FocusEvent e) {
+		}
+
+		@Override
+		public void focusLost(FocusEvent e) {
+			validate();
+		}
     }
 }

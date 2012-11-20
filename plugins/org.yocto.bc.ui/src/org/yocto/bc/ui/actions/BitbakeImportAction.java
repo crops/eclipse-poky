@@ -38,7 +38,7 @@ public  class BitbakeImportAction extends AbstractBitbakeCommandAction {
 		protected IStatus run(IProgressMonitor monitor) {
 			
 			try {
-				BBRecipe br = new BBRecipe(bbs, recipe.getLocationURI().getPath());
+				BBRecipe br = new BBRecipe(bbs, recipe.getLocationURI());
 				br.initialize();
 				String filePath = (String) br.get(BBCommonVars.S);
 				
@@ -60,7 +60,7 @@ public  class BitbakeImportAction extends AbstractBitbakeCommandAction {
 				}
 			
 				if (!workdir.exists()) {
-					execCommands(new String[] {"bitbake -c patch -b " + recipe.getLocationURI().getPath()}, monitor);
+					execCommands(new String[] {"bitbake -c patch -b " + recipe.getAbsolutePath()}, monitor);
 				}
 				
 				if (!workdir.exists()) {

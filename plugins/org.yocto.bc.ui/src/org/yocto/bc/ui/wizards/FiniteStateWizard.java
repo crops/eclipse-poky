@@ -6,7 +6,7 @@ import org.eclipse.swt.widgets.Composite;
 
 
 
-public abstract class FiniteStateWizard extends Wizard {
+public abstract class FiniteStateWizard extends Wizard{
     private boolean finishable = false;
     private boolean canFinish = false;
 
@@ -52,5 +52,5 @@ public abstract class FiniteStateWizard extends Wizard {
      * Retrive the model object from the wizard.
      * @return
      */
-    public abstract Map getModel();
+    public abstract Map<?, ?> getModel();
 }

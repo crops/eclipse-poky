@@ -14,7 +14,7 @@ public class BitbakeCleanRecipeAction extends AbstractBitbakeCommandAction {
 
 	@Override
 	public String [] getCommands() {
-		return new String[] {"bitbake -c clean -b " + recipe.getLocationURI().getPath()};
+		return new String[] {"bitbake -c clean -b " + recipe.getAbsolutePath()};
 	}
 
 	@Override

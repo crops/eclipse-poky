@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+
 import org.yocto.bc.ui.wizards.FiniteStateWizardPage;
 
 /**

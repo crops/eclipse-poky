@@ -10,31 +10,33 @@
  *******************************************************************************/
 package org.yocto.bc.ui;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.rse.core.model.IHost;
+import org.eclipse.rse.services.files.IHostFile;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
-
 import org.yocto.bc.bitbake.BBRecipe;
 import org.yocto.bc.bitbake.BBSession;
 import org.yocto.bc.bitbake.ProjectInfoHelper;
 import org.yocto.bc.bitbake.ShellSession;
+import org.yocto.bc.remote.utils.RemoteHelper;
 import org.yocto.bc.ui.model.ProjectInfo;
-import org.yocto.bc.ui.wizards.newproject.CreateBBCProjectOperation;
 
 public class Activator extends AbstractUIPlugin {
 
@@ -45,19 +47,19 @@ public class Activator extends AbstractUIPlugin {
 
 	// The shared instance
 	private static Activator plugin;
-	private static Map shellMap;
-	private static Map projInfoMap;
-	private static Hashtable bbSessionMap;
-	private static Hashtable bbRecipeMap;
+	private static Map<String, ShellSession> shellMap;
+	private static Map<URI, ProjectInfo> projInfoMap;
+	private static Hashtable<URI, BBSession> bbSessionMap;
+	private static Hashtable<URI, BBSession> bbRecipeMap;
 
 	private IResourceChangeListener listener = new BCResourceChangeListener();
 
-	public static BBRecipe getBBRecipe(BBSession session, String filePath) throws IOException {
+	public static BBRecipe getBBRecipe(BBSession session, URI filePath) throws IOException {
 		if (bbRecipeMap == null) {
-			bbRecipeMap = new Hashtable();
+			bbRecipeMap = new Hashtable<URI, BBSession>();
 		}
 
-		String key = session.getProjInfoRoot() + filePath;
+		URI key = session.getProjInfoRoot();// + filePath;
 		BBRecipe recipe = (BBRecipe) bbRecipeMap.get(key);
 		if (recipe == null) {
 			recipe = new BBRecipe(session,filePath);
@@ -73,15 +75,16 @@ public class Activator extends AbstractUIPlugin {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BBSession getBBSession(String projectRoot, Writer out) throws IOException {
+	public static BBSession getBBSession(ProjectInfo projectInfo, Writer out, IProgressMonitor monitor) throws IOException {
+		URI projectRoot = projectInfo.getURI();
 		if (bbSessionMap == null) {
-			bbSessionMap = new Hashtable();
+			bbSessionMap = new Hashtable<URI, BBSession>();
 		}
 		
 		BBSession bbs = (BBSession) bbSessionMap.get(projectRoot);
 		
 		if (bbs == null) {
-			bbs = new BBSession(getShellSession(projectRoot, out), projectRoot);
+			bbs = new BBSession(getShellSession(projectInfo, out, monitor), projectRoot);
 			bbSessionMap.put(projectRoot, bbs);
 		}
 		
@@ -92,18 +95,23 @@ public class Activator extends AbstractUIPlugin {
 	 * Get or create a BitBake session passing in ProjectInfo
 	 * @param pinfo
 	 * @return
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public static BBSession getBBSession(String projectRoot) throws IOException {
+	public static BBSession getBBSession(ProjectInfo projectInfo, IProgressMonitor monitor) throws Exception {
+		URI projectRoot = projectInfo.getURI();
 		if (bbSessionMap == null) {
-			bbSessionMap = new Hashtable();
+			bbSessionMap = new Hashtable<URI, BBSession>();
 		}
 		
 		BBSession bbs = (BBSession) bbSessionMap.get(projectRoot);
 		
 		if (bbs == null) {
-			bbs = new BBSession(getShellSession(projectRoot, null), projectRoot);
+			bbs = new BBSession(getShellSession(projectInfo, null, monitor), projectRoot);
 			bbSessionMap.put(projectRoot, bbs);
+		} else {
+			if (projectInfo.getConnection() == null) {
+				throw new Exception("The remote connection is null!");
+			}
 		}
 		
 		return bbs;
@@ -129,9 +137,9 @@ public class Activator extends AbstractUIPlugin {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
 
-	public static ProjectInfo getProjInfo(String location) throws CoreException, InvocationTargetException, InterruptedException {
+	public static ProjectInfo getProjInfo(URI location) throws CoreException, InvocationTargetException, InterruptedException {
 		if (projInfoMap == null) {
-			projInfoMap = new Hashtable();
+			projInfoMap = new Hashtable<URI, ProjectInfo>();
 		}
 		
 		ProjectInfo pi = (ProjectInfo) projInfoMap.get(location);
@@ -144,13 +152,18 @@ public class Activator extends AbstractUIPlugin {
 			} catch (IOException e) {
 				throw new InvocationTargetException(e);
 			}
+			if (pi.getConnection() == null) {
+				IHost connection = RemoteHelper.getRemoteConnectionForURI(location, new NullProgressMonitor());
+				pi.setConnection(connection);
+			}
+			projInfoMap.put(location, pi);
 		}
 		
 		return pi;
 	}
 
 	public static void notifyAllBBSession(IResource[] added, IResource[] removed, IResource[] changed) {
-		Iterator iter;
+		Iterator<BBSession> iter;
 		if(bbRecipeMap != null) {
 			iter = bbRecipeMap.values().iterator();
 			while(iter.hasNext()) {
@@ -173,50 +186,51 @@ public class Activator extends AbstractUIPlugin {
 	 * @return a cached shell session for a given project root.
 	 * @throws IOException 
 	 */
-	private static ShellSession getShellSession(String absolutePath, Writer out) throws IOException {
+	private static ShellSession getShellSession(ProjectInfo projInfo, Writer out, IProgressMonitor monitor) throws IOException {
+		URI absolutePath = projInfo.getURI();
 		if (shellMap == null) {
-			shellMap = new Hashtable();
+			shellMap = new Hashtable<String, ShellSession>();
 		}
 		
 		ShellSession ss = (ShellSession) shellMap.get(absolutePath);
 		
 		if (ss == null) {
-			ss = new ShellSession(ShellSession.SHELL_TYPE_BASH, new File(absolutePath), ProjectInfoHelper.getInitScriptPath(absolutePath), out);
+//			if (conn == null)
+//				RemoteHelper.getRemoteConnectionByName();
+			IHostFile remoteHostFile = RemoteHelper.getRemoteHostFile(projInfo.getConnection(), absolutePath.getPath(), monitor);
+			ss = new ShellSession(projInfo, ShellSession.SHELL_TYPE_BASH, remoteHostFile, ProjectInfoHelper.getInitScriptPath(absolutePath), out);
 		}
 		
 		return ss;
 	}
 
-	private static String loadInit(String absolutePath) throws CoreException {
-		IProject [] prjs = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-		IProject foundPrj = null;
-		
-		for (int i = 0; i < prjs.length; ++i) {
-			IProject p = prjs[i];
-			
-			System.out
-					.println(p.getDescription().getLocationURI().getPath());
-			
-			if (p.getDescription().getLocationURI().getPath().equals(absolutePath)) {
-				foundPrj = p;
-				break;
-			}
-		}
-		
-		if (foundPrj == null) {
-			throw new RuntimeException("Unable to find project associated with path! " + absolutePath);
-		}
+//	private static String loadInit(String absolutePath) throws CoreException {
+//		IProject [] prjs = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+//		IProject foundPrj = null;
+//		
+//		for (int i = 0; i < prjs.length; ++i) {
+//			IProject p = prjs[i];
+//			
+//			System.out
+//					.println(p.getDescription().getLocationURI().getPath());
+//			
+//			if (p.getDescription().getLocationURI().getPath().equals(absolutePath)) {
+//				foundPrj = p;
+//				break;
+//			}
+//		}
+//		
+//		if (foundPrj == null) {
+//			throw new RuntimeException("Unable to find project associated with path! " + absolutePath);
+//		}
+//	
+//		return foundPrj.getPersistentProperty(CreateBBCProjectOperation.BBC_PROJECT_INIT);
+//	}
 	
-		return foundPrj.getPersistentProperty(CreateBBCProjectOperation.BBC_PROJECT_INIT);
-	}
-	
-	public static void putProjInfo(String location, ProjectInfo pinfo) {
+	public static void putProjInfo(URI location, ProjectInfo pinfo) {
 		if (projInfoMap == null) {
-			projInfoMap = new Hashtable();
+			projInfoMap = new Hashtable<URI, ProjectInfo>();
 		}
-		
-		
-		
 		projInfoMap.put(location, pinfo);
 	}
 	

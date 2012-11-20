@@ -1,38 +1,38 @@
 package org.yocto.bc.ui.wizards.install;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
+import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.ptp.rdt.ui.wizards.RemoteProjectContentsLocationArea;
+import org.eclipse.ptp.rdt.ui.wizards.RemoteProjectContentsLocationArea.IErrorMessageReporter;
+import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.core.IRemoteFileManager;
+import org.eclipse.ptp.remote.core.IRemoteServices;
+import org.eclipse.ptp.remote.core.exception.RemoteConnectionException;
+import org.eclipse.ptp.remote.rse.core.RSEConnection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.PlatformUI;
-
-import org.yocto.bc.ui.wizards.FiniteStateWizard;
 import org.yocto.bc.ui.wizards.FiniteStateWizardPage;
-import org.yocto.bc.ui.wizards.FiniteStateWizardPage.ValidationListener;
 
 /**
  * Select which flavor of OE is to be installed.
@@ -45,23 +45,20 @@ import org.yocto.bc.ui.wizards.FiniteStateWizardPage.ValidationListener;
  */
 public class OptionsPage extends FiniteStateWizardPage {
 
-	private Map vars;
-	private Composite c1;
+	public static final String URI_SEPARATOR = "/";
+	public static final String LOCALHOST = "LOCALHOST";
+	
 	private Composite top;
 	
-	private List controlList;
-	private boolean controlsCreated = false;
-	
-	private Text txtProjectLocation;
-
-	private Text txtInit;
 	private ValidationListener validationListener;
 	private Text txtProjectName;
-	private Button gitButton;
-
-	protected OptionsPage(Map model) {
+	private Button btnGit;
+	private Button btnValidate;
+	
+	private RemoteProjectContentsLocationArea locationArea;
+	
+	protected OptionsPage(Map<String, Object> model) {
 		super("Options", model);
-		//setTitle("Create new yocto bitbake project");
 		setMessage("Enter these parameters to create new Yocto Project BitBake commander project");
 	}
 
@@ -72,7 +69,6 @@ public class OptionsPage extends FiniteStateWizardPage {
 		top.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		GridData gdFillH = new GridData(GridData.FILL_HORIZONTAL);
-		GridData gdVU = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
 		
 		Composite projectNameComp = new Composite(top, SWT.NONE);
 		GridData gdProjName = new GridData(GridData.FILL_HORIZONTAL);
@@ -88,58 +84,160 @@ public class OptionsPage extends FiniteStateWizardPage {
 		
 		txtProjectName.addModifyListener(validationListener);
 
-		Label lblProjectLocation = new Label(projectNameComp, SWT.None);
-		lblProjectLocation.setText("&Project Location:");
-
-		Composite locComposite = new Composite(projectNameComp, SWT.NONE);
-		GridData gd = new GridData(GridData.VERTICAL_ALIGN_END
-				| GridData.FILL_HORIZONTAL);
-		gd.horizontalIndent = 0;
-		locComposite.setLayoutData(gd);
-		GridLayout gl = new GridLayout(2, false);
-		gl.marginWidth = 0;
-		locComposite.setLayout(gl);
-
-		txtProjectLocation = new Text(locComposite, SWT.BORDER);
-		txtProjectLocation.setLayoutData(gdFillH);
-		txtProjectLocation.addModifyListener(validationListener);
-
-		Button button = new Button(locComposite, SWT.PUSH);
-		button.setText("Browse...");
-		button.addSelectionListener(new SelectionAdapter() {
+		IErrorMessageReporter errorReporter = new IErrorMessageReporter() {
+			
+			@Override
+			public void reportError(String errorMessage, boolean infoOnly) {
+				setMessage(errorMessage);
+				validatePage();
+				updateModel();
+			}
+		};
+		
+		locationArea = new RemoteProjectContentsLocationArea(errorReporter, top, null);
+		
+		Group locationValidationGroup = new Group(top, SWT.NONE);
+		locationValidationGroup.setText("Git repository");
+		GridData gd = new GridData(GridData.VERTICAL_ALIGN_END | GridData.FILL_HORIZONTAL);
+		locationValidationGroup.setLayoutData(gd);
+		GridLayout gl = new GridLayout(1, false);
+		locationValidationGroup.setLayout(gl);
+		
+		SelectionListener lst = new SelectionListener() {
+			
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				handleBrowse();
+				if (validateProjectName() && validateProjectLocation()) 
+					setPageComplete(true);
+				
 			}
-		});
-
-		//Label lblGit = new Label(projectNameComp, SWT.None);
-		//lblGit.setText("Clone from &Git Repository?");
-
-		Composite gitComposite = new Composite(projectNameComp, SWT.NONE);
-		gd = new GridData(GridData.VERTICAL_ALIGN_END
-				| GridData.FILL_HORIZONTAL);
-		gd.horizontalIndent = 0;
-		gitComposite.setLayoutData(gd);
-		gl = new GridLayout(1, false);
-		gl.marginWidth = 0;
-		gitComposite.setLayout(gl);
-
-		gitButton = new Button(gitComposite, SWT.CHECK);
-		gitButton.setText("Clone from Yocto Project &Git Repository");
-		gitButton.setEnabled(true);
-		gitButton.addSelectionListener(validationListener);
-
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		};
+		
+		
+		btnGit = new Button(locationValidationGroup, SWT.RADIO);
+		btnGit.setText("Clone from Yocto Project &Git Repository into new location");
+		btnGit.setEnabled(true);
+		btnGit.setSelection(true);
+		btnGit.addSelectionListener(lst);
+		
+		
+		btnValidate = new Button(locationValidationGroup, SWT.RADIO);
+		btnValidate.setText("&Validate existing Git project location");
+		btnValidate.setEnabled(true);
+		btnValidate.setSelection(false);
+		btnValidate.addSelectionListener(lst);
+		
 		setControl(top);
 	}
+	
+	private boolean validateProjectName() {
+		IWorkspaceRoot wsroot = ResourcesPlugin.getWorkspace().getRoot();
 
-	private void handleBrowse() {
-		DirectoryDialog dialog = new DirectoryDialog(getShell(), SWT.None);
-		String dir = dialog.open();
-		if (dir != null) {
-			txtProjectLocation.setText(dir);
+		IStatus validate = ResourcesPlugin.getWorkspace().validateName(txtProjectName.getText(), IResource.PROJECT);
+
+		if (txtProjectName.getText().trim().isEmpty()) {
+			setErrorMessage("Project name cannot be empty!");
+			return false;
 		}
+		
+		if (!validate.isOK() || !isValidProjectName(txtProjectName.getText())) {
+			setErrorMessage("Invalid project name: " + txtProjectName.getText());
+			return false;
+		}
+
+		IProject proj = wsroot.getProject(txtProjectName.getText());
+		if (proj.exists()) {
+			setErrorMessage("A project with the name " + txtProjectName.getText() + " already exists");
+			return false;
+		}
+		return true;
 	}
+	
+	public String getProjectName(){
+		return txtProjectName.getText().trim();
+	}
+	
+	protected boolean validateProjectLocation() {
+		
+		String projectLoc = locationArea.getProjectLocation().trim();
+		
+		File checkProject_dir = new File(projectLoc);
+		if (!checkProject_dir.isDirectory()) {
+			setErrorMessage("The project location directory " + projectLoc + " is not valid");
+			return false;
+		}
+		projectLoc = convertToRealPath(projectLoc);
+		String separator = projectLoc.endsWith(URI_SEPARATOR) ? "" : URI_SEPARATOR;
+		String projectPath = projectLoc + separator + getProjectName();
+		File gitDir = new File(projectPath);
+		if(btnValidate.getSelection()) {
+			if(!gitDir.isDirectory() || !gitDir.exists()) {
+				setErrorMessage("Directory " + projectPath + " does not exist, please select git clone.");
+				return false;
+			}
+			File[] filesMatched = gitDir.listFiles(new FilenameFilter() {
+				
+				@Override
+				public boolean accept(File file, String pattern) {
+					return file.getName().equals(".git");
+				}
+			});
+			
+			if (filesMatched.length != 1) {
+				setErrorMessage("Directory " + projectPath + " does not contain a git repository, please select git clone.");
+				return false;
+			}
+			
+			if(!new File(projectLoc + separator + InstallWizard.VALIDATION_FILE).exists()) {
+				setErrorMessage("Directory " + projectPath + " seems invalid, please use other directory or project name.");
+				return false;
+			}
+		}
+		
+		try {
+			IWorkspaceRoot wsroot = ResourcesPlugin.getWorkspace().getRoot();
+			IProject proj = wsroot.getProject(txtProjectName.getText());
+			if (proj.exists()) {
+				setErrorMessage("A project with the name " + txtProjectName.getText() + " already exists");
+				return false;
+			}
+			URI location = new URI("file:" + URI_SEPARATOR + URI_SEPARATOR + convertToRealPath(projectLoc) + URI_SEPARATOR + txtProjectName.getText());
+			
+			IStatus status = ResourcesPlugin.getWorkspace().validateProjectLocationURI(proj, location);
+			if (!status.isOK()) {
+				setErrorMessage(status.getMessage());
+				return false;
+			}
+		} catch (Exception e) {
+			setErrorMessage("Run into error while trying to validate entries!");
+			return false;
+		}
+		
+		setErrorMessage(null);
+		return true;
+	}
+
+	private String convertToRealPath(String path) {
+	    String patternStr = File.separator + File.separator;
+	    if (patternStr.equals(URI_SEPARATOR))
+	    	return path;
+	    String replaceStr = URI_SEPARATOR;
+	    String convertedpath;
+
+	    //Compile regular expression
+	    Pattern pattern = Pattern.compile(patternStr); //pattern to look for
+
+	    //replace all occurance of percentage character to file separator
+	    Matcher matcher = pattern.matcher(path);
+	    convertedpath = matcher.replaceAll(replaceStr);
+
+	    return convertedpath;
+	}
+
 	
 	@Override
 	public void pageCleanup() {
@@ -153,95 +251,94 @@ public class OptionsPage extends FiniteStateWizardPage {
 	@Override
 	
 	protected void updateModel() {
-		model.put(InstallWizard.INSTALL_DIRECTORY, txtProjectLocation.getText()+File.separator+txtProjectName.getText());
+		try {
+			URI uri = getProjectLocationURI();
+			if (uri != null)
+				model.put(InstallWizard.INSTALL_DIRECTORY, getProjectLocationURI());
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 		model.put(InstallWizard.PROJECT_NAME, txtProjectName.getText());
-		model.put(InstallWizard.GIT_CLONE, new Boolean(gitButton.getSelection()));
+		model.put(InstallWizard.GIT_CLONE, new Boolean(btnGit.getSelection()));
+		model.put(InstallWizard.SELECTED_CONNECTION, locationArea.getRemoteConnection());
+		model.put(InstallWizard.SELECTED_REMOTE_SERVICE, locationArea.getRemoteServices());
 	}
 
+	public URI getProjectLocationURI() throws URISyntaxException {
+		URI uri = locationArea.getProjectLocationURI();
+		
+		if (uri != null) {
+			String location = locationArea.getProjectLocation();
+			if (!uri.getPath().isEmpty()) {
+				String separator = uri.getPath().endsWith(URI_SEPARATOR) ? "" : URI_SEPARATOR;
+				
+				return new URI( uri.getScheme(),
+								uri.getHost(),
+								uri.getPath() + separator + txtProjectName.getText(),
+								uri.getFragment());
+			} else {
+				return null;
+//				String defaultPath = getDefaultPathDisplayString(locationArea.getRemoteConnection(), locationArea.getRemoteServices());
+//				return new URI(uri.getScheme(), uri.getHost(), defaultPath, uri.getFragment());
+			}
+		} else {
+			String location = locationArea.getProjectLocation();
+			String separator = location.endsWith(URI_SEPARATOR) ? "" : URI_SEPARATOR;
+			
+			IRemoteConnection conn = locationArea.getConnection();
+			if (conn instanceof RSEConnection) {
+				RSEConnection rseConn = (RSEConnection)conn;
+				return new URI("rse", rseConn.getHost().getHostName(), location);
+			} else {
+				return new URI( "file", location + separator + txtProjectName.getText(),"");
+			}
+		}
+	}
+	
+	private String getDefaultPathDisplayString(IRemoteConnection connection, IRemoteServices remoteServices) {
+		String projectName = getProjectName();
+		if (projectName.isEmpty())
+			projectName = "yocto";
+		if (connection != null) {
+			if (!connection.isOpen())
+				try {
+					connection.open(null);
+				} catch (RemoteConnectionException e) {
+					e.printStackTrace();
+				}
+			
+			IRemoteFileManager fileMgr = remoteServices.getFileManager(connection);
+			URI defaultURI = fileMgr.toURI(connection.getWorkingDirectory());
+
+			// Handle files specially. Assume a file if there is no project to
+			// query
+			if (defaultURI != null && defaultURI.getScheme().equals("file")) {
+				return Platform.getLocation().append(projectName).toOSString();
+			}
+			if (defaultURI == null) {
+				return ""; //$NON-NLS-1$
+			}
+			return new Path(defaultURI.getPath()).append(projectName).toOSString();
+		}
+		return ""; //$NON-NLS-1$
+	}
+	
 	private boolean isValidProjectName(String projectName) {
 		if (projectName.indexOf('$') > -1) {
 			return false;
 		}
 
 		return true;
-	}
+	} 
 	@Override
 	protected boolean validatePage() {
-		IWorkspaceRoot wsroot = ResourcesPlugin.getWorkspace().getRoot();
-
-		IStatus validate = ResourcesPlugin.getWorkspace().validateName(txtProjectName.getText(), IResource.PROJECT);
-
-		if (!validate.isOK() || !isValidProjectName(txtProjectName.getText())) {
-			setErrorMessage("Invalid project name: " + txtProjectName.getText());
+		if  (!validateProjectName())
 			return false;
-		}
-
-		IProject proj = wsroot.getProject(txtProjectName.getText());
-		if (proj.exists()) {
-			setErrorMessage("A project with the name " + txtProjectName.getText()
-					+ " already exists");
-			return false;
-		}
 		
-		String projectLoc = txtProjectLocation.getText();
-		File checkProject_dir = new File(projectLoc);
-		if (!checkProject_dir.isDirectory()) {
-			setErrorMessage("The project location directory " + txtProjectLocation.getText() + " is not valid");
-			return false;
-		}
-		
-		String projectPath = projectLoc + File.separator+txtProjectName.getText();
-		File git_dir=new File(projectPath);
-		if(!gitButton.getSelection()) {
-			if(!git_dir.isDirectory() || !git_dir.exists()) {
-				setErrorMessage("Directory " + txtProjectLocation.getText()+File.separator+txtProjectName.getText() + " does not exist, please select git clone.");
-				return false;
-			}else if(!new File(projectPath + File.separator + InstallWizard.VALIDATION_FILE).exists()) {
-				setErrorMessage("Directory " + txtProjectLocation.getText()+File.separator+txtProjectName.getText() + " seems invalid, please use other directory or project name.");
-				return false;
-			}
-		}else {
-			// git check
-			if(git_dir.exists()) {
-				setErrorMessage("Directory " + txtProjectLocation.getText()+File.separator+txtProjectName.getText() + " exists, please unselect git clone.");
-				return false;
-			}
-		}
-		
-		try {
-			URI location = new URI("file://" + txtProjectLocation.getText()+File.separator+txtProjectName.getText());
-		
-			IStatus status = ResourcesPlugin.getWorkspace().validateProjectLocationURI(proj, location);
-			if (!status.isOK()) {
-				setErrorMessage(status.getMessage());
-				return false;
-			}
-		} catch (Exception e) {
-			setErrorMessage("Run into error while trying to validate entries!");
-			return false;
-		}
 		setErrorMessage(null);
 		setMessage("All the entries are valid, press \"Finish\" to start the process, "+
 				"this will take a while. Please don't interrupt till there's output in the Yocto Console window...");
 		return true;
-	}
-	
-	private class FileOpenSelectionAdapter extends SelectionAdapter {
-		@Override
-		public void widgetSelected(SelectionEvent e) {
-			FileDialog fd = new FileDialog(PlatformUI.getWorkbench()
-					.getDisplay().getActiveShell(), SWT.OPEN);
-
-			fd.setText("Open Configuration Script");
-			fd.setFilterPath(txtProjectLocation.getText());
-
-			String selected = fd.open();
-
-			if (selected != null) {
-				txtInit.setText(selected);
-				updateModel();
-			}
-		}
 	}
 
 }

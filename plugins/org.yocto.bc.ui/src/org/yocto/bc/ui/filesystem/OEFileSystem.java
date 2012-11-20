@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.yocto.bc.ui.filesystem;
 
-import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -20,9 +19,11 @@ import java.util.Map;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.filesystem.IFileSystem;
 import org.eclipse.core.filesystem.provider.FileSystem;
-
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.yocto.bc.bitbake.BBSession;
 import org.yocto.bc.ui.Activator;
+import org.yocto.bc.ui.model.ProjectInfo;
+import org.yocto.bc.ui.model.YoctoHostFile;
 
 /**
  * A filesystem that ignores specific OE directories that contain derived information.
@@ -32,14 +33,17 @@ import org.yocto.bc.ui.Activator;
 public class OEFileSystem extends FileSystem {
 
 	private static IFileSystem ref;
+	private ProjectInfo projInfo;
+	
 	public static IFileSystem getInstance() {
 		return ref;
 	}
 
 	private Map fileStoreCache;
 
-	public OEFileSystem() {
+	public OEFileSystem(ProjectInfo pInfo) {
 		ref = this;
+		projInfo = pInfo;
 		fileStoreCache = new Hashtable();
 	}
 	
@@ -51,11 +55,11 @@ public class OEFileSystem extends FileSystem {
 		if (uf == null) {
 			BBSession config = null;
 			try {
-				config = Activator.getBBSession(uri.getPath());
+				config = Activator.getBBSession(uf.getProjectInfo(), new NullProgressMonitor());
 				config.initialize();
 			} catch (Exception e) {
 				e.printStackTrace();
-				return new OEIgnoreFile(new File(uri.getPath()));
+				return new OEIgnoreFile(new YoctoHostFile(projInfo, uri));
 			}
 
 			if (config.get("TMPDIR") == null || config.get("DL_DIR") == null || config.get("SSTATE_DIR")== null) {
@@ -69,7 +73,8 @@ public class OEFileSystem extends FileSystem {
 			ignoreList.add(config.get("DL_DIR"));
 			ignoreList.add(config.get("SSTATE_DIR"));
 			
-			uf = new OEFile(new File(uri.getPath()), ignoreList, uri.getPath());
+			//FIXME: add project info
+			//uf = new OEFile(uri, ignoreList, uri, projectInfo, new NullProgressMonitor());
 			fileStoreCache.put(uri, uf);
 		}
 		

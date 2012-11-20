@@ -11,14 +11,7 @@
 package org.yocto.bc.bitbake;
 
 import java.io.IOException;
-
-import org.eclipse.jface.preference.JFacePreferences;
-import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.console.IConsole;
-import org.eclipse.ui.console.MessageConsole;
-import org.eclipse.ui.console.MessageConsoleStream;
+import java.net.URI;
 
 /**
  * Represents the bitbake environment of a recipe package.
@@ -27,10 +20,10 @@ import org.eclipse.ui.console.MessageConsoleStream;
  */
 public class BBRecipe extends BBSession {
 	private final BBSession session;
-	private final String filePath;
+	private final URI filePath;
 
-	public BBRecipe(BBSession session, String filePath) throws IOException {
-		super(session.shell, session.pinfo.getRootPath());
+	public BBRecipe(BBSession session, URI filePath) throws IOException {
+		super(session.shell, session.pinfo.getURI());
 		this.session = session;
 		this.filePath = filePath;
 		this.parsingCmd = "DISABLE_SANITY_CHECKS=1 bitbake -e -b " + filePath;
@@ -39,12 +32,12 @@ public class BBRecipe extends BBSession {
 	@Override
 	public void initialize() throws Exception {
 		if (this.size() == 0) {
-			//System.out.println("Failed to parse " + filePath);
+			System.out.println("Failed to parse " + filePath);
 			//throw new IOException("Failed to parse " + filePath);
 		}
 	}
 
-	protected String getDefaultDepends() {
+	protected URI getDefaultDepends() {
 		return this.filePath;
 	}
 }

@@ -13,10 +13,9 @@ package org.yocto.bc.ui.actions;
 import java.io.IOException;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
@@ -24,17 +23,17 @@ import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.rse.services.files.IHostFile;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
-
 import org.yocto.bc.bitbake.BBLanguageHelper;
 import org.yocto.bc.bitbake.BBSession;
 import org.yocto.bc.bitbake.ICommandResponseHandler;
 import org.yocto.bc.ui.Activator;
-import org.yocto.bc.ui.builder.BitbakeCommanderNature;
+import org.yocto.bc.ui.model.YoctoHostFile;
 
 public abstract class AbstractBitbakeCommandAction implements IWorkbenchWindowActionDelegate {
 
@@ -52,7 +51,7 @@ public abstract class AbstractBitbakeCommandAction implements IWorkbenchWindowAc
 
 	}
 	protected IAction action;
-	protected IFile recipe;
+	protected YoctoHostFile recipe;
 	protected BBSession bbs;
 
 	private Color commandColor, responseColor, errorColor;
@@ -64,29 +63,32 @@ public abstract class AbstractBitbakeCommandAction implements IWorkbenchWindowAc
 		errorColor = JFaceResources.getColorRegistry().get(JFacePreferences.ERROR_COLOR);
 	}
 
-	private void checkEnabled(IFile file) {
+	private void checkEnabled(IHostFile file, IProgressMonitor monitor) {
 		try {
-			if (file.getFileExtension() == null || !file.getFileExtension().equals(BBLanguageHelper.BITBAKE_RECIPE_FILE_EXTENSION)) {
+			String absPath = file.getAbsolutePath();
+			String ext = absPath.substring(file.getAbsolutePath().lastIndexOf(".") + 1);
+			
+			if (ext == null || !ext.equals(BBLanguageHelper.BITBAKE_RECIPE_FILE_EXTENSION)) {
 				action.setEnabled(false);
 				return;
 			}
 
-			IProject project = file.getProject();
-			if (!(project.hasNature(BitbakeCommanderNature.NATURE_ID))) {
-				action.setEnabled(false);
-				return;
-			}
+//			IProject project = file.getProject();
+//			if (!(project.hasNature(BitbakeCommanderNature.NATURE_ID))) {
+//				action.setEnabled(false);
+//				return;
+//			}
+//
+//			bbs = Activator.getBBSession(project.getLocationURI(), monitor);
+//
+//			if (bbs != null) {
+//				recipe = file;
+//				action.setEnabled(true);
+//			}
 
-			bbs = Activator.getBBSession(project.getLocationURI().getPath());
-
-			if (bbs != null) {
-				recipe = file;
-				action.setEnabled(true);
-			}
-
-		} catch (CoreException e) {
-			action.setEnabled(false);
-			e.printStackTrace();
+//		} catch (CoreException e) {
+//			action.setEnabled(false);
+//			e.printStackTrace();
 		} catch (Exception e) {
 			action.setEnabled(false);
 			e.printStackTrace();
@@ -188,7 +190,7 @@ public abstract class AbstractBitbakeCommandAction implements IWorkbenchWindowAc
 			Object sel = ((IStructuredSelection) selection).getFirstElement();
 
 			if (sel instanceof IFile) {
-				checkEnabled((IFile) sel);
+				checkEnabled((IHostFile)sel, new NullProgressMonitor());
 				return;
 			}
 		}

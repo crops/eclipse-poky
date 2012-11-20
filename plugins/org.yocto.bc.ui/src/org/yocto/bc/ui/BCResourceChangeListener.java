@@ -41,6 +41,7 @@ public class BCResourceChangeListener implements IResourceChangeListener {
             			        	  removed.add(res);
             			              break;
             			           case IResourceDelta.CHANGED:
+            			        	  res.getLocation();
             			        	  changed.add(res);
             			              break;
             			        }

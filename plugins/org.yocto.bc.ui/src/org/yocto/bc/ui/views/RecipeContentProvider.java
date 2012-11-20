@@ -51,7 +51,7 @@ class RecipeContentProvider implements IStructuredContentProvider {
 	}
 
 	private Collection getRecipesFromProject(IProject project) throws Exception {
-		BBSession session = Activator.getBBSession(project.getLocationURI().getPath(), null);
+		BBSession session = Activator.getBBSession(Activator.getProjInfo(project.getLocationURI()), null);
 		return session.getRecipeFiles(project);
 	}
 

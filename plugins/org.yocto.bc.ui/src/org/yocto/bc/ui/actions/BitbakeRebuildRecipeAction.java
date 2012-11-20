@@ -19,7 +19,7 @@ public  class BitbakeRebuildRecipeAction extends AbstractBitbakeCommandAction {
 
 	@Override
 	public String [] getCommands() {
-		return new String[] {"bitbake -c rebuild -b " + recipe.getLocationURI().getPath()};
+		return new String[] {"bitbake -c rebuild -b " + recipe.getAbsolutePath()};
 	}
 
 	@Override

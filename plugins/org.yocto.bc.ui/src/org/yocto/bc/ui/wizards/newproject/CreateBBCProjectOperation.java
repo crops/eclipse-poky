@@ -12,8 +12,6 @@ package org.yocto.bc.ui.wizards.newproject;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Vector;
 
@@ -24,13 +22,10 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
-
 import org.yocto.bc.bitbake.ProjectInfoHelper;
-import org.yocto.bc.ui.Activator;
+import org.yocto.bc.remote.utils.RemoteHelper;
 import org.yocto.bc.ui.builder.BitbakeCommanderNature;
 import org.yocto.bc.ui.model.ProjectInfo;
 
@@ -46,7 +41,7 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 	public static final QualifiedName BBC_PROJECT_INIT = new QualifiedName(null, "BBC_PROJECT_INIT");
 	public static void addNatureToProject(IProject proj, String nature_id, IProgressMonitor monitor) throws CoreException {
 		IProjectDescription desc = proj.getDescription();
-		Vector natureIds = new Vector();
+		Vector<String> natureIds = new Vector<String>();
 		
 		natureIds.add(nature_id);
 		natureIds.addAll(Arrays.asList(desc.getNatureIds()));
@@ -65,14 +60,15 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 		addNatureToProject(proj, BitbakeCommanderNature.NATURE_ID, monitor);
 	}
 
-	private IProjectDescription createProjectDescription(IWorkspace workspace, ProjectInfo projInfo2) throws CoreException {
-		IProjectDescription desc = workspace.newProjectDescription(projInfo2.getProjectName());
+	private IProjectDescription createProjectDescription(IWorkspace workspace, ProjectInfo projInformation) throws CoreException {
+		IProjectDescription desc = workspace.newProjectDescription(projInformation.getProjectName());
 		
-		try {
-			desc.setLocationURI(new URI(OEFS_SCHEME + projInfo2.getRootPath()));
-		} catch (URISyntaxException e) {
-			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Unable to load filesystem.", e));
-		}
+//		try {
+//			desc.setLocationURI(new URI(OEFS_SCHEME + projInfo2.getRootPath()));
+			desc.setLocationURI(projInformation.getURI());
+//		} catch (URISyntaxException e) {
+//			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Unable to load filesystem.", e));
+//		}
 		
 		return desc;
 	}
@@ -84,14 +80,19 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 		IWorkspaceRoot wsroot = ResourcesPlugin.getWorkspace().getRoot();
 
 		IProject proj = wsroot.getProject(projInfo.getProjectName());
-		proj.create(desc, monitor);
+		
 		try {
-			ProjectInfoHelper.store(proj.getLocationURI().getPath(), projInfo);
+			proj.create(desc, monitor);
+			ProjectInfoHelper.store(RemoteHelper.getRemoteConnectionByName(projInfo.getConnection().getName()), proj.getLocationURI(), projInfo, monitor);
+			proj.open(monitor);
 		} catch (IOException e) {
 			throw new InvocationTargetException(e);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
-		proj.open(monitor);
+		
+		
 
 		addNatures(proj, monitor);
 	}

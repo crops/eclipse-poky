@@ -14,18 +14,19 @@ package org.yocto.bc.ui.wizards;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -33,6 +34,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.rse.core.model.IHost;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -40,21 +42,24 @@ import org.eclipse.ui.IWorkbenchWizard;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
-
-import org.yocto.bc.bitbake.BBLanguageHelper;
+import org.yocto.bc.remote.utils.RemoteHelper;
+import org.yocto.bc.remote.utils.YoctoCommand;
+import org.yocto.bc.ui.Activator;
+import org.yocto.bc.ui.model.ProjectInfo;
 
 public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 	private NewBitBakeFileRecipeWizardPage page;
 	private ISelection selection;
-
+	private IHost connection;
+	
 	public NewBitBakeFileRecipeWizard() {
 		super();
 		setNeedsProgressMonitor(true);
 	}
-
+ 
 	@Override
 	public void addPages() {
-		page = new NewBitBakeFileRecipeWizardPage(selection);
+		page = new NewBitBakeFileRecipeWizardPage(selection, connection);
 		addPage(page);
 	}
 
@@ -106,6 +111,27 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 	 */
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.selection = selection;
+		if (selection instanceof IStructuredSelection) {
+			Object element = ((IStructuredSelection)selection).getFirstElement();
+			
+			if (element instanceof IResource) {
+				IProject p = ((IResource)element).getProject();
+				try {
+					ProjectInfo projInfo = Activator.getProjInfo(p.getLocationURI());
+					if (projInfo.getConnection() == null)
+						this.connection = RemoteHelper.getRemoteConnectionForURI(p.getLocationURI(), new NullProgressMonitor());
+					else
+						this.connection = projInfo.getConnection();
+				} catch (CoreException e) {
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		}
 	}
 
 	/**
@@ -172,23 +198,14 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performFinish() {
-		final BitbakeRecipeUIElement element = page.getUIElement();
+		
+		final BitbakeRecipeUIElement element = page.populateUIElement();
 		
 		IRunnableWithProgress op = new IRunnableWithProgress() {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
 					doFinish(element, monitor);
-					File temp_dir = new File(element.getMetaDir() + "/temp");
-					if (temp_dir.exists()) {
-						File working_dir = new File(element.getMetaDir());
-					
-						String rm_cmd = "rm -rf temp";
-						final Process process = Runtime.getRuntime().exec(rm_cmd, null, working_dir);
-						int returnCode = process.waitFor();
-						if (returnCode != 0) {
-							throw new Exception("Failed to clean up the temp dir");
-						}
-					}
+					RemoteHelper.runCommandRemote(connection, new YoctoCommand("rm -rf temp", element.getMetaDir() + "/temp", ""), monitor, true);
 				} catch (Exception e) {
 					throw new InvocationTargetException(e);
 				} finally {

@@ -22,12 +22,14 @@ import org.eclipse.core.filesystem.provider.FileInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.rse.services.files.IHostFile;
+import org.yocto.bc.ui.model.YoctoHostFile;
 
 public class OEIgnoreFile implements IFileStore {
 
-	private final File file;
+	private final YoctoHostFile file;
 
-	public OEIgnoreFile(File file) {
+	public OEIgnoreFile(YoctoHostFile file) {
 		this.file = file;
 	}
 
@@ -46,17 +48,12 @@ public class OEIgnoreFile implements IFileStore {
 	}
 
 	public void copy(IFileStore destination, int options, IProgressMonitor monitor) throws CoreException {
-		// TODO Auto-generated method stub
-		
 	}
 
 	public void delete(int options, IProgressMonitor monitor) throws CoreException {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	public IFileInfo fetchInfo() {
-		// TODO Auto-generated method stub
 		return new FileInfo(file.getName());
 	}
 
@@ -65,12 +62,10 @@ public class OEIgnoreFile implements IFileStore {
 	}
 
 	public Object getAdapter(Class adapter) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public IFileStore getChild(IPath path) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -81,7 +76,6 @@ public class OEIgnoreFile implements IFileStore {
 	}
 
 	public IFileSystem getFileSystem() {
-		// TODO Auto-generated method stub
 		return OEFileSystem.getInstance();
 	}
 
@@ -90,12 +84,10 @@ public class OEIgnoreFile implements IFileStore {
 	}
 
 	public IFileStore getParent() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public boolean isParentOf(IFileStore other) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -117,8 +109,9 @@ public class OEIgnoreFile implements IFileStore {
 	public void putInfo(IFileInfo info, int options, IProgressMonitor monitor) throws CoreException {
 	}
 
+	
 	public File toLocalFile(int options, IProgressMonitor monitor) throws CoreException {
-		return file;
+		return file.toLocalFile();
 	}
 
 	public URI toURI() {

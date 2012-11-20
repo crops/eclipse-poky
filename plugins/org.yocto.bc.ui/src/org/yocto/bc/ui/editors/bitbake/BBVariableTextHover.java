@@ -3,7 +3,7 @@
  */
 package org.yocto.bc.ui.editors.bitbake;
 
-import java.io.File;
+import java.net.URI;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -14,7 +14,6 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Region;
-
 import org.yocto.bc.bitbake.BBRecipe;
 import org.yocto.bc.bitbake.BBSession;
 import org.yocto.bc.ui.Activator;
@@ -26,20 +25,17 @@ import org.yocto.bc.ui.Activator;
  */
 class BBVariableTextHover implements ITextHover {
 	private final BBSession session;
-	private volatile Map envMap;
+	private volatile Map<String, String> envMap;
 
-	public BBVariableTextHover(BBSession session, String file) {
+	public BBVariableTextHover(BBSession session, URI file) {
 		this.session = session;
-		envMap = session;
+//		envMap = session;
 		LoadRecipeJob loadRecipeJob = new LoadRecipeJob(getFilename(file), file);
 		loadRecipeJob.schedule();
 	}
 
-	private String getFilename(String file) {
-		
-		String [] elems = file.split(File.separator);
-		
-		return elems[elems.length - 1];
+	private String getFilename(URI uri) {
+		return uri.getPath();
 	}
 
 	public IRegion getHoverRegion(ITextViewer tv, int off) {
@@ -95,9 +91,9 @@ class BBVariableTextHover implements ITextHover {
 	}
 	
 	private class LoadRecipeJob extends Job {
-		private final String filePath;
+		private final URI filePath;
 
-		public LoadRecipeJob(String name, String filePath) {
+		public LoadRecipeJob(String name, URI filePath) {
 			super("Extracting BitBake environment for " + name);
 			this.filePath = filePath;
 		}
@@ -107,7 +103,7 @@ class BBVariableTextHover implements ITextHover {
 			try {
 				BBRecipe recipe = Activator.getBBRecipe(session, filePath);
 				recipe.initialize();
-				envMap = recipe;
+//				envMap = recipe;
 			} catch (Exception e) {
 				return new Status(IStatus.WARNING, Activator.PLUGIN_ID, "Unable to load session for " + filePath, e);
 			} 

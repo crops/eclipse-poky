@@ -66,7 +66,7 @@ public class BitBakeSourceViewerConfiguration extends TextSourceViewerConfigurat
 	public ITextHover getTextHover(ISourceViewer sv, String contentType) {
 		//only .bb file support Text Hover.
 		if (textHover == null && targetFile.getFileExtension().equals(BBLanguageHelper.BITBAKE_RECIPE_FILE_EXTENSION)) {
-			textHover = new BBVariableTextHover(session, targetFile.getLocationURI().getPath());
+			textHover = new BBVariableTextHover(session, targetFile.getLocationURI());
 		}
 		
 		return textHover;

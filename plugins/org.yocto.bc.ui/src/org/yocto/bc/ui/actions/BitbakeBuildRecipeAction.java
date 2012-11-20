@@ -14,7 +14,7 @@ public  class BitbakeBuildRecipeAction extends AbstractBitbakeCommandAction {
 
 	@Override
 	public String [] getCommands() {
-		return new String[] {"bitbake -b " + recipe.getLocationURI().getPath()};
+		return new String[] {"bitbake -b " + recipe.getAbsolutePath()};
 	}
 
 	@Override

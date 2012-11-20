@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -41,7 +42,6 @@ import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.progress.WorkbenchJob;
-
 import org.yocto.bc.ui.model.IModelElement;
 import org.yocto.bc.ui.model.ProjectInfo;
 
@@ -59,14 +59,14 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	public static final int TYPE_FLAG = 4;
 	
 	public static final String BUILDDIR_INDICATORS [] = {
-		File.separatorChar + "conf" + File.separatorChar + "local.conf",
-		File.separatorChar + "conf" + File.separatorChar + "bblayers.conf",
+		"/conf/local.conf",
+		"/conf/bblayers.conf",
 	};
 
 	protected final ProjectInfo pinfo;
 	protected final ShellSession shell;
-	protected Map properties = null;
-	protected List <String> depends = null;
+	protected Map<?,?> properties = null;
+	protected List <URI> depends = null;
 	protected boolean initialized = false;
 	protected MessageConsole sessionConsole;
 	private final ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock();
@@ -75,7 +75,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	protected String parsingCmd;
 	private boolean silent = false;
 	
-	public BBSession(ShellSession ssession, String projectRoot) throws IOException {
+	public BBSession(ShellSession ssession, URI projectRoot) throws IOException {
 		shell = ssession;
 		this.pinfo = new ProjectInfo();
 		pinfo.setLocation(projectRoot);
@@ -83,7 +83,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		this.parsingCmd = "DISABLE_SANITY_CHECKS=1 bitbake -e";
 	}
 
-	public BBSession(ShellSession ssession, String projectRoot, boolean silent) throws IOException {
+	public BBSession(ShellSession ssession, URI projectRoot, boolean silent) throws IOException {
 		this(ssession, projectRoot);
 		this.silent = silent;
 	}
@@ -182,8 +182,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		return shell;
 	}
 
-	public String getProjInfoRoot() {
-		return pinfo.getRootPath();
+	public URI getProjInfoRoot() {
+		return pinfo.getURI();
 	}
 
 	/**
@@ -261,7 +261,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	 */
 	public MessageConsole getConsole() {
 		if (sessionConsole == null) {
-			String cName = ProjectInfoHelper.getProjectName(pinfo.getRootPath()) + " Console";
+			String cName = ProjectInfoHelper.getProjectName(pinfo.getURI()) + " Console";
 			IConsoleManager conMan = ConsolePlugin.getDefault().getConsoleManager();
 			IConsole[] existing = conMan.getConsoles();
 			for (int i = 0; i < existing.length; i++)
@@ -330,8 +330,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	}
 
 	protected int checkExecuteError(String result, int code) {
-		String recipe = getDefaultDepends();
-		String text = "Parsing " + ((recipe != null) ? ("recipe " + recipe) : "base configurations");
+		URI recipeURI = getDefaultDepends();
+		String text = "Parsing " + ((recipeURI != null) ? ("recipe " + recipeURI) : "base configurations");
 		if (code != 0) {
 			text = text + " ERROR!\n" + result;
 		}else {
@@ -503,23 +503,30 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		}
 	}
 
-	protected String getDefaultDepends() {
+	protected URI getDefaultDepends() {
 		return null;
 	}
 	
 	protected Map parseBBEnvironment(String bbOut) throws Exception {
 		Map env = new Hashtable();
-		this.depends = new ArrayList<String>();
+		this.depends = new ArrayList<URI>();
 
 		parse(bbOut, env);
 
 		String included = (String) env.get("BBINCLUDED");
 		if(getDefaultDepends() != null) {
 			this.depends.add(getDefaultDepends());
-		}
+		} 
+		
 		if(included != null) {
-			this.depends.addAll(Arrays.asList(included.split(" ")));
+			String[] includedSplitted = included.split(" ");
+			for (String incl : includedSplitted){
+				this.depends.add(new URI(incl));
+			}
 		}
+//		if(included != null) {
+//			this.depends.addAll(Arrays.asList(included.split(" ")));
+//		}
 
 		return env;
 	}
@@ -724,10 +731,12 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 						return;
 					}
 				}
-				for(int i=0;changed != null && i<changed.length;i++) {
-					if (this.depends.contains(changed[i].getLocation().toString())) {
-						initialized = false;
-						return;
+				if (!depends.isEmpty()) {
+					for(int i=0;changed != null && i<changed.length;i++) {
+						if (changed[i].getLocation() != null && this.depends.contains(changed[i].getLocation().toString())) {
+							initialized = false;
+							return;
+						}
 					}
 				}
 			}
