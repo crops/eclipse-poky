@@ -96,8 +96,8 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	private static final String CONFIGURE_IN = "configure.in";
 	private static final String CONFIGURE_AC = "configure.ac";
 	private static final String AUTOTOOLS = "autotools";
-	private static final String md5Pattern = "^[0-9a-e]{32}$";
-	protected static final String sha256Pattern = "^[0-9a-e]{64}$";
+	private static final String md5Pattern = "^[0-9a-f]{32}$";
+	protected static final String sha256Pattern = "^[0-9a-f]{64}$";
 	
 	public NewBitBakeFileRecipeWizardPage(ISelection selection, IHost connection) {
 		super("wizardPage");
@@ -323,6 +323,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 
 	private void handleRemotePopulate(URI srcURI, IProgressMonitor monitor) throws Exception {
 		RemoteHelper.clearProcessBuffer(connection);
+
 		populateRecipeName(srcURI);
 		List<YoctoCommand> commands = new ArrayList<YoctoCommand>();
 		
