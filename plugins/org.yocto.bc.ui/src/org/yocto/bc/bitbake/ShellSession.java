@@ -20,6 +20,7 @@ import java.io.Writer;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.services.files.IHostFile;
 import org.yocto.bc.remote.utils.RemoteHelper;
 import org.yocto.bc.remote.utils.YoctoCommand;
@@ -92,43 +93,29 @@ public class ShellSession {
 	}
 
 	private void initializeShell(IProgressMonitor monitor) throws IOException {
-//		try {
-//			RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName()), new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""), monitor);
-//		} catch (CoreException e) {
-//			e.printStackTrace();
-//		}
-
-//		process = Runtime.getRuntime().exec(shellPath);
-//		pos = process.getOutputStream();
-//		
-//		if (root != null) {
-//			out.write(execute("cd " + root.getAbsolutePath()));
-//		}
-//		
-//		if (initCmd != null) {
-//			out.write(execute("source " + initCmd));
-//		}
+		try {
+			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
+			RemoteHelper.runCommandRemote(connection, new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""), monitor);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	synchronized 
 	public String execute(String command) throws IOException {
-		return execute(command, (int [])null);
+		return execute(command, false);
 	}
 
 	synchronized 
-	public String execute(String command, int[] retCode) throws IOException {
-		//FIXME : parse output 
-//		try {
-//			RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName()), new YoctoCommand(command, root.getAbsolutePath(), ""), new NullProgressMonitor());
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		
-//		String errorMessage = null;
-//		interrupt = false;
-//		out.write(command);
-//		out.write(LT);
-//		
+	public String execute(String command, boolean hasErrors) throws IOException {
+		try {
+			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
+			hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath(), ""), new NullProgressMonitor());
+			return RemoteHelper.getProcessBuffer(connection).getMergedOutputLines();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 //		sendToProcessAndTerminate(command);
 //
 //		if (process.getErrorStream().available() > 0) {
@@ -143,7 +130,7 @@ public class ShellSession {
 //		BufferedReader br = new BufferedReader(new InputStreamReader(process
 //				.getInputStream()));
 //
-		StringBuffer sb = new StringBuffer();
+//		StringBuffer sb = new StringBuffer();
 //		String line = null;
 
 //		while (((line = br.readLine()) != null) && !line.endsWith(TERMINATOR) && !interrupt) {
@@ -169,8 +156,8 @@ public class ShellSession {
 //		if (errorMessage != null) {
 //			throw new IOException(errorMessage);
 //		}
-
-		return sb.toString();
+//
+//		return sb.toString();
 	}
 
 synchronized 

@@ -329,18 +329,17 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		}
 	}
 
-	protected int checkExecuteError(String result, int code) {
+	protected void checkExecuteError(String result, boolean hasErrors) {
 		URI recipeURI = getDefaultDepends();
 		String text = "Parsing " + ((recipeURI != null) ? ("recipe " + recipeURI) : "base configurations");
-		if (code != 0) {
+		if (hasErrors) {
 			text = text + " ERROR!\n" + result;
 		}else {
 				text = text + " SUCCESS.\n";
 		}
 		if(!silent) {
-			displayInConsole(text, code, false);
+			displayInConsole(text, -1, false);
 		}
-		return code;
 	}
 
 	protected void displayInConsole(final String result, final int code, boolean clear) {
@@ -377,9 +376,9 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 			}
 			try {
 				if(!initialized) { //recheck
-					int [] codes = {-1};
-					String result = shell.execute(parsingCmd, codes);
-					if(checkExecuteError(result, codes[0]) == 0) {
+					boolean hasErrors = false;	
+					String result = shell.execute(parsingCmd, hasErrors);
+					if(!hasErrors) {
 						properties = parseBBEnvironment(result);
 					} else {
 						properties = parseBBEnvironment("");
