@@ -301,8 +301,6 @@ public class RemoteHelper {
 	}
 	
 	public static void runBatchRemote(IHost connection, List<YoctoCommand> cmds, IProgressMonitor monitor, boolean waitForOutput) throws CoreException {
-		connection.getHostName();
-		connection.getDefaultUserId();
 		try {
 			String remoteCommand = "";
 			for (YoctoCommand cmd : cmds) {
@@ -364,5 +362,4 @@ public class RemoteHelper {
 		}
 		return false;
 	}
-
 }

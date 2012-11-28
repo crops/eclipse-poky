@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
@@ -95,6 +96,8 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	private static final String CONFIGURE_IN = "configure.in";
 	private static final String CONFIGURE_AC = "configure.ac";
 	private static final String AUTOTOOLS = "autotools";
+	private static final String md5Pattern = "^[0-9a-e]{32}$";
+	protected static final String sha256Pattern = "^[0-9a-e]{64}$";
 	
 	public NewBitBakeFileRecipeWizardPage(ISelection selection, IHost connection) {
 		super("wizardPage");
@@ -302,14 +305,6 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-//				populateRecipeName(srcURI);
-//				populateSrcUriChecksum(srcURI, monitor);
-//				
-//				URI extractDir = extractPackage(srcURI, monitor);
-//				populateLicenseFileChecksum(extractDir, monitor);
-//				updateSrcUri(createMirrorLookupTable(monitor), srcURI);
-//				populateInheritance(extractDir, monitor);
-				
 			} else {
 				String packageName = getSrcFileName(false).replace("-", "_");
 				fileText.setText(packageName + BB_RECIPE_EXT);
@@ -318,10 +313,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			}
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
-		} /*catch (MalformedURLException e) {
-			e.printStackTrace();
-		}*/
-		
+		}
 	}
 	
 	private void handleLocalPopulate(URI srcURI, IProgressMonitor monitor) {
@@ -330,6 +322,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	}
 
 	private void handleRemotePopulate(URI srcURI, IProgressMonitor monitor) throws Exception {
+		RemoteHelper.clearProcessBuffer(connection);
 		populateRecipeName(srcURI);
 		List<YoctoCommand> commands = new ArrayList<YoctoCommand>();
 		
@@ -363,9 +356,12 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		updateSrcUri(createMirrorLookupTable(monitor), srcURI);
 		populateInheritance(extractDir, monitor);
 		
-		md5sumText.setText(retrieveSum(md5YCmd));
-		sha256sumText.setText(retrieveSum(sha256YCmd));
-		checksumText.setText(RemoteHelper.createNewURI(extractDir, COPYING_FILE).toString() + ";md5=" + retrieveSum(licenseChecksumCmd));
+		String md5Val = retrieveSum(md5YCmd);
+		md5sumText.setText(Pattern.matches(md5Pattern,  md5Val) ? md5Val : "");
+		String sha256Val = retrieveSum(sha256YCmd);
+		sha256sumText.setText(Pattern.matches(sha256Pattern,  sha256Val) ? sha256Val : "");
+		String checkSumVal =  retrieveSum(licenseChecksumCmd);
+		checksumText.setText(RemoteHelper.createNewURI(extractDir, COPYING_FILE).toString() + ";md5=" + (Pattern.matches(md5Pattern,  checkSumVal) ? checkSumVal : ""));
 	}
 
 	private String retrieveSum(YoctoCommand cmd) {
@@ -409,6 +405,9 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	
 	private void populateInheritance(URI extractDir, IProgressMonitor monitor) {
 		IHostFile[] hostFiles = RemoteHelper.getRemoteDirContent(connection, metaDirLoc.getPath(), "", IFileService.FILE_TYPE_FILES, monitor);
+		if (hostFiles == null)
+			return;
+		
 		for (IHostFile file: hostFiles) {
 			String fileName = file.getName();
 			if (fileName.equalsIgnoreCase(CMAKE_LIST)){

@@ -11,7 +11,6 @@ import org.eclipse.rse.services.shells.IHostOutput;
 import org.eclipse.rse.services.shells.IHostShell;
 import org.eclipse.rse.services.shells.IHostShellChangeEvent;
 import org.eclipse.rse.services.shells.IHostShellOutputReader;
-import org.eclipse.swt.widgets.Display;
 
 public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 	private ProcessStreamBuffer processStreamBuffer;
@@ -75,7 +74,6 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 	
 	private void reportProgress(String info) {
 		
-		
 		if(calculator == null) {
 			updateMonitor(1);
 		} else {
@@ -125,7 +123,6 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 				this.commandResponseHandler.response(value, false);
 			}
 		}
-
 		AbstractHostShellOutputReader absReader = (AbstractHostShellOutputReader)reader;
 		isAlive = absReader.isAlive();
 		isFinished = absReader.isFinished();
@@ -144,5 +141,10 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 
 	public void setAlive(boolean isAlive) {
 		this.isAlive = isAlive;
+	}
+
+	public void clearProcessBuffer() {
+		this.processStreamBuffer.outputLines.clear();
+		this.processStreamBuffer.errorLines.clear();
 	}
 }
