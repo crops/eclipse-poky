@@ -352,11 +352,11 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		
 		String md5Cmd = "md5sum " + getSrcFileName(true); 
 		YoctoCommand md5YCmd = new YoctoCommand(md5Cmd, tempFolderPath, "");
-		RemoteHelper.runCommandRemote(connection, md5YCmd, monitor, true);
+		RemoteHelper.runCommandRemote(connection, md5YCmd, monitor);
 		
 		String sha256Cmd = "sha256sum " + getSrcFileName(true); 
 		YoctoCommand sha256YCmd = new YoctoCommand(sha256Cmd, tempFolderPath, "");
-		RemoteHelper.runCommandRemote(connection, sha256YCmd, monitor, true);
+		RemoteHelper.runCommandRemote(connection, sha256YCmd, monitor);
 		
 		URI extractDir = extractPackage(srcURI, monitor);
 		YoctoCommand licenseChecksumCmd = populateLicenseFileChecksum(extractDir, monitor);
@@ -388,7 +388,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 				tarCmd += "-xvf ";
 			}
 			
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand(tarCmd + path, tempFolderPath, ""), monitor, true);
+			RemoteHelper.runCommandRemote(connection, new YoctoCommand(tarCmd + path, tempFolderPath, ""), monitor);
 			
 			return RemoteHelper.createNewURI(metaDirLoc, TEMP_FOLDER_NAME + "/" + getSrcFileName(false));
 			
@@ -427,7 +427,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		
 		try {
 			YoctoCommand catCmd = new YoctoCommand("md5sum " + COPYING_FILE, extractDir.getPath(), "");
-			RemoteHelper.runCommandRemote(connection, catCmd, monitor, true);
+			RemoteHelper.runCommandRemote(connection, catCmd, monitor);
 			return catCmd;
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to process file for MD5 calculation", e);
@@ -495,7 +495,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		HashMap<String, String> mirrorMap = new HashMap<String, String>();
 		
 		YoctoCommand cmd = new YoctoCommand("cat " + MIRRORS_FILE, getMetaFolderPath() + CLASSES_FOLDER, "");
-		RemoteHelper.runCommandRemote(connection, cmd, monitor, true);
+		RemoteHelper.runCommandRemote(connection, cmd, monitor);
 		
 		if (!cmd.getProcessBuffer().hasErrors()){
 			String delims = "[\\t]+";

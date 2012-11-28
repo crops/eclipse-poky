@@ -1,14 +1,9 @@
 package org.yocto.bc.remote.utils;
 
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
-import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.IConsoleManager;
-import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 
 public class ConsoleHelper {
@@ -28,15 +23,6 @@ public class ConsoleHelper {
 	}
 	
 	public static void showConsole(MessageConsole console){
-		IWorkbench wb = PlatformUI.getWorkbench();
-		IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
-		IWorkbenchPage page = win.getActivePage();
-		String id = IConsoleConstants.ID_CONSOLE_VIEW;
-		try {
-			IConsoleView view = (IConsoleView) page.showView(id);
-			view.display(console);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		Display.getDefault().syncExec(new ConsoleRunnable(console));
 	}
 }

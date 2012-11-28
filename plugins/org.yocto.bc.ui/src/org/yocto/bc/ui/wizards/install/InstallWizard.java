@@ -1,12 +1,9 @@
 package org.yocto.bc.ui.wizards.install;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -21,7 +18,6 @@ import org.eclipse.rse.core.model.IHost;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
 import org.eclipse.ui.console.MessageConsole;
-import org.yocto.bc.bitbake.ICommandResponseHandler;
 import org.yocto.bc.remote.utils.CommandResponseHandler;
 import org.yocto.bc.remote.utils.ConsoleWriter;
 import org.yocto.bc.remote.utils.RemoteHelper;
@@ -118,23 +114,14 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				
 			if (((Boolean)options.get(GIT_CLONE)).booleanValue()) {
 				String[] cmd = {"/usr/bin/git clone --progress", "git://git.yoctoproject.org/poky.git", uri.getPath()};
-				final Pattern pattern = Pattern.compile("^Receiving objects:\\s*(\\d+)%.*");
-				LongtimeRunningTask runningTask = new LongtimeRunningTask("Checking out Yocto git repository", cmd, null, null,
+				LongtimeRunningTask runningTask = new LongtimeRunningTask("Checking out Yocto git repository", cmd, 
 						((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION)), 
-						((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE)),
-					new ICalculatePercentage() {
-						public float calWorkloadDone(String info) throws IllegalArgumentException {
-							Matcher m = pattern.matcher(info.trim());
-							if(m.matches()) {
-								return new Float(m.group(1)) / 100;
-							}else {
-								throw new IllegalArgumentException();
-							}
-						}
-					}
-				);
-				this.getContainer().run(true,true, runningTask);
+						((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE)));
+				this.getContainer().run(false, false, runningTask);
+//				while (!runningTask.isFinished)
+//					Thread.sleep(2);
 			}
+			
 			CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(RemoteHelper.getRemoteConnectionByName(((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION)).getName()));
 			if (!cmdHandler.hasError()) {
 				String initPath = "";
@@ -177,62 +164,27 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 	}
 
-	private interface ICalculatePercentage {
-		public float calWorkloadDone(String info) throws IllegalArgumentException;
-	}
-
 	private class LongtimeRunningTask implements IRunnableWithProgress {
 		static public final int TOTALWORKLOAD = 100;
 		
 		private String []cmdArray;
-		private Process process;
 		private String taskName;
-		private int reported_workload;
 		private IRemoteConnection connection;
 		private IRemoteServices remoteServices;
 		
-		ICalculatePercentage cal;
-
 		public LongtimeRunningTask(String taskName, 
-				String []cmdArray, String []envp, File dir, 
-				IRemoteConnection connection, IRemoteServices remoteServices,
-				ICalculatePercentage calculator) {
+				String []cmdArray,
+				IRemoteConnection connection, IRemoteServices remoteServices) {
 			this.taskName = taskName;
 			this.cmdArray = cmdArray;
-			this.process = null;
-			this.cal = calculator;
 			this.connection = connection;
-//			this.handler = RemoteHelper.getCommandHandler(RemoteHelper.getRemoteConnectionByName(connection.getName()));
 			this.remoteServices = remoteServices;
 		}
 
-//		private void reportProgress(IProgressMonitor monitor,String info) {
-//			if(cal == null) {
-//				monitor.worked(1);
-//			}else {
-//				float percentage;
-//				try {
-//					percentage=cal.calWorkloadDone(info);
-//				} catch (IllegalArgumentException e) {
-//					//can't get percentage
-//					return;
-//				}
-//				int delta=(int) (TOTALWORKLOAD * percentage - reported_workload);
-//				if( delta > 0 ) {
-//					monitor.worked(delta);
-//					reported_workload += delta;
-//				}
-//			}
-//		}
-
 		synchronized public void run(IProgressMonitor monitor) 
 				throws InvocationTargetException, InterruptedException {
-
-//			boolean cancel = false;
-			reported_workload = 0;
-
+			boolean cancel = false;
 			try {
-				
 				monitor.beginTask(taskName, TOTALWORKLOAD);
 				
 				if (!connection.isOpen()) {
@@ -251,18 +203,24 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				for (int i = 1; i < cmdArray.length; i++)
 					args += cmdArray[i] + " ";
 				try {
-					RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(connection.getName()), new YoctoCommand(cmdArray[0], "", args), monitor, true);
-					RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(connection.getName()), new YoctoCommand("pwd", "", ""), monitor, true);
+					while (!cancel) {
+	                    if(monitor.isCanceled()) {
+	                            cancel=true;
+	                            throw new InterruptedException("User Cancelled");
+	                    }
+	                    boolean hasErrors = RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(connection.getName()), new YoctoCommand(cmdArray[0], "", args), monitor);
+	                    if (hasErrors)
+	                    	break;
+	                    
+	                    Thread.sleep(5000);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
+				} finally {
+					monitor.done();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-			} finally {
-				monitor.done();
-				if (process != null ) {
-					process.destroy();
-				}
 			}
 		}
 	}

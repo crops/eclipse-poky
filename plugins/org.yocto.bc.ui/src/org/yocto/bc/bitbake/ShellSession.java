@@ -18,7 +18,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Writer;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.rse.services.files.IHostFile;
@@ -119,12 +118,12 @@ public class ShellSession {
 	synchronized 
 	public String execute(String command, int[] retCode) throws IOException {
 		//FIXME : parse output 
-		try {
-			RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName()), new YoctoCommand(command, root.getAbsolutePath(), ""), new NullProgressMonitor(), true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
+//		try {
+//			RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName()), new YoctoCommand(command, root.getAbsolutePath(), ""), new NullProgressMonitor());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		
 //		String errorMessage = null;
 //		interrupt = false;
 //		out.write(command);

@@ -12,7 +12,6 @@ import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.core.subsystems.ISubSystem;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
 import org.eclipse.rse.services.files.IFileService;
-import org.eclipse.rse.services.shells.HostShellProcessAdapter;
 import org.eclipse.rse.services.shells.IHostShell;
 import org.eclipse.rse.services.shells.IShellService;
 import org.eclipse.rse.subsystems.files.core.servicesubsystem.IFileServiceSubSystem;
@@ -27,7 +26,7 @@ public class RemoteMachine {
 	private MessageConsole console;
 	private CommandResponseHandler cmdHandler;
 	private IHostShell hostShell;
-	private HostShellProcessAdapter hostShellProcessAdapter;
+	private YoctoHostShellProcessAdapter hostShellProcessAdapter;
 	private IShellService shellService;
 	private ProcessStreamBuffer processBuffer;
 	private IHost connection;
@@ -61,7 +60,6 @@ public class RemoteMachine {
 		try {
 			if (hostShell == null) {
 				hostShell = getShellService(new NullProgressMonitor()).launchShell("", new String[]{}, new NullProgressMonitor());
-				getHostShellProcessAdapter();
 			}
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
@@ -71,7 +69,7 @@ public class RemoteMachine {
 		return hostShell;
 	}
 	
-	public HostShellProcessAdapter getHostShellProcessAdapter() {
+	public YoctoHostShellProcessAdapter getHostShellProcessAdapter() {
 		try {
 			if (hostShellProcessAdapter == null)
 				hostShellProcessAdapter = new YoctoHostShellProcessAdapter(getHostShell(), getProcessBuffer(), getCmdHandler());
