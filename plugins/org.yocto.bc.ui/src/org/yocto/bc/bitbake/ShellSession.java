@@ -46,6 +46,7 @@ public class ShellSession {
 	 */
 	public static final String TERMINATOR = "#234o987dsfkcqiuwey18837032843259d";
 	public static final String LT = System.getProperty("line.separator");
+	public static final String exportCmd = "export BB_ENV_EXTRAWHITE=\"DISABLE_SANITY_CHECKS $BB_ENV_EXTRAWHITE\"";
 	
 	public static String getFilePath(String file) throws IOException {
 		File f = new File(file);
@@ -69,7 +70,7 @@ public class ShellSession {
 
 	private OutputStream pos = null;
 	//private File initFile = null;
-	private String shellPath = null;
+//	private String shellPath = null;
 	private final String initCmd;
 	private final IHostFile root;
 //	private final Writer out;
@@ -84,10 +85,10 @@ public class ShellSession {
 //		} else {
 //			this.out = out;
 //		}
-		if (shellType == SHELL_TYPE_SH) {
-			shellPath = "/bin/sh";
-		}
-		shellPath  = "/bin/bash";
+//		if (shellType == SHELL_TYPE_SH) {
+//			shellPath = "/bin/sh";
+//		}
+//		shellPath  = "/bin/bash";
 		
 		initializeShell(new NullProgressMonitor());
 	}
@@ -95,7 +96,8 @@ public class ShellSession {
 	private void initializeShell(IProgressMonitor monitor) throws IOException {
 		try {
 			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""), monitor);
+			RemoteHelper.runCommandRemote(connection, new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""), monitor);		
+			RemoteHelper.runCommandRemote(connection, new YoctoCommand(exportCmd, root.getAbsolutePath(), ""), monitor);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -110,7 +112,7 @@ public class ShellSession {
 	public String execute(String command, boolean hasErrors) throws IOException {
 		try {
 			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
-			hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath(), ""), new NullProgressMonitor());
+			hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""), new NullProgressMonitor());
 			return RemoteHelper.getProcessBuffer(connection).getMergedOutputLines();
 		} catch (Exception e) {
 			e.printStackTrace();

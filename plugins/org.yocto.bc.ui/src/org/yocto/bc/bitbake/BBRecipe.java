@@ -20,24 +20,24 @@ import java.net.URI;
  */
 public class BBRecipe extends BBSession {
 	private final BBSession session;
-	private final URI filePath;
+	private final URI fileURI;
 
 	public BBRecipe(BBSession session, URI filePath) throws IOException {
 		super(session.shell, session.pinfo.getURI());
 		this.session = session;
-		this.filePath = filePath;
-		this.parsingCmd = "DISABLE_SANITY_CHECKS=1 bitbake -e -b " + filePath;
+		this.fileURI = filePath;
+		this.parsingCmd = "DISABLE_SANITY_CHECKS=\"1\" bitbake -e -b " + filePath.getPath();
 	}
 	
 	@Override
 	public void initialize() throws Exception {
 		if (this.size() == 0) {
-			System.out.println("Failed to parse " + filePath);
+			System.out.println("Failed to parse " + fileURI);
 			//throw new IOException("Failed to parse " + filePath);
 		}
 	}
 
 	protected URI getDefaultDepends() {
-		return this.filePath;
+		return this.fileURI;
 	}
 }
