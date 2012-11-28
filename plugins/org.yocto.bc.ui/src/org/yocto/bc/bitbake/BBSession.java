@@ -80,7 +80,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		this.pinfo = new ProjectInfo();
 		pinfo.setLocation(projectRoot);
 		pinfo.setInitScriptPath(ProjectInfoHelper.getInitScriptPath(projectRoot));
-		this.parsingCmd = "DISABLE_SANITY_CHECKS=1 bitbake -e";
+		this.parsingCmd = "DISABLE_SANITY_CHECKS=\"1\" bitbake -e";
 	}
 
 	public BBSession(ShellSession ssession, URI projectRoot, boolean silent) throws IOException {
@@ -376,7 +376,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 			}
 			try {
 				if(!initialized) { //recheck
-					boolean hasErrors = false;	
+					boolean hasErrors = false;
 					String result = shell.execute(parsingCmd, hasErrors);
 					if(!hasErrors) {
 						properties = parseBBEnvironment(result);
@@ -725,7 +725,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		try {
 			if (initialized && (removed != null || changed != null)) {
 				for(int i=0;removed != null && i<removed.length;i++) {
-					if (this.depends.contains(removed[i].getLocation().toString())) {
+					if (this.depends.contains(removed[i].getLocationURI())) {
 						initialized = false;
 						return;
 					}
