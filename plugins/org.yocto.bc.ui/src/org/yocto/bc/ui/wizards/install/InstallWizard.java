@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
@@ -114,12 +115,12 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				
 			if (((Boolean)options.get(GIT_CLONE)).booleanValue()) {
 				String[] cmd = {"/usr/bin/git clone --progress", "git://git.yoctoproject.org/poky.git", uri.getPath()};
+//				String[] cmd = {"md5sum /home/builder/socks-gw"};
 				LongtimeRunningTask runningTask = new LongtimeRunningTask("Checking out Yocto git repository", cmd, 
 						((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION)), 
 						((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE)));
+				ModalContext.setAllowReadAndDispatch(false);
 				this.getContainer().run(false, false, runningTask);
-//				while (!runningTask.isFinished)
-//					Thread.sleep(2);
 			}
 			
 			CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(RemoteHelper.getRemoteConnectionByName(((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION)).getName()));
@@ -183,7 +184,7 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 
 		synchronized public void run(IProgressMonitor monitor) 
 				throws InvocationTargetException, InterruptedException {
-			boolean cancel = false;
+//			boolean cancel = false;
 			try {
 				monitor.beginTask(taskName, TOTALWORKLOAD);
 				
@@ -203,17 +204,17 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				for (int i = 1; i < cmdArray.length; i++)
 					args += cmdArray[i] + " ";
 				try {
-					while (!cancel) {
-	                    if(monitor.isCanceled()) {
-	                            cancel=true;
-	                            throw new InterruptedException("User Cancelled");
-	                    }
-	                    boolean hasErrors = RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(connection.getName()), new YoctoCommand(cmdArray[0], "", args), monitor);
-	                    if (hasErrors)
-	                    	break;
+//					while (!cancel) {
+//	                    if(monitor.isCanceled()) {
+//	                            cancel=true;
+//	                            throw new InterruptedException("User Cancelled");
+//	                    }
+	                    RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(connection.getName()), new YoctoCommand(cmdArray[0], "", args), monitor);
+//	                    if (hasErrors)
+//	                    	break;
 	                    
-	                    Thread.sleep(5000);
-					}
+//	                    Thread.sleep(5000);
+//					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
