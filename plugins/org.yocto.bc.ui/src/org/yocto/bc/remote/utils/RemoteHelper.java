@@ -288,15 +288,18 @@ public class RemoteHelper {
 	public static boolean writeToShell(IHost connection, String remoteCommand, IProgressMonitor monitor){
 		YoctoHostShellProcessAdapter hostShellProcessAdapter = getHostShellProcessAdapter(connection);
 		hostShellProcessAdapter.setMonitor(monitor);
+		hostShellProcessAdapter.setLastCommand(remoteCommand);
 		getHostShell(connection).writeToShell(remoteCommand);
 		
-		try {
-			while (!hostShellProcessAdapter.isFinished() && hostShellProcessAdapter.isAlive()) {
-				Thread.sleep(2);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			while (!hostShellProcessAdapter.isFinished() && hostShellProcessAdapter.isAlive()) {
+//				Thread.sleep(2);
+//			}
+////			System.out.println(">>>>>>>>>>>>>>>>>>>>finished command " + remoteCommand);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		
 		return hostShellProcessAdapter.hasErrors();
 	}
 	
@@ -362,4 +365,9 @@ public class RemoteHelper {
 		}
 		return false;
 	}
+
+	public static void clearProcessBuffer(IHost connection) {
+		getHostShellProcessAdapter(connection).clearProcessBuffer();
+	}
+
 }

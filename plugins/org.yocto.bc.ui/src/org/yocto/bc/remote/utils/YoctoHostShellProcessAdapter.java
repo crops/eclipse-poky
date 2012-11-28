@@ -1,6 +1,7 @@
 package org.yocto.bc.remote.utils;
 
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +14,10 @@ import org.eclipse.rse.services.shells.IHostShellChangeEvent;
 import org.eclipse.rse.services.shells.IHostShellOutputReader;
 
 public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
+	private String commandPrompt = null;
+	private static final String ROOT = "root";
+	private static final String PROMPT_USER_CH = "$";
+	private static final String PROMPT_ROOT_CH = "#";
 	private ProcessStreamBuffer processStreamBuffer;
 	private CommandResponseHandler commandResponseHandler;
 	private boolean isFinished;
@@ -20,7 +25,34 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 	private int reportedWorkload;
 	private IProgressMonitor monitor;
 	private boolean isAlive;
+
+	private String lastCommand;
+	private boolean waitForOutput;
+	private String endChar = null;
+
+	private Semaphore sem;
 	
+	public String getLastCommand() {
+		return lastCommand;
+	}
+
+	public synchronized void setLastCommand(String lastCommand) {
+//		if (waitForOutput) {
+			try {
+				// there are still some processes that might take a long time and if we do not wait for them, 
+				// then the semaphore will not be released, because an interrupted exception will occur
+				Thread.sleep(2000);
+				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>semaphore aquire");
+				sem.acquire();
+				this.lastCommand = lastCommand.trim();
+				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>last command set " + lastCommand);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+//		}
+	}
+
+
 	public IProgressMonitor getMonitor() {
 		return monitor;
 	}
@@ -50,6 +82,9 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 		this.processStreamBuffer = processStreamBuffer;
 		this.commandResponseHandler = commandResponseHandler;
 		this.calculator = new GitCalculatePercentage();
+		this.sem = new Semaphore(1);
+		this.lastCommand = "";
+
 	}
 
 	private void updateMonitor(final int work){
@@ -106,6 +141,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 				if (value.isEmpty()) {
 					continue;
 				}
+				setCommandPrompt(value);
 				System.out.println(value);
 				this.processStreamBuffer.addErrorLine(value);
 				this.commandResponseHandler.response(value, false);
@@ -116,18 +152,38 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 				if (value.isEmpty()) {
 					continue;
 				}
-				
+				setCommandPrompt(value);
+				if (value.startsWith(commandPrompt) &&  value.endsWith(endChar) && 
+						!value.endsWith(lastCommand) && processStreamBuffer.getLastOutputLineContaining(lastCommand) != null /*&& waitForOutput*/) {
+					System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Sem release");
+					sem.release();
+				}
+
 				reportProgress(value);
 				System.out.println(value);
 				this.processStreamBuffer.addOutputLine(value);
 				this.commandResponseHandler.response(value, false);
 			}
 		}
+		
 		AbstractHostShellOutputReader absReader = (AbstractHostShellOutputReader)reader;
 		isAlive = absReader.isAlive();
 		isFinished = absReader.isFinished();
 	}
-
+	private void setCommandPrompt(String value) {
+		if (commandPrompt == null) {
+			if (value.startsWith(ROOT) && value.indexOf(PROMPT_ROOT_CH) != -1) {
+				int end = value.indexOf(PROMPT_ROOT_CH);
+				commandPrompt = value.substring(0, end);
+				endChar = PROMPT_ROOT_CH;
+			} else if (value.indexOf(PROMPT_USER_CH) != -1) {
+				int end = value.indexOf(PROMPT_USER_CH);
+				commandPrompt = value.substring(0, end);
+				endChar = PROMPT_USER_CH;
+			}
+				
+		}
+	}
 	public boolean isFinished() {
 		return isFinished;
 	}
@@ -141,6 +197,14 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 
 	public void setAlive(boolean isAlive) {
 		this.isAlive = isAlive;
+	}
+
+	public boolean isWaitForOutput() {
+		return waitForOutput;
+	}
+
+	public void setWaitForOutput(boolean waitForOutput) {
+		this.waitForOutput = waitForOutput;
 	}
 
 	public void clearProcessBuffer() {
