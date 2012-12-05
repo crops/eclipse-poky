@@ -180,28 +180,32 @@ update_feature_remote()
 }
 
 #Eclipse Update Site
-#MAIN_UPDATE_SITE="http://download.eclipse.org/releases/juno"
+MAIN_UPDATE_SITE="http://download.eclipse.org/releases/juno"
 # The main eclipse download site is unreliable at times. For now, we're going to
 # maintain a mirror of just what we need.
-MAIN_UPDATE_SITE="http://downloads.yoctoproject.org/eclipse/juno/ftp.osuosl.org/pub/eclipse/releases/juno"
-
-UPDATE_SITE="${MAIN_UPDATE_SITE}"
+YP_UPDATE_SITE="http://downloads.yoctoproject.org/eclipse/juno/ftp.osuosl.org/pub/eclipse/releases/juno"
+PTP_UPDATE_SITE="http://download.eclipse.org/tools/ptp/updates/juno/"
+UPDATE_SITE="${YP_UPDATE_SITE}"
 
 #CDT related
 CDTFEAT="8.1.0"
 echo "Installing CDT..."
-update_feature_remote ${UPDATE_SITE} org.eclipse.cdt.sdk.feature.group ${CDTFEAT}
+update_feature_remote ${MAIN_UPDATE_SITE} org.eclipse.cdt.feature.group ${CDTFEAT}
 CDTREMOTEVER="6.0.0"
 update_feature_remote ${UPDATE_SITE} org.eclipse.cdt.launch.remote.feature.group ${CDTREMOTEVER}
+CDTXLCVER="6.3.1"
+update_feature_remote ${MAIN_UPDATE_SITE} org.eclipse.cdt.xlc.feature.feature.group ${CDTXLCVER}
 
 #RSE SDK
 RSEVER="3.4.0"
 TCFVER="1.0.0"
 TMVER="3.3.0"
+RUAVER="1.1.400"
 echo "Installing RSE/TCF/TM related component..."
 update_feature_remote ${UPDATE_SITE} org.eclipse.rse.feature.group ${RSEVER}
 update_feature_remote ${UPDATE_SITE} org.eclipse.tcf.rse.feature.feature.group ${TCFVER}
 update_feature_remote ${UPDATE_SITE} org.eclipse.tm.terminal.sdk.feature.group ${TMVER}
+update_feature_remote ${MAIN_UPDATE_SITE} org.eclipse.rse.useractions.feature.group ${RUAVER}
 
 #AUTOTOOL
 ATVER="3.0.1"
@@ -213,6 +217,15 @@ TMFREL="1.0.0"
 echo "Install TMF..."
 update_feature_remote ${UPDATE_SITE} org.eclipse.linuxtools.tmf.feature.group ${TMFREL}
 
+#PTP 
+PTPVER="6.0.3"
+echo "Install PTP..."
+update_feature_remote ${PTP_UPDATE_SITE} org.eclipse.ptp.rdt.xlc.feature.group ${PTPVER}
+update_feature_remote ${PTP_UPDATE_SITE} org.eclipse.ptp.rdt.feature.group ${PTPVER}
+#update_feature_remote ${PTP_UPDATE_SITE} org.eclipse.ptp.rdt.remotetools.feature.group ${PTPVER}
+#update_feature_remote ${PTP_UPDATE_SITE} org.eclipse.ptp.rdt.sync.feature.group ${PTPVER}
+#update_feature_remote ${PTP_UPDATE_SITE} org.eclipse.ptp.rdt.editor.feature.group ${PTPVER}
+ 
 echo ""
 echo "Your build environment is successfully created."
 echo "Run ECLIPSE_HOME=${curdir}/eclipse `dirname $0`/build.sh <branch name> <release name> to build"
