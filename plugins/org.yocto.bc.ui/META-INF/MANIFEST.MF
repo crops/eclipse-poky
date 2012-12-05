@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: org.yocto.bc.ui;singleton:=true
-Bundle-Version: 1.2.0.qualifier
+Bundle-Version: 1.4.0.qualifier
 Bundle-Activator: org.yocto.bc.ui.Activator
 Bundle-Vendor: %Bundle-Vendor
 Require-Bundle: org.eclipse.ui,
@@ -43,9 +43,6 @@ Import-Package: org.eclipse.cdt.managedbuilder.core,
  org.eclipse.rse.subsystems.terminals.core,
  org.eclipse.rse.subsystems.terminals.core.elements,
  org.eclipse.rse.ui,
- org.eclipse.tcf.protocol;version="1.0.0",
- org.eclipse.tcf.services;version="1.0.0",
- org.eclipse.tcf.util;version="1.0.0",
  org.eclipse.tm.internal.terminal.control,
  org.eclipse.tm.internal.terminal.provisional.api,
  org.eclipse.ui.internal.net
