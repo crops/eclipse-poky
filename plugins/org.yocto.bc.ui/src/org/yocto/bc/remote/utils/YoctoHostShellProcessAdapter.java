@@ -33,7 +33,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 	private String endChar = null;
 
 	private Semaphore sem;
-	
+
 	public YoctoHostShellProcessAdapter(IHostShell hostShell, ProcessStreamBuffer processStreamBuffer, CommandResponseHandler commandResponseHandler) throws IOException {
 		super(hostShell);
 		this.processStreamBuffer = processStreamBuffer;
@@ -67,11 +67,11 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 	private interface ICalculatePercentage {
 		public float calWorkloadDone(String info) throws IllegalArgumentException;
 	}
-	
+
 	private class GitCalculatePercentage implements ICalculatePercentage {
 		final Pattern pattern = Pattern.compile("^Receiving objects:\\s*(\\d+)%.*");
 		public float calWorkloadDone(String info) throws IllegalArgumentException {
-	Matcher m = pattern.matcher(info.trim());
+			Matcher m = pattern.matcher(info.trim());
 			if(m.matches()) {
 				return new Float(m.group(1)) / 100;
 			}else {
@@ -79,7 +79,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 			}
 		}
 	}
-	
+
 	private IProgressMonitor getMonitor() {
 		if (command == null) {
 			return null;
@@ -88,16 +88,13 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 	}
 
 	private void updateMonitor(final int work){
-	
 		Display.getDefault().asyncExec(new Runnable() {
-
 			@Override
 			public void run() {
 				if (getMonitor() != null) {
 					getMonitor().worked(work);
 				}
 			}
-
 		});
 	}
 
@@ -155,10 +152,9 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 					continue;
 				}
 				setCommandPrompt(value);
-	
 				if (commandPrompt != null && endChar != null && command != null && processStreamBuffer != null &&
 						value.startsWith(commandPrompt) &&  value.endsWith(endChar) && 
-						!value.endsWith(command) && processStreamBuffer.getLastOutputLineContaining(command) != null) {
+						!value.endsWith(command) && processStreamBuffer.getLastOutputLineContaining(command) != null /*&& waitForOutput*/) {
 					sem.release();
 					isFinished = true;
 				}
@@ -210,4 +206,3 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 	}
 
 }
-

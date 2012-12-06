@@ -48,23 +48,23 @@ public class ShellSession {
 	public static final String LT = System.getProperty("line.separator");
 	public static final String exportCmd = "export BB_ENV_EXTRAWHITE=\"DISABLE_SANITY_CHECKS $BB_ENV_EXTRAWHITE\"";
 	public static final String exportColumnsCmd = "export COLUMNS=1000";
-	
+
 	public static String getFilePath(String file) throws IOException {
 		File f = new File(file);
-		
+
 		if (!f.exists() || f.isDirectory()) {
 			throw new IOException("Path passed is not a file: " + file);
 		}
-		
+
 		StringBuffer sb = new StringBuffer();
-		
+
 		String elems[] = file.split("//");
-		
+
 		for (int i = 0; i < elems.length - 1; ++i) {
 			sb.append(elems[i]);
 			sb.append("//");
 		}
-		
+
 		return sb.toString();
 	}
 	private Process process;
@@ -90,7 +90,7 @@ public class ShellSession {
 //			shellPath = "/bin/sh";
 //		}
 //		shellPath  = "/bin/bash";
-		
+
 		initializeShell(new NullProgressMonitor());
 	}
 
@@ -104,13 +104,14 @@ public class ShellSession {
 		}
 	}
 
-	synchronized 
+	synchronized
 	public String execute(String command) throws IOException {
 		return execute(command, false);
 	}
 
-	synchronized 
+	synchronized
 	public String execute(String command, boolean hasErrors) throws IOException {
+
 		try {
 			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
 			hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
@@ -119,57 +120,15 @@ public class ShellSession {
 			e.printStackTrace();
 		}
 		return null;
-//		sendToProcessAndTerminate(command);
-//
-//		if (process.getErrorStream().available() > 0) {
-//			byte[] msg = new byte[process.getErrorStream().available()];
-//
-//			process.getErrorStream().read(msg, 0, msg.length);
-//			out.write(new String(msg));
-//			out.write(LT);
-//			errorMessage = "Error while executing: " + command + LT + new String(msg);
-//		}
-//		
-//		BufferedReader br = new BufferedReader(new InputStreamReader(process
-//				.getInputStream()));
-//
-//		StringBuffer sb = new StringBuffer();
-//		String line = null;
-
-//		while (((line = br.readLine()) != null) && !line.endsWith(TERMINATOR) && !interrupt) {
-//			sb.append(line);
-//			sb.append(LT);
-//			out.write(line);
-//			out.write(LT);
-//		}
-//		
-//		if (interrupt) {
-//			process.destroy();
-//			initializeShell(null);
-//			interrupt = false;
-//		} 
-//		else if (line != null && retCode != null) {
-//			try {
-//				retCode[0]=Integer.parseInt(line.substring(0,line.lastIndexOf(TERMINATOR)));
-//			}catch (NumberFormatException e) {
-//				throw new IOException("Can NOT get return code" + command + LT + line);
-//			}
-//		}
-//		
-//		if (errorMessage != null) {
-//			throw new IOException(errorMessage);
-//		}
-//
-//		return sb.toString();
 	}
 
-synchronized 
+synchronized
 	public void execute(String command, ICommandResponseHandler handler) throws IOException {
 		System.out.println(command);
 		execute(command, TERMINATOR, handler);
 	}
-	
-	synchronized 
+
+	synchronized
 	public void execute(String command, String terminator, ICommandResponseHandler handler) throws IOException {
 		interrupt = false;
 		InputStream errIs = process.getErrorStream();
@@ -177,40 +136,40 @@ synchronized
 			clearErrorStream(errIs);
 		}
 		sendToProcessAndTerminate(command);
-		
+
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String std = null;
 
-		do {		
+		do {
 			if (errIs.available() > 0) {
 				byte[] msg = new byte[errIs.available()];
 
 				errIs.read(msg, 0, msg.length);
 //				out.write(new String(msg));
 				handler.response(new String(msg), true);
-			} 
-			
+			}
+
 			std = br.readLine();
-			
+
 			if (std != null && !std.endsWith(terminator)) {
 //				out.write(std);
 				handler.response(std, false);
-			} 
-			
+			}
+
 		} while (std != null && !std.endsWith(terminator) && !interrupt);
-		
+
 		if (interrupt) {
 			process.destroy();
 			initializeShell(null);
 			interrupt = false;
 		}
 	}
-	
+
 	private void clearErrorStream(InputStream is) {
-	
+
 		try {
 			byte b[] = new byte[is.available()];
-			is.read(b);			
+			is.read(b);
 			System.out.println("clearing: " + new String(b));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -221,7 +180,7 @@ synchronized
 	/**
 	 * Send command string to shell process and add special terminator string so
 	 * reader knows when output is complete.
-	 * 
+	 *
 	 * @param command
 	 * @throws IOException
 	 */
@@ -241,6 +200,5 @@ synchronized
 	public void interrupt() {
 		interrupt = true;
 	}
-	
-}
 
+}

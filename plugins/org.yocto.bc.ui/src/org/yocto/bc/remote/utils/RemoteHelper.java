@@ -47,13 +47,13 @@ import org.yocto.bc.ui.wizards.install.Messages;
 public class RemoteHelper {
 	public static final int TOTALWORKLOAD = 100;
 	private static Map<IHost, RemoteMachine> machines;
-	
+
 	public static RemoteMachine getRemoteMachine(IHost connection){
 		if (!getMachines().containsKey(connection))
 			getMachines().put(connection, new RemoteMachine(connection));
 		return getMachines().get(connection);
 	}
-	
+
 	private static Map<IHost, RemoteMachine> getMachines() {
 		if (machines == null)
 			machines = new HashMap<IHost, RemoteMachine>();
@@ -71,7 +71,7 @@ public class RemoteHelper {
 	public static YoctoHostShellProcessAdapter getHostShellProcessAdapter(IHost connection) {
 		return getRemoteMachine(connection).getHostShellProcessAdapter();
 	}
-	
+
 	public static ProcessStreamBuffer getProcessBuffer(IHost connection) {
 		return getRemoteMachine(connection).getProcessBuffer();
 	}
@@ -87,20 +87,20 @@ public class RemoteHelper {
 		for (int i = 0; i < connections.length; i++)
 			if (connections[i].getAliasName().equals(remoteConnection))
 				return connections[i];
-		return null; 
+		return null;
 	}
-	
+
 	public static IHost getRemoteConnectionForURI(URI uri, IProgressMonitor monitor) {
 		if (uri == null)
 			return null;
-		
+
 		String host = uri.getHost();
-		if (host == null) 
+		if (host == null)
 			return null;
-		
+
 		ISystemRegistry sr = RSECorePlugin.getTheSystemRegistry();
 		IHost[] connections = sr.getHosts();
-		 
+
 		IHost unconnected = null;
 		for (IHost conn : connections) {
 			if (host.equalsIgnoreCase(conn.getHostName())) {
@@ -110,26 +110,26 @@ public class RemoteHelper {
 				unconnected = conn;
 			}
 		}
-		 
+
 		return unconnected;
 	}
-		 
+
 	public static IRemoteFileSubSystem getRemoteFileSubSystem(IHost host) {
 		IRemoteFileSubSystem candidate = null;
 		IRemoteFileSubSystem otherServiceCandidate = null;
 		IRemoteFileSubSystem[] subSystems = RemoteFileUtility.getFileSubSystems(host);
-		
+
 		for (IRemoteFileSubSystem subSystem : subSystems) {
 			if (subSystem instanceof FileServiceSubSystem) {
 				if (subSystem.isConnected())
 					return subSystem;
-				
+
 				if (otherServiceCandidate == null)
 					otherServiceCandidate = subSystem;
-				
+
 			} else if (candidate == null || (subSystem.isConnected() && !candidate.isConnected()))
 				candidate = subSystem;
-		
+
 		}
 		if (candidate != null && candidate.isConnected())
 			return candidate;
@@ -137,7 +137,7 @@ public class RemoteHelper {
 			return otherServiceCandidate;
 		return null;
 	}
-	
+
 	public static String getRemoteHostName(String remoteConnection){
 		final IHost host = getRemoteConnectionByName(remoteConnection);
 		if(host == null)
@@ -149,9 +149,9 @@ public class RemoteHelper {
 	public static IFileService getConnectedRemoteFileService(IHost connection, IProgressMonitor monitor) throws Exception {
 		return getRemoteMachine(connection).getRemoteFileService(monitor);
 	}
-	
+
 	public static IHostFile[] getRemoteDirContent(IHost connection, String remoteParent, String fileFilter, int fileType, IProgressMonitor monitor){
-		
+
 		try {
 			IFileService fileServ = getConnectedRemoteFileService(connection, monitor);
 			return fileServ.list(remoteParent, fileFilter, fileType, monitor);
@@ -182,11 +182,11 @@ public class RemoteHelper {
 
 		return ((IFileServiceSubSystem) subsystem).getFileService();
 	}
-	
+
 	public static ISubSystem getFileSubsystem(IHost connection) {
 		return getRemoteMachine(connection).getFileSubsystem();
 	}
-	
+
 	public static IService getConnectedShellService(IHost connection, IProgressMonitor monitor) throws Exception {
 		return getRemoteMachine(connection).getShellService(monitor);
 	}
@@ -201,21 +201,21 @@ public class RemoteHelper {
 		}
 		return null;
 	}
-	
+
 	public static void getRemoteFile(IHost connection, String localExePath, String remoteExePath,
 			IProgressMonitor monitor) throws Exception {
-		
+
 		assert(connection!=null);
 		monitor.beginTask(Messages.InfoDownload, 100);
-		
+
 		IFileService fileService;
 		try {
-			fileService = (IFileService) getConnectedRemoteFileService(connection, new SubProgressMonitor(monitor, 10));
+			fileService = getConnectedRemoteFileService(connection, new SubProgressMonitor(monitor, 10));
 			File file = new File(localExePath);
 			file.deleteOnExit();
 			monitor.worked(5);
 			Path remotePath = new Path(remoteExePath);
-			fileService.download(remotePath.removeLastSegments(1).toString(), 
+			fileService.download(remotePath.removeLastSegments(1).toString(),
 					remotePath.lastSegment(),file,true, null,
 					new SubProgressMonitor(monitor, 85));
 		} finally {
@@ -223,13 +223,13 @@ public class RemoteHelper {
 		}
 		return;
 	}
-	
+
 	public static IHostFile getRemoteHostFile(IHost connection, String remoteFilePath, IProgressMonitor monitor){
 		assert(connection != null);
 		monitor.beginTask(Messages.InfoDownload, 100);
-		
+
 		try {
-			IFileService fileService = (IFileService) getConnectedRemoteFileService(connection, new SubProgressMonitor(monitor, 10));
+			IFileService fileService = getConnectedRemoteFileService(connection, new SubProgressMonitor(monitor, 10));
 			Path remotePath = new Path(remoteFilePath);
 			IHostFile remoteFile = fileService.getFile(remotePath.removeLastSegments(1).toString(), remotePath.lastSegment(), new SubProgressMonitor(monitor, 5));
 			return remoteFile;
@@ -239,20 +239,20 @@ public class RemoteHelper {
 		}
 		return null;
 	}
-	
+
 	public static boolean runCommandRemote(final IHost connection, final YoctoCommand cmd) throws Exception {
 		final String remoteCommand = cmd.getCommand() + " " + cmd.getArguments();
 		final boolean hasErrors = false;
-		
+
 		if (!cmd.getInitialDirectory().isEmpty()) {
 			writeToShell(connection, "cd " + cmd.getInitialDirectory());
 		}
 		if (!hasErrors)
 			writeToShell(connection, remoteCommand);
-				
+
 		return hasErrors;
 	}
-	
+
 	public static boolean writeToShell(final IHost connection, final String remoteCommand){
 		new Thread(new Runnable() {
 			@Override
@@ -282,7 +282,7 @@ public class RemoteHelper {
 				}
 				writeToShell(connection, remoteCommand);
 			}
-			
+
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
@@ -291,7 +291,7 @@ public class RemoteHelper {
 	/**
 	 * Throws a core exception with an error status object built from the given
 	 * message, lower level exception, and error code.
-	 * 
+	 *
 	 * @param message
 	 *            the status message
 	 * @param exception
@@ -329,6 +329,7 @@ public class RemoteHelper {
 			String parentPath = path.substring(0, nameStart);
 			String name = path.substring(nameStart + 1);
 			IHostFile hostFile = fs.getFile(parentPath, name, monitor);
+
 			return hostFile.exists();
 		} catch (Exception e) {
 			e.printStackTrace();

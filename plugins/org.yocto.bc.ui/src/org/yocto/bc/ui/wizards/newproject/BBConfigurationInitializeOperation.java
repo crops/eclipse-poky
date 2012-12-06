@@ -15,7 +15,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-
 import org.yocto.bc.bitbake.BBSession;
 import org.yocto.bc.bitbake.ProjectInfoHelper;
 import org.yocto.bc.remote.utils.RemoteHelper;
@@ -37,13 +36,16 @@ public class BBConfigurationInitializeOperation implements IRunnableWithProgress
 		this.writer = writer;
 	}
 
+	@Override
 	public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 		BBSession session;
 		try {
+			monitor.beginTask("Initialize bitbake session ...", RemoteHelper.TOTALWORKLOAD);
 			ProjectInfoHelper.store(RemoteHelper.getRemoteConnectionByName(pinfo.getConnection().getName()), pinfo.getURI(), pinfo, monitor);
 			session = Activator.getBBSession(pinfo, writer, monitor);
 			session.initialize();
-
+			monitor.worked(90);
+			monitor.done();
 		} catch (Exception e) {
 			throw new InvocationTargetException(e);
 		}
