@@ -118,10 +118,7 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 				IProject p = ((IResource)element).getProject();
 				try {
 					ProjectInfo projInfo = Activator.getProjInfo(p.getLocationURI());
-					if (projInfo.getConnection() == null)
-						this.connection = RemoteHelper.getRemoteConnectionForURI(p.getLocationURI(), new NullProgressMonitor());
-					else
-						this.connection = projInfo.getConnection();
+					this.connection = projInfo.getConnection();
 				} catch (CoreException e) {
 					e.printStackTrace();
 				} catch (InvocationTargetException e) {
@@ -205,7 +202,7 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
 					doFinish(element, monitor);
-					RemoteHelper.runCommandRemote(connection, new YoctoCommand("rm -rf temp", element.getMetaDir() + "/temp", ""));
+					RemoteHelper.runCommandRemote(connection, new YoctoCommand("rm -rf " + element.getMetaDir() + "/temp", "", ""));
 				} catch (Exception e) {
 					throw new InvocationTargetException(e);
 				} finally {

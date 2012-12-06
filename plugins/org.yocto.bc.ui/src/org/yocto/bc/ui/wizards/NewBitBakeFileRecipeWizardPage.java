@@ -397,22 +397,17 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		updateSrcUri(mirrorTable, srcURI);
 		populateInheritance(extractDir, monitor);
 
-		String md5Val = retrieveSum(md5YCmd);
+		String md5Val = retrieveSum(srcFileNameExt, md5Pattern);
 		md5sumText.setText(Pattern.matches(md5Pattern,  md5Val) ? md5Val : "");
-		String sha256Val = retrieveSum(sha256YCmd);
+		String sha256Val = retrieveSum(srcFileNameExt, sha256Pattern);
 		sha256sumText.setText(Pattern.matches(sha256Pattern,  sha256Val) ? sha256Val : "");
-		String checkSumVal =  retrieveSum(licenseChecksumCmd);
+		String checkSumVal =  retrieveSum(COPYING_FILE, md5Pattern);
 		checksumText.setText(RemoteHelper.createNewURI(extractDir, COPYING_FILE).toString() + ";md5=" + (Pattern.matches(md5Pattern,  checkSumVal) ? checkSumVal : ""));
 	}
 
-	private String retrieveSum(YoctoCommand cmd) {
+	private String retrieveSum(String arg, String pattern) {
 		ProcessStreamBuffer buffer = RemoteHelper.getProcessBuffer(this.connection);
-		String line = buffer.getOutputLineContaining(cmd.getCommand());
-		if (line != null) {
-			String[] tokens = line.split(WHITESPACES);
-			return tokens[0];
-		}
-		return "";
+		return buffer.getOutputLineContaining(arg, pattern);
 	}
 
 	private URI extractPackage(URI srcURI) {

@@ -45,6 +45,7 @@ import org.yocto.bc.ui.Activator;
 import org.yocto.bc.ui.wizards.install.Messages;
 
 public class RemoteHelper {
+	public static final String TERMINATOR = "234o987dsfkcqiuwey18837032843259d";
 	public static final int TOTALWORKLOAD = 100;
 	private static Map<IHost, RemoteMachine> machines;
 
@@ -95,9 +96,11 @@ public class RemoteHelper {
 			return null;
 
 		String host = uri.getHost();
-		if (host == null)
-			return null;
-
+		if (host == null) {
+			// this is a local connection
+			ISystemRegistry sr = RSECorePlugin.getTheSystemRegistry();
+			return sr.getLocalHost();
+		}
 		ISystemRegistry sr = RSECorePlugin.getTheSystemRegistry();
 		IHost[] connections = sr.getHosts();
 
@@ -259,8 +262,9 @@ public class RemoteHelper {
 			public void run() {
 				try {
 					YoctoHostShellProcessAdapter adapter = getHostShellProcessAdapter(connection);
-					adapter.setLastCommand(remoteCommand);
-					getHostShell(connection).writeToShell(remoteCommand);
+					String fullRemoteCommand = remoteCommand + "; echo " + TERMINATOR + ";";
+					adapter.setLastCommand(fullRemoteCommand);
+					getHostShell(connection).writeToShell(fullRemoteCommand);
 					while (!adapter.isFinished())
 						Thread.sleep(2);
 //					return hostShellProcessAdapter.hasErrors();

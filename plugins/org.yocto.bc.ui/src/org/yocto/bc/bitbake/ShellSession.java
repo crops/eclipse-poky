@@ -81,24 +81,13 @@ public class ShellSession {
 		this.projectInfo = pInfo;
 		this.root = root;
 		this.initCmd  = initCmd;
-//		if (out == null) {
-//			this.out = new NullWriter();
-//		} else {
-//			this.out = out;
-//		}
-//		if (shellType == SHELL_TYPE_SH) {
-//			shellPath = "/bin/sh";
-//		}
-//		shellPath  = "/bin/bash";
-
 		initializeShell(new NullProgressMonitor());
 	}
 
 	private void initializeShell(IProgressMonitor monitor) throws IOException {
 		try {
-			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""));
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand(exportCmd, root.getAbsolutePath(), ""));
+			RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""));
+			RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(exportCmd, root.getAbsolutePath(), ""));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -113,9 +102,12 @@ public class ShellSession {
 	public String execute(String command, boolean hasErrors) throws IOException {
 
 		try {
-			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
-			hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
-			return RemoteHelper.getProcessBuffer(connection).getMergedOutputLines();
+			if (projectInfo.getConnection() != null) {
+				IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
+				hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
+				return RemoteHelper.getProcessBuffer(connection).getMergedOutputLines();
+			}
+			return null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

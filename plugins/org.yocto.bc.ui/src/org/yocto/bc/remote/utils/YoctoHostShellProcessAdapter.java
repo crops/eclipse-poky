@@ -17,10 +17,6 @@ import org.eclipse.rse.services.shells.IHostShellOutputReader;
 import org.eclipse.swt.widgets.Display;
 
 public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
-	private String commandPrompt = null;
-	private static final String ROOT = "root";
-	private static final String PROMPT_USER_CH = "$";
-	private static final String PROMPT_ROOT_CH = "#";
 	private ProcessStreamBuffer processStreamBuffer;
 	private CommandResponseHandler commandResponseHandler;
 	private boolean isFinished;
@@ -30,7 +26,6 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 
 	private String command;
 	private Map<String, IProgressMonitor> commandMonitors;
-	private String endChar = null;
 
 	private Semaphore sem;
 
@@ -57,9 +52,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 			isFinished = false;
 			sem.acquire();
 			this.command = lastCommand.trim();
-			System.out.println("last command " + lastCommand + getOwnMonitor());
 			this.commandMonitors.put(command, getOwnMonitor());
-
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -145,7 +138,6 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 				if (value.isEmpty()) {
 					continue;
 				}
-				setCommandPrompt(value);
 				System.out.println(value);
 				this.processStreamBuffer.addErrorLine(value);
 				this.commandResponseHandler.response(value, false);
@@ -156,11 +148,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 				if (value.isEmpty()) {
 					continue;
 				}
-				setCommandPrompt(value);
-
-				if (commandPrompt != null && endChar != null && command != null && processStreamBuffer != null &&
-						value.startsWith(commandPrompt) &&  value.endsWith(endChar) &&
-						!value.endsWith(command) && processStreamBuffer.getLastOutputLineContaining(command) != null /*&& waitForOutput*/) {
+				if (value.endsWith(RemoteHelper.TERMINATOR)) {
 					sem.release();
 					isFinished = true;
 				}
@@ -172,20 +160,6 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 			}
 		}
 
-	}
-	private void setCommandPrompt(String value) {
-		if (commandPrompt == null) {
-			if (value.startsWith(ROOT) && value.indexOf(PROMPT_ROOT_CH) != -1) {
-				int end = value.indexOf(PROMPT_ROOT_CH);
-				commandPrompt = value.substring(0, end);
-				endChar = PROMPT_ROOT_CH;
-			} else if (value.indexOf(PROMPT_USER_CH) != -1) {
-				int end = value.indexOf(PROMPT_USER_CH);
-				commandPrompt = value.substring(0, end);
-				endChar = PROMPT_USER_CH;
-			}
-
-		}
 	}
 	public boolean isFinished() {
 		return isFinished;

@@ -2,6 +2,7 @@ package org.yocto.bc.remote.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class ProcessStreamBuffer {
 	private static final String WHITESPACES = "\\s+";
@@ -54,17 +55,16 @@ public class ProcessStreamBuffer {
 		return null;
 	}
 
-	public String getOutputLineContaining(String str) {
-		int index = 0;
+	public String getOutputLineContaining(String arg, String pattern) {
 		for (int i = outputLines.size() - 1; i >= 0; i--){
 			String line = outputLines.get(i);
-			if (line.contains(str)) {
-				index = i + 1;
-				break;
+			if (line.contains(arg)) {
+				String[] tokens = line.split("\\s+");
+				if (Pattern.matches(pattern,  tokens[0])) {
+					return tokens[0];
+				}
 			}
 		}
-		if (index >= 0 && index < outputLines.size())
-			return outputLines.get(index);
 		return null;
 	}
 }

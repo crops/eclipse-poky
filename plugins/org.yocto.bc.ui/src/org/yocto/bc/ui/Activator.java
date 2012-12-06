@@ -24,10 +24,8 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
-import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.services.files.IHostFile;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -68,7 +66,7 @@ public class Activator extends AbstractUIPlugin {
 
 		return recipe;
 	}
-	
+
 	/**
 	 * Get or create a BitBake session passing in ProjectInfo
 	 * @param pinfo
@@ -80,40 +78,36 @@ public class Activator extends AbstractUIPlugin {
 		if (bbSessionMap == null) {
 			bbSessionMap = new Hashtable<URI, BBSession>();
 		}
-		
-		BBSession bbs = (BBSession) bbSessionMap.get(projectRoot);
-		
+
+		BBSession bbs = bbSessionMap.get(projectRoot);
+
 		if (bbs == null) {
 			bbs = new BBSession(getShellSession(projectInfo, out, monitor), projectRoot);
 			bbSessionMap.put(projectRoot, bbs);
 		}
-		
+
 		return bbs;
 	}
-	
+
 	/**
 	 * Get or create a BitBake session passing in ProjectInfo
 	 * @param pinfo
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static BBSession getBBSession(ProjectInfo projectInfo, IProgressMonitor monitor) throws Exception {
 		URI projectRoot = projectInfo.getURI();
 		if (bbSessionMap == null) {
 			bbSessionMap = new Hashtable<URI, BBSession>();
 		}
-		
-		BBSession bbs = (BBSession) bbSessionMap.get(projectRoot);
-		
+
+		BBSession bbs = bbSessionMap.get(projectRoot);
+
 		if (bbs == null) {
 			bbs = new BBSession(getShellSession(projectInfo, null, monitor), projectRoot);
 			bbSessionMap.put(projectRoot, bbs);
-		} else {
-			if (projectInfo.getConnection() == null) {
-				throw new Exception("The remote connection is null!");
-			}
 		}
-		
+
 		return bbs;
 	}
 
@@ -141,9 +135,7 @@ public class Activator extends AbstractUIPlugin {
 		if (projInfoMap == null) {
 			projInfoMap = new Hashtable<URI, ProjectInfo>();
 		}
-		
-		ProjectInfo pi = (ProjectInfo) projInfoMap.get(location);
-		
+		ProjectInfo pi = projInfoMap.get(location);
 		if (pi == null) {
 			pi = new ProjectInfo();
 			pi.setLocation(location);
@@ -152,13 +144,10 @@ public class Activator extends AbstractUIPlugin {
 			} catch (IOException e) {
 				throw new InvocationTargetException(e);
 			}
-			if (pi.getConnection() == null) {
-				IHost connection = RemoteHelper.getRemoteConnectionForURI(location, new NullProgressMonitor());
-				pi.setConnection(connection);
-			}
+
 			projInfoMap.put(location, pi);
 		}
-		
+
 		return pi;
 	}
 
@@ -175,7 +164,7 @@ public class Activator extends AbstractUIPlugin {
 		if(bbSessionMap != null) {
 			iter= bbSessionMap.values().iterator();
 			while(iter.hasNext()) {
-				BBSession p = (BBSession)iter.next();
+				BBSession p = iter.next();
 				p.changeNotified(added, removed, changed);
 			}
 		}
@@ -184,56 +173,31 @@ public class Activator extends AbstractUIPlugin {
 	/**
 	 * @param absolutePath
 	 * @return a cached shell session for a given project root.
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	private static ShellSession getShellSession(ProjectInfo projInfo, Writer out, IProgressMonitor monitor) throws IOException {
 		URI absolutePath = projInfo.getURI();
 		if (shellMap == null) {
 			shellMap = new Hashtable<String, ShellSession>();
 		}
-		
-		ShellSession ss = (ShellSession) shellMap.get(absolutePath);
-		
+
+		ShellSession ss = shellMap.get(absolutePath);
+
 		if (ss == null) {
-//			if (conn == null)
-//				RemoteHelper.getRemoteConnectionByName();
 			IHostFile remoteHostFile = RemoteHelper.getRemoteHostFile(projInfo.getConnection(), absolutePath.getPath(), monitor);
 			ss = new ShellSession(projInfo, ShellSession.SHELL_TYPE_BASH, remoteHostFile, ProjectInfoHelper.getInitScriptPath(absolutePath), out);
 		}
-		
+
 		return ss;
 	}
 
-//	private static String loadInit(String absolutePath) throws CoreException {
-//		IProject [] prjs = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-//		IProject foundPrj = null;
-//		
-//		for (int i = 0; i < prjs.length; ++i) {
-//			IProject p = prjs[i];
-//			
-//			System.out
-//					.println(p.getDescription().getLocationURI().getPath());
-//			
-//			if (p.getDescription().getLocationURI().getPath().equals(absolutePath)) {
-//				foundPrj = p;
-//				break;
-//			}
-//		}
-//		
-//		if (foundPrj == null) {
-//			throw new RuntimeException("Unable to find project associated with path! " + absolutePath);
-//		}
-//	
-//		return foundPrj.getPersistentProperty(CreateBBCProjectOperation.BBC_PROJECT_INIT);
-//	}
-	
 	public static void putProjInfo(URI location, ProjectInfo pinfo) {
 		if (projInfoMap == null) {
 			projInfoMap = new Hashtable<URI, ProjectInfo>();
 		}
 		projInfoMap.put(location, pinfo);
 	}
-	
+
 	/**
 	 * The constructor
 	 */
@@ -273,6 +237,7 @@ public class Activator extends AbstractUIPlugin {
 		bbSessionMap.remove(path);
 	}
 
+	@Override
 	protected void initializeImageRegistry(ImageRegistry reg) {
 		reg.put(IMAGE_VARIABLE, Activator.getImageDescriptor("icons/variable.gif"));
 		reg.put(IMAGE_FUNCTION, Activator.getImageDescriptor("icons/function.gif"));

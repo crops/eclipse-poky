@@ -439,6 +439,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	}
 
 	protected void parse(String content, Map outMap) throws Exception {
+		if (content == null)
+			return;	
 		BufferedReader reader = new BufferedReader(new StringReader(content));
 		String line;
 		boolean inLine = false;

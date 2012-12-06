@@ -13,6 +13,7 @@ package org.yocto.bc.ui.model;
 import java.net.URI;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
 import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.rse.core.model.IHost;
@@ -58,6 +59,9 @@ public class ProjectInfo implements IModelElement {
 	}
 
 	public IHost getConnection() {
+		if (connection == null) {
+			connection = RemoteHelper.getRemoteConnectionForURI(location, new NullProgressMonitor());
+		}
 		return connection;
 	}
 
