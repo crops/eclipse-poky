@@ -24,7 +24,6 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -54,7 +53,7 @@ import org.yocto.bc.remote.utils.YoctoCommand;
 public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	private Text containerText;
 	private Text fileText;
-	
+
 	private Text descriptionText;
 	private Text licenseText;
 	private Text checksumText;
@@ -65,17 +64,17 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	private Text md5sumText;
 	private Text sha256sumText;
 	private Button btnPopulate;
-	
+
 	private BitbakeRecipeUIElement element;
-	
+
 	private ISelection selection;
 	private URI metaDirLoc;
 	private ArrayList<String> inheritance;
 
 	private IHost connection;
-	
+
 	private String tempFolderPath;
-	
+
 	public static final String TEMP_FOLDER_NAME = "temp";
 	public static final String TAR_BZ2_EXT = ".tar.bz2";
 	public static final String TAR_GZ_EXT = ".tar.gz";
@@ -98,7 +97,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	private static final String AUTOTOOLS = "autotools";
 	private static final String md5Pattern = "^[0-9a-f]{32}$";
 	protected static final String sha256Pattern = "^[0-9a-f]{64}$";
-	
+
 	public NewBitBakeFileRecipeWizardPage(ISelection selection, IHost connection) {
 		super("wizardPage");
 		setTitle("BitBake Recipe");
@@ -107,9 +106,10 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		this.connection = connection;
 		this.element = new BitbakeRecipeUIElement();
 		this.inheritance = new ArrayList<String>();
-		
+
 	}
 
+	@Override
 	public void createControl(Composite parent) {
 		final Composite container = new Composite(parent, SWT.NULL);
 		GridLayout layout = new GridLayout();
@@ -129,6 +129,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		containerText.setLayoutData(gd);
 		containerText.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
 			}
@@ -142,12 +143,12 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 				handleBrowse(container, containerText);
 			}
 		});
-		
+
 		label = new Label(container, SWT.NULL);
 		gd = new GridData();
 		gd.horizontalSpan = 3;
 		label.setLayoutData(gd);
-		
+
 		label = new Label(container, SWT.NULL);
 		label.setText("SRC_&URI:");
 
@@ -155,12 +156,13 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		txtSrcURI.setLayoutData(gd);
 		txtSrcURI.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				if (txtSrcURI.getText().trim().isEmpty()) {
 					if (btnPopulate != null)
 						btnPopulate.setEnabled(false);
 				} else if (btnPopulate != null){
-						btnPopulate.setEnabled(true);
+					btnPopulate.setEnabled(true);
 				}
 				dialogChanged();
 			}
@@ -182,7 +184,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		createField(container, "License File &Checksum:", (checksumText = new Text(container, SWT.BORDER | SWT.SINGLE)));
 		createField(container, "&Package Description:", (descriptionText = new Text(container, SWT.BORDER | SWT.SINGLE)));
 		createField(container, "&License:", (licenseText = new Text(container, SWT.BORDER | SWT.SINGLE)));
-		
+
 		createField(container, "&Homepage:", (homepageText = new Text(container, SWT.BORDER | SWT.SINGLE)));
 		createField(container, "Package &Author:", (authorText = new Text(container, SWT.BORDER | SWT.SINGLE)));
 		createField(container, "&Section:", (sectionText = new Text(container, SWT.BORDER | SWT.SINGLE)));
@@ -190,7 +192,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 //		ProxySettingsComposite proxySettings = new ProxySettingsComposite(container, SWT.NONE);
 //		proxySettings.setEnabled(true);
 //		proxySettings.setVisible(true);
-		
+
 		initialize();
 		dialogChanged();
 		setControl(container);
@@ -200,12 +202,13 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		Label label = new Label(container, SWT.NONE);
 		label.setText(title);
 		label.moveAbove(control);
-	
+
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
 		control.setLayoutData(gd);
 		control.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
 			}
@@ -222,7 +225,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			updateStatus("Directory must be specified");
 			return;
 		}
-	
+
 		if (container == null || (container.getType() & (IResource.PROJECT | IResource.FOLDER)) == 0) {
 			updateStatus("File container must exist");
 			return;
@@ -231,10 +234,10 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			updateStatus("Project must be writable");
 			return;
 		}
-		
+
 		IProject project = container.getProject();
 		metaDirLoc = RemoteHelper.createNewURI(project.getLocationURI(), "meta");
-		
+
 		if (fileName.length() == 0) {
 			updateStatus("File name must be specified");
 			return;
@@ -252,7 +255,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			updateStatus("Recipe must have a description");
 			return;
 		}
-		
+
 		if (licenseText.getText().length() == 0) {
 			updateStatus("Recipe must have a license");
 			return;
@@ -261,7 +264,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		if (txtSrcURI.getText().length() == 0) {
 			updateStatus("SRC_URI can't be empty");
 		}
-		
+
 		updateStatus(null);
 	}
 
@@ -281,7 +284,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		element.setMetaDir(metaDirLoc);
 		return element;
 	}
-	
+
 	private void handleBrowse(final Composite parent, final Text text) {
 		ContainerSelectionDialog dialog = new ContainerSelectionDialog(getShell(), ResourcesPlugin.getWorkspace().getRoot(), false, "Select project directory");
 		if (dialog.open() == Window.OK) {
@@ -291,14 +294,14 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			}
 		}
 	}
-	
+
 	private void handlePopulate() {
 		try {
 			IProgressMonitor monitor = new NullProgressMonitor();
 			URI srcURI = new URI(txtSrcURI.getText().trim());
 			String scheme = srcURI.getScheme();
 			String srcFileName = getSrcFileName(true);
-			if ((scheme.equals(HTTP) || scheme.equals(FTP)) 
+			if ((scheme.equals(HTTP) || scheme.equals(FTP))
 					&& (srcFileName.endsWith(TAR_GZ_EXT) || srcFileName.endsWith(TAR_BZ2_EXT))) {
 				try {
 					handleRemotePopulate(srcURI, monitor);
@@ -315,7 +318,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void handleLocalPopulate(URI srcURI, IProgressMonitor monitor) {
 		populateLicenseFileChecksum(srcURI, monitor);
 		populateInheritance(srcURI, monitor);
@@ -326,43 +329,43 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 
 		populateRecipeName(srcURI);
 		List<YoctoCommand> commands = new ArrayList<YoctoCommand>();
-		
+
 		String metaDirLocPath = metaDirLoc.getPath();
 		commands.add(new YoctoCommand("rm -rf " + TEMP_FOLDER_NAME, metaDirLocPath, ""));
 		commands.add(new YoctoCommand( "mkdir " + TEMP_FOLDER_NAME, metaDirLocPath, ""));
 		updateTempFolderPath();
-		commands.add(new YoctoCommand("wget " + srcURI.toURL(), tempFolderPath, ""));
-		
-		updateTempFolderPath();
-		
+
+
 		try {
-			RemoteHelper.runBatchRemote(connection, commands, monitor, true);
-		} catch (CoreException e) {
+			commands.add(new YoctoCommand("wget " + srcURI.toURL(), tempFolderPath, ""));
+
+			updateTempFolderPath();
+			RemoteHelper.runBatchRemote(connection, commands, true);
+
+			commands.clear();
+
+			String md5Cmd = "md5sum " + getSrcFileName(true);
+			YoctoCommand md5YCmd = new YoctoCommand(md5Cmd, tempFolderPath, "");
+			RemoteHelper.runCommandRemote(connection, md5YCmd);
+
+			String sha256Cmd = "sha256sum " + getSrcFileName(true);
+			YoctoCommand sha256YCmd = new YoctoCommand(sha256Cmd, tempFolderPath, "");
+			RemoteHelper.runCommandRemote(connection, sha256YCmd);
+
+			URI extractDir = extractPackage(srcURI, monitor);
+			YoctoCommand licenseChecksumCmd = populateLicenseFileChecksum(extractDir, monitor);
+			updateSrcUri(createMirrorLookupTable(monitor), srcURI);
+			populateInheritance(extractDir, monitor);
+
+			String md5Val = retrieveSum(md5YCmd);
+			md5sumText.setText(Pattern.matches(md5Pattern,  md5Val) ? md5Val : "");
+			String sha256Val = retrieveSum(sha256YCmd);
+			sha256sumText.setText(Pattern.matches(sha256Pattern,  sha256Val) ? sha256Val : "");
+			String checkSumVal =  retrieveSum(licenseChecksumCmd);
+			checksumText.setText(RemoteHelper.createNewURI(extractDir, COPYING_FILE).toString() + ";md5=" + (Pattern.matches(md5Pattern,  checkSumVal) ? checkSumVal : ""));
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		commands.clear();
-		
-		
-		String md5Cmd = "md5sum " + getSrcFileName(true); 
-		YoctoCommand md5YCmd = new YoctoCommand(md5Cmd, tempFolderPath, "");
-		RemoteHelper.runCommandRemote(connection, md5YCmd, monitor);
-		
-		String sha256Cmd = "sha256sum " + getSrcFileName(true); 
-		YoctoCommand sha256YCmd = new YoctoCommand(sha256Cmd, tempFolderPath, "");
-		RemoteHelper.runCommandRemote(connection, sha256YCmd, monitor);
-		
-		URI extractDir = extractPackage(srcURI, monitor);
-		YoctoCommand licenseChecksumCmd = populateLicenseFileChecksum(extractDir, monitor);
-		updateSrcUri(createMirrorLookupTable(monitor), srcURI);
-		populateInheritance(extractDir, monitor);
-		
-		String md5Val = retrieveSum(md5YCmd);
-		md5sumText.setText(Pattern.matches(md5Pattern,  md5Val) ? md5Val : "");
-		String sha256Val = retrieveSum(sha256YCmd);
-		sha256sumText.setText(Pattern.matches(sha256Pattern,  sha256Val) ? sha256Val : "");
-		String checkSumVal =  retrieveSum(licenseChecksumCmd);
-		checksumText.setText(RemoteHelper.createNewURI(extractDir, COPYING_FILE).toString() + ";md5=" + (Pattern.matches(md5Pattern,  checkSumVal) ? checkSumVal : ""));
 	}
 
 	private String retrieveSum(YoctoCommand cmd) {
@@ -384,31 +387,31 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			} else if(path.endsWith(TAR_GZ_EXT)){
 				tarCmd += "-xvf ";
 			}
-			
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand(tarCmd + path, tempFolderPath, ""), monitor);
-			
+
+			RemoteHelper.runCommandRemote(connection, new YoctoCommand(tarCmd + path, tempFolderPath, ""));
+
 			return RemoteHelper.createNewURI(metaDirLoc, TEMP_FOLDER_NAME + "/" + getSrcFileName(false));
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
-	
+
 	private void updateTempFolderPath(){
 		this.tempFolderPath = getMetaFolderPath() + TEMP_FOLDER_NAME + "/";
 	}
-	
+
 	private String getMetaFolderPath(){
 		String sep = metaDirLoc.getPath().endsWith("/")? "" : "/";
 		return metaDirLoc.getPath() + sep;
 	}
-	
+
 	private void populateInheritance(URI extractDir, IProgressMonitor monitor) {
 		IHostFile[] hostFiles = RemoteHelper.getRemoteDirContent(connection, metaDirLoc.getPath(), "", IFileService.FILE_TYPE_FILES, monitor);
 		if (hostFiles == null)
 			return;
-		
+
 		for (IHostFile file: hostFiles) {
 			String fileName = file.getName();
 			if (fileName.equalsIgnoreCase(CMAKE_LIST)){
@@ -420,21 +423,21 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			}
 		}
 	}
-	
+
 	private YoctoCommand populateLicenseFileChecksum(URI extractDir, IProgressMonitor monitor) {
 		if (extractDir == null)
 			throw new RuntimeException("Something went wrong during source extraction!");
-		
+
 		try {
 			YoctoCommand catCmd = new YoctoCommand("md5sum " + COPYING_FILE, extractDir.getPath(), "");
-			RemoteHelper.runCommandRemote(connection, catCmd, monitor);
+			RemoteHelper.runCommandRemote(connection, catCmd);
 			return catCmd;
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to process file for MD5 calculation", e);
 		}
-		
+
 	}
-	
+
 	private String getSrcFileName(boolean withExt){
 		URI srcURI;
 		try {
@@ -455,48 +458,13 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		}
 		return "";
 	}
-	
-	
-	
-//	private void populateSrcUriChecksum(URI srcUri, IProgressMonitor monitor) {
-//		try {
-//			String rmCmd = "rm -rf " + TEMP_FOLDER_NAME;
-//			RemoteHelper.handleRunCommandRemote(connection, metaDirLoc.getPath(), rmCmd, "", monitor, cmdHandler);
-			
-//			String mkdirCmd = "mkdir " + TEMP_FOLDER_NAME;
-//			updateTempFolderPath();
-//			RemoteHelper.handleRunCommandRemote(connection, metaDirLoc.getPath(), mkdirCmd, "", monitor, cmdHandler);
-			
-			
-//			String wgetCmd = "wget " + srcUri.toURL();
-//			RemoteHelper.handleRunCommandRemote(connection, tempFolderPath, rmCmd + APPEND_CH + mkdirCmd + APPEND_CH + wgetCmd, "", monitor, cmdHandler);
-//			
-//			String md5Cmd = "md5sum " + getSrcFileName(true); 
-//			ProcessStreamBuffer md5SumBuffer = RemoteHelper.handleRunCommandRemote(connection, tempFolderPath, md5Cmd, "", monitor, cmdHandler);
-//			String line = md5SumBuffer.getLastOutputLineContaining(getSrcFileName(true));
-//			if (line != null) {
-//				String[] md5SumTokens = line.split(WHITESPACES);
-//				md5sumText.setText(md5SumTokens[0]);
-//			}
-//			
-//			String sha256Cmd = "sha256sum " + getSrcFileName(true); 
-//			ProcessStreamBuffer sha256SumBuffer = RemoteHelper.handleRunCommandRemote(connection, tempFolderPath, sha256Cmd, "", monitor, cmdHandler);
-//			line = sha256SumBuffer.getLastOutputLineContaining(getSrcFileName(true));
-//			if (line != null) {
-//				String[] sha256SumTokens = line.split(WHITESPACES);
-//				sha256sumText.setText(sha256SumTokens[0]);
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-	
+
 	private HashMap<String, String> createMirrorLookupTable(IProgressMonitor monitor) throws Exception {
 		HashMap<String, String> mirrorMap = new HashMap<String, String>();
-		
+
 		YoctoCommand cmd = new YoctoCommand("cat " + MIRRORS_FILE, getMetaFolderPath() + CLASSES_FOLDER, "");
-		RemoteHelper.runCommandRemote(connection, cmd, monitor);
-		
+		RemoteHelper.runCommandRemote(connection, cmd);
+
 		if (!cmd.getProcessBuffer().hasErrors()){
 			String delims = "[\\t]+";
 			List<String> outputLines = cmd.getProcessBuffer().getOutputLines();
@@ -512,42 +480,42 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		}
 		return mirrorMap;
 	}
-	
+
 	private void populateRecipeName(URI srcUri) {
 		String fileName = fileText.getText();
-		if (!fileName.isEmpty()) 
+		if (!fileName.isEmpty())
 			return;
-		
+
 		String recipeFile = getSrcFileName(false).replace("-", "_");
 		recipeFile += BB_RECIPE_EXT;
 		if (recipeFile != null)
 			fileText.setText(recipeFile);
 	}
-	
+
 	private void updateSrcUri(HashMap<String, String> mirrorsMap, URI srcUri) {
 		Set<String> mirrors = mirrorsMap.keySet();
 		Iterator<String> iter = mirrors.iterator();
 		String mirror_key = null;
 		String srcURL = srcUri.toString();
-		
-	    while (iter.hasNext()) {
-	    	String value = (String)iter.next();
-	    	if (srcURL.startsWith(value)) {
-	    		mirror_key = value;
-	    		break;
-	    	}	
-	    }
-	    
-	    if (mirror_key != null) {
-	    	String replace_string = (String)mirrorsMap.get(mirror_key);
-	    	if (replace_string != null)
-	    		srcURL = replace_string + srcURL.substring(mirror_key.length());
-	    }
-	    int idx = srcURL.lastIndexOf("-");
-	    String new_src_uri = srcURL.substring(0, idx)+"-${PV}" + TAR_GZ_EXT;
-	    txtSrcURI.setText(new_src_uri);
+
+		while (iter.hasNext()) {
+			String value = iter.next();
+			if (srcURL.startsWith(value)) {
+				mirror_key = value;
+				break;
+			}
+		}
+
+		if (mirror_key != null) {
+			String replace_string = mirrorsMap.get(mirror_key);
+			if (replace_string != null)
+				srcURL = replace_string + srcURL.substring(mirror_key.length());
+		}
+		int idx = srcURL.lastIndexOf("-");
+		String new_src_uri = srcURL.substring(0, idx)+"-${PV}" + TAR_GZ_EXT;
+		txtSrcURI.setText(new_src_uri);
 	}
-	
+
 	private void initialize() {
 		if (selection != null && selection.isEmpty() == false && selection instanceof IStructuredSelection) {
 			IStructuredSelection ssel = (IStructuredSelection) selection;

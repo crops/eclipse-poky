@@ -47,6 +47,7 @@ public class ShellSession {
 	public static final String TERMINATOR = "#234o987dsfkcqiuwey18837032843259d";
 	public static final String LT = System.getProperty("line.separator");
 	public static final String exportCmd = "export BB_ENV_EXTRAWHITE=\"DISABLE_SANITY_CHECKS $BB_ENV_EXTRAWHITE\"";
+	public static final String exportColumnsCmd = "export COLUMNS=1000";
 	
 	public static String getFilePath(String file) throws IOException {
 		File f = new File(file);
@@ -96,8 +97,8 @@ public class ShellSession {
 	private void initializeShell(IProgressMonitor monitor) throws IOException {
 		try {
 			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""), monitor);		
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand(exportCmd, root.getAbsolutePath(), ""), monitor);
+			RemoteHelper.runCommandRemote(connection, new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""));
+			RemoteHelper.runCommandRemote(connection, new YoctoCommand(exportCmd, root.getAbsolutePath(), ""));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -112,7 +113,7 @@ public class ShellSession {
 	public String execute(String command, boolean hasErrors) throws IOException {
 		try {
 			IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
-			hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""), new NullProgressMonitor());
+			hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
 			return RemoteHelper.getProcessBuffer(connection).getMergedOutputLines();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -241,20 +242,5 @@ synchronized
 		interrupt = true;
 	}
 	
-	private class NullWriter extends Writer {
-
-		@Override
-		public void close() throws IOException {			
-		}
-
-		@Override
-		public void flush() throws IOException {			
-		}
-
-		@Override
-		public void write(char[] cbuf, int off, int len) throws IOException {			
-		}
-		
-	}
-
 }
+

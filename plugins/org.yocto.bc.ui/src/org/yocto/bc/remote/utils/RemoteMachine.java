@@ -8,6 +8,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.core.subsystems.ISubSystem;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
@@ -72,7 +74,7 @@ public class RemoteMachine {
 	public YoctoHostShellProcessAdapter getHostShellProcessAdapter() {
 		try {
 			if (hostShellProcessAdapter == null)
-				hostShellProcessAdapter = new YoctoHostShellProcessAdapter(getHostShell(), getProcessBuffer(), getCmdHandler());
+				hostShellProcessAdapter = new YoctoRunnableWithProgress(getHostShell(), getProcessBuffer(), getCmdHandler());
 			return hostShellProcessAdapter;
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -138,36 +138,6 @@ public class RemoteHelper {
 		return null;
 	}
 	
-//	private static int displayDialogBox(String name, String[] choices) {
-//		Display display = Display.getDefault();;
-//	    final Shell shell = new Shell(display);
-//	    shell.setText(name);
-//
-//	    shell.setLayout(new GridLayout(2, false));
-//
-//	    new Label(shell, SWT.NONE).setText("Connections for host:");
-//	    final Combo comboChoices = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
-//	    for (int i = 0, n = choices.length; i < n; i++)
-//	    	comboChoices.add(choices[i]);
-//	    comboChoices.select(0);
-//
-//	    Button btnOK = new Button(shell, SWT.PUSH);
-//	    btnOK.setText("OK");
-//	   
-//	    DialogSelectionListener dsl = new DialogSelectionListener(shell, comboChoices);
-//	    
-//	    btnOK.addSelectionListener(dsl);
-//	    
-//	    shell.pack();
-//	    shell.open();
-//	    while (!shell.isDisposed()) {
-//	    	if (!display.readAndDispatch()) {
-//	            display.sleep();
-//	        }
-//	    }
-//	    return dsl.getReturnValue();
-//	}
-	
 	public static String getRemoteHostName(String remoteConnection){
 		final IHost host = getRemoteConnectionByName(remoteConnection);
 		if(host == null)
@@ -270,49 +240,49 @@ public class RemoteHelper {
 		return null;
 	}
 	
-	public static boolean runCommandRemote(IHost connection, YoctoCommand cmd, IProgressMonitor monitor) throws Exception {
-		String remoteCommand = cmd.getCommand() + " " + cmd.getArguments();
-		boolean hasErrors = false;
-		try {
-			if (!cmd.getInitialDirectory().isEmpty()) {
-				hasErrors = writeToShell(connection, "cd " + cmd.getInitialDirectory(), monitor);
-			}
-			if (!hasErrors)
-				return writeToShell(connection, remoteCommand, monitor);
-		} catch (Exception e) {
-			e.printStackTrace();
+	public static boolean runCommandRemote(final IHost connection, final YoctoCommand cmd) throws Exception {
+		final String remoteCommand = cmd.getCommand() + " " + cmd.getArguments();
+		final boolean hasErrors = false;
+		
+		if (!cmd.getInitialDirectory().isEmpty()) {
+			writeToShell(connection, "cd " + cmd.getInitialDirectory());
 		}
+		if (!hasErrors)
+			writeToShell(connection, remoteCommand);
+				
 		return hasErrors;
 	}
 	
-	public static boolean writeToShell(IHost connection, String remoteCommand, IProgressMonitor monitor){
-		YoctoHostShellProcessAdapter hostShellProcessAdapter = getHostShellProcessAdapter(connection);
-		hostShellProcessAdapter.setMonitor(monitor);
-		hostShellProcessAdapter.setLastCommand(remoteCommand);
-		getHostShell(connection).writeToShell(remoteCommand);
-		
-//		try {
-//			while (!hostShellProcessAdapter.isFinished() && hostShellProcessAdapter.isAlive()) {
-//				Thread.sleep(2);
-//			}
-////			System.out.println(">>>>>>>>>>>>>>>>>>>>finished command " + remoteCommand);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		
-		return hostShellProcessAdapter.hasErrors();
+	public static boolean writeToShell(final IHost connection, final String remoteCommand){
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					YoctoHostShellProcessAdapter adapter = getHostShellProcessAdapter(connection);
+					adapter.setLastCommand(remoteCommand);
+					getHostShell(connection).writeToShell(remoteCommand);
+					while (!adapter.isFinished())
+						Thread.sleep(2);
+//					return hostShellProcessAdapter.hasErrors();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}).run();
+		return true;
 	}
-	
-	public static void runBatchRemote(IHost connection, List<YoctoCommand> cmds, IProgressMonitor monitor, boolean waitForOutput) throws CoreException {
+
+	public static void runBatchRemote(IHost connection, List<YoctoCommand> cmds, boolean waitForOutput) throws CoreException {
 		try {
 			String remoteCommand = "";
 			for (YoctoCommand cmd : cmds) {
 				remoteCommand = cmd.getCommand() + " " + cmd.getArguments();
 				if (!cmd.getInitialDirectory().isEmpty()) {
-					writeToShell(connection, "cd " + cmd.getInitialDirectory(), monitor);
+					writeToShell(connection, "cd " + cmd.getInitialDirectory());
 				}
-				writeToShell(connection, remoteCommand, monitor);
+				writeToShell(connection, remoteCommand);
 			}
+			
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}

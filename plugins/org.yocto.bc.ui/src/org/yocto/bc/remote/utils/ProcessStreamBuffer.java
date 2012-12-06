@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProcessStreamBuffer {
+	private static final String WHITESPACES = "\\s+";
 	List<String> errorLines;
 	List<String> outputLines;
 	
@@ -47,7 +48,7 @@ public class ProcessStreamBuffer {
 			return null;
 		for (int i = outputLines.size() - 1; i >= 0; i--){
 			String line = outputLines.get(i);
-			if (line.contains(str))
+			if (line.replaceAll(WHITESPACES, "").contains(str.replaceAll(WHITESPACES, "")))
 				return line;
 		}
 		return null;

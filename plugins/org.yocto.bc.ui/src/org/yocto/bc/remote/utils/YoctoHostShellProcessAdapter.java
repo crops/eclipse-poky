@@ -1,19 +1,22 @@
 package org.yocto.bc.remote.utils;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.rse.services.shells.AbstractHostShellOutputReader;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.rse.services.shells.HostShellProcessAdapter;
 import org.eclipse.rse.services.shells.IHostOutput;
 import org.eclipse.rse.services.shells.IHostShell;
 import org.eclipse.rse.services.shells.IHostShellChangeEvent;
 import org.eclipse.rse.services.shells.IHostShellOutputReader;
+import org.eclipse.swt.widgets.Display;
 
-public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
+public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 	private String commandPrompt = null;
 	private static final String ROOT = "root";
 	private static final String PROMPT_USER_CH = "$";
@@ -23,42 +26,42 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 	private boolean isFinished;
 	private ICalculatePercentage calculator;
 	private int reportedWorkload;
-	private IProgressMonitor monitor;
 	private boolean isAlive;
 
-	private String lastCommand;
-	private boolean waitForOutput;
+	private String command;
+	private Map<String, IProgressMonitor> commandMonitors;
 	private String endChar = null;
 
 	private Semaphore sem;
 	
+	public YoctoHostShellProcessAdapter(IHostShell hostShell, ProcessStreamBuffer processStreamBuffer, CommandResponseHandler commandResponseHandler) throws IOException {
+		super(hostShell);
+		this.processStreamBuffer = processStreamBuffer;
+		this.commandResponseHandler = commandResponseHandler;
+		this.calculator = new GitCalculatePercentage();
+		this.sem = new Semaphore(1);
+		this.command = "";
+		this.commandMonitors = new HashMap<>();
+	}
+
 	public String getLastCommand() {
-		return lastCommand;
+		return command;
 	}
 
 	public synchronized void setLastCommand(String lastCommand) {
-//		if (waitForOutput) {
-			try {
-				// there are still some processes that might take a long time and if we do not wait for them, 
-				// then the semaphore will not be released, because an interrupted exception will occur
-				Thread.sleep(2000);
-				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>semaphore aquire");
-				sem.acquire();
-				this.lastCommand = lastCommand.trim();
-				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>last command set " + lastCommand);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-//		}
-	}
+		try {
+			// there are still some processes that might take a long time and if we do not wait for them, 
+			// then the semaphore will not be released, because an interrupted exception will occur
+			Thread.sleep(2000);
+			isFinished = false;
+			sem.acquire();
+			this.command = lastCommand.trim();
+			System.out.println("last command " + lastCommand + getOwnMonitor());
+			this.commandMonitors.put(command, getOwnMonitor());
 
-
-	public IProgressMonitor getMonitor() {
-		return monitor;
-	}
-
-	public void setMonitor(IProgressMonitor monitor) {
-		this.monitor = monitor;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private interface ICalculatePercentage {
@@ -68,7 +71,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 	private class GitCalculatePercentage implements ICalculatePercentage {
 		final Pattern pattern = Pattern.compile("^Receiving objects:\\s*(\\d+)%.*");
 		public float calWorkloadDone(String info) throws IllegalArgumentException {
-			Matcher m = pattern.matcher(info.trim());
+	Matcher m = pattern.matcher(info.trim());
 			if(m.matches()) {
 				return new Float(m.group(1)) / 100;
 			}else {
@@ -77,38 +80,37 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 		}
 	}
 	
-	public YoctoHostShellProcessAdapter(IHostShell hostShell, ProcessStreamBuffer processStreamBuffer, CommandResponseHandler commandResponseHandler) throws IOException {
-		super(hostShell);
-		this.processStreamBuffer = processStreamBuffer;
-		this.commandResponseHandler = commandResponseHandler;
-		this.calculator = new GitCalculatePercentage();
-		this.sem = new Semaphore(1);
-		this.lastCommand = "";
-
+	private IProgressMonitor getMonitor() {
+		if (command == null) {
+			return null;
+		}
+		return commandMonitors.get(command);
 	}
 
 	private void updateMonitor(final int work){
-//		Display.getDefault().syncExec(new Runnable() {
-//			
-//			@Override
-//			public void run() {
-//				monitor.worked(work);
-//			}
-//		});
-	}
 	
+		Display.getDefault().asyncExec(new Runnable() {
+
+			@Override
+			public void run() {
+				if (getMonitor() != null) {
+					getMonitor().worked(work);
+				}
+			}
+
+		});
+	}
+
 	private void doneMonitor(){
-//		Display.getCurrent().syncExec(new Runnable() {
-//			
-//			@Override
-//			public void run() {
-//				monitor.done();
-//			}
-//		});
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				getMonitor().done();
+			}
+		});
 	}
-	
+
 	private void reportProgress(String info) {
-		
 		if(calculator == null) {
 			updateMonitor(1);
 		} else {
@@ -130,7 +132,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 				doneMonitor();
 		}
 	}
-	
+
 	@Override
 	public void shellOutputChanged(IHostShellChangeEvent event) {
 		IHostShellOutputReader reader = event.getReader();
@@ -153,10 +155,12 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 					continue;
 				}
 				setCommandPrompt(value);
-				if (value.startsWith(commandPrompt) &&  value.endsWith(endChar) && 
-						!value.endsWith(lastCommand) && processStreamBuffer.getLastOutputLineContaining(lastCommand) != null /*&& waitForOutput*/) {
-					System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Sem release");
+	
+				if (commandPrompt != null && endChar != null && command != null && processStreamBuffer != null &&
+						value.startsWith(commandPrompt) &&  value.endsWith(endChar) && 
+						!value.endsWith(command) && processStreamBuffer.getLastOutputLineContaining(command) != null) {
 					sem.release();
+					isFinished = true;
 				}
 
 				reportProgress(value);
@@ -166,9 +170,6 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 			}
 		}
 		
-		AbstractHostShellOutputReader absReader = (AbstractHostShellOutputReader)reader;
-		isAlive = absReader.isAlive();
-		isFinished = absReader.isFinished();
 	}
 	private void setCommandPrompt(String value) {
 		if (commandPrompt == null) {
@@ -199,16 +200,14 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter{
 		this.isAlive = isAlive;
 	}
 
-	public boolean isWaitForOutput() {
-		return waitForOutput;
-	}
-
-	public void setWaitForOutput(boolean waitForOutput) {
-		this.waitForOutput = waitForOutput;
-	}
-
 	public void clearProcessBuffer() {
 		this.processStreamBuffer.outputLines.clear();
 		this.processStreamBuffer.errorLines.clear();
 	}
+
+	public IProgressMonitor getOwnMonitor() {
+		return new NullProgressMonitor();
+	}
+
 }
+

@@ -63,12 +63,7 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 	private IProjectDescription createProjectDescription(IWorkspace workspace, ProjectInfo projInformation) throws CoreException {
 		IProjectDescription desc = workspace.newProjectDescription(projInformation.getProjectName());
 		
-//		try {
-//			desc.setLocationURI(new URI(OEFS_SCHEME + projInfo2.getRootPath()));
-			desc.setLocationURI(projInformation.getURI());
-//		} catch (URISyntaxException e) {
-//			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Unable to load filesystem.", e));
-//		}
+		desc.setLocationURI(projInformation.getURI());
 		
 		return desc;
 	}

@@ -5,16 +5,13 @@ import java.net.URI;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardContainer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
 import org.eclipse.ptp.remote.core.IRemoteServices;
-import org.eclipse.ptp.remote.core.exception.RemoteConnectionException;
 import org.eclipse.rse.core.model.IHost;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
@@ -22,7 +19,7 @@ import org.eclipse.ui.console.MessageConsole;
 import org.yocto.bc.remote.utils.CommandResponseHandler;
 import org.yocto.bc.remote.utils.ConsoleWriter;
 import org.yocto.bc.remote.utils.RemoteHelper;
-import org.yocto.bc.remote.utils.YoctoCommand;
+import org.yocto.bc.remote.utils.YoctoRunnableWithProgress;
 import org.yocto.bc.ui.Activator;
 import org.yocto.bc.ui.model.ProjectInfo;
 import org.yocto.bc.ui.wizards.FiniteStateWizard;
@@ -106,24 +103,35 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 		page.setPageComplete(true);
 		Map<String, Object> options = model;
 		
-
 		try {
 			URI uri = new URI("");
 			if (options.containsKey(INSTALL_DIRECTORY)) {
 				uri = (URI) options.get(INSTALL_DIRECTORY);
 			}
+			IRemoteConnection remoteConnection = ((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION));
+			IRemoteServices remoteServices = ((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE));
+			IHost connection = RemoteHelper.getRemoteConnectionByName(remoteConnection.getName());
+			CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(connection);
 				
 			if (((Boolean)options.get(GIT_CLONE)).booleanValue()) {
-				String[] cmd = {"/usr/bin/git clone --progress", "git://git.yoctoproject.org/poky.git", uri.getPath()};
-//				String[] cmd = {"md5sum /home/builder/socks-gw"};
-				LongtimeRunningTask runningTask = new LongtimeRunningTask("Checking out Yocto git repository", cmd, 
-						((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION)), 
-						((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE)));
-				ModalContext.setAllowReadAndDispatch(false);
-				this.getContainer().run(false, false, runningTask);
+				String cmd = "/usr/bin/git clone --progress";
+				String args = "git://git.yoctoproject.org/poky.git " + uri.getPath();
+				String taskName = "Checking out Yocto git repository";
+				YoctoRunnableWithProgress adapter = (YoctoRunnableWithProgress)RemoteHelper.getHostShellProcessAdapter(connection);
+				adapter.setRemoteConnection(remoteConnection);
+				adapter.setRemoteServices(remoteServices);
+				adapter.setTaskName(taskName);
+				adapter.setCmd(cmd);
+				adapter.setArgs(args);
+				IWizardContainer container = this.getContainer();
+				try {
+					container.run(true, true, adapter);
+				} catch (InvocationTargetException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
-			
-			CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(RemoteHelper.getRemoteConnectionByName(((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION)).getName()));
 			if (!cmdHandler.hasError()) {
 				String initPath = "";
 				if (uri.getPath() != null) {
@@ -136,95 +144,30 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				pinfo.setInitScriptPath(initPath);
 				pinfo.setLocation(uri);
 				pinfo.setName(prjName);
-				IRemoteConnection remConn = (IRemoteConnection) model.get(InstallWizard.SELECTED_CONNECTION);
-				IHost connection = RemoteHelper.getRemoteConnectionByName(remConn.getName());
 				pinfo.setConnection(connection);
-				pinfo.setRemoteServices((IRemoteServices) model.get(InstallWizard.SELECTED_REMOTE_SERVICE));
+				pinfo.setRemoteServices(remoteServices);
 			
 				ConsoleWriter cw = new ConsoleWriter();
-				this.getContainer().run(false, false, new BBConfigurationInitializeOperation(pinfo, cw));
+				this.getContainer().run(true, true, new BBConfigurationInitializeOperation(pinfo, cw));
 				console = RemoteHelper.getConsole(connection);
 				console.newMessageStream().println(cw.getContents());
 
 				model.put(InstallWizard.KEY_PINFO, pinfo);
 				Activator.putProjInfo(pinfo.getURI(), pinfo);
 
-				this.getContainer().run(false, false, new CreateBBCProjectOperation(pinfo));
+				this.getContainer().run(true, true, new CreateBBCProjectOperation(pinfo));
 				return true;
-				
 			}
+			return true;
 		} catch (Exception e) {
 			Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
 					IStatus.ERROR, e.getMessage(), e));
-			this.getContainer().getCurrentPage().setDescription(
-							"Failed to create project: " + e.getMessage());
+			this.getContainer().getCurrentPage().setDescription("Failed to create project: " + e.getMessage());
 		}
 		return false;
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 	}
-
-	private class LongtimeRunningTask implements IRunnableWithProgress {
-		static public final int TOTALWORKLOAD = 100;
-		
-		private String []cmdArray;
-		private String taskName;
-		private IRemoteConnection connection;
-		private IRemoteServices remoteServices;
-		
-		public LongtimeRunningTask(String taskName, 
-				String []cmdArray,
-				IRemoteConnection connection, IRemoteServices remoteServices) {
-			this.taskName = taskName;
-			this.cmdArray = cmdArray;
-			this.connection = connection;
-			this.remoteServices = remoteServices;
-		}
-
-		synchronized public void run(IProgressMonitor monitor) 
-				throws InvocationTargetException, InterruptedException {
-//			boolean cancel = false;
-			try {
-				monitor.beginTask(taskName, TOTALWORKLOAD);
-				
-				if (!connection.isOpen()) {
-					try {
-						connection.open(monitor);
-					} catch (RemoteConnectionException e1) {
-						e1.printStackTrace();
-					}
-				}
-
-				if (!remoteServices.isInitialized()) {
-					remoteServices.initialize();
-				}
-
-				String args = "";
-				for (int i = 1; i < cmdArray.length; i++)
-					args += cmdArray[i] + " ";
-				try {
-//					while (!cancel) {
-//	                    if(monitor.isCanceled()) {
-//	                            cancel=true;
-//	                            throw new InterruptedException("User Cancelled");
-//	                    }
-	                    RemoteHelper.runCommandRemote(RemoteHelper.getRemoteConnectionByName(connection.getName()), new YoctoCommand(cmdArray[0], "", args), monitor);
-//	                    if (hasErrors)
-//	                    	break;
-	                    
-//	                    Thread.sleep(5000);
-//					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					monitor.done();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 
 }
