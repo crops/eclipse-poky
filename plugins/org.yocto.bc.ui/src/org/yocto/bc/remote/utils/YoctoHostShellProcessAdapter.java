@@ -34,6 +34,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 
 	private Semaphore sem;
 
+
 	public YoctoHostShellProcessAdapter(IHostShell hostShell, ProcessStreamBuffer processStreamBuffer, CommandResponseHandler commandResponseHandler) throws IOException {
 		super(hostShell);
 		this.processStreamBuffer = processStreamBuffer;
@@ -41,7 +42,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 		this.calculator = new GitCalculatePercentage();
 		this.sem = new Semaphore(1);
 		this.command = "";
-		this.commandMonitors = new HashMap<>();
+		this.commandMonitors = new HashMap<String, IProgressMonitor>();
 	}
 
 	public String getLastCommand() {
@@ -50,7 +51,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 
 	public synchronized void setLastCommand(String lastCommand) {
 		try {
-			// there are still some processes that might take a long time and if we do not wait for them, 
+			// there are still some processes that might take a long time and if we do not wait for them,
 			// then the semaphore will not be released, because an interrupted exception will occur
 			Thread.sleep(2000);
 			isFinished = false;
@@ -70,6 +71,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 
 	private class GitCalculatePercentage implements ICalculatePercentage {
 		final Pattern pattern = Pattern.compile("^Receiving objects:\\s*(\\d+)%.*");
+		@Override
 		public float calWorkloadDone(String info) throws IllegalArgumentException {
 			Matcher m = pattern.matcher(info.trim());
 			if(m.matches()) {
@@ -88,13 +90,16 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 	}
 
 	private void updateMonitor(final int work){
+
 		Display.getDefault().asyncExec(new Runnable() {
+
 			@Override
 			public void run() {
 				if (getMonitor() != null) {
 					getMonitor().worked(work);
 				}
 			}
+
 		});
 	}
 
@@ -124,7 +129,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 				updateMonitor(delta);
 				reportedWorkload += delta;
 			}
-			
+
 			if (reportedWorkload == RemoteHelper.TOTALWORKLOAD)
 				doneMonitor();
 		}
@@ -152,8 +157,9 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 					continue;
 				}
 				setCommandPrompt(value);
+
 				if (commandPrompt != null && endChar != null && command != null && processStreamBuffer != null &&
-						value.startsWith(commandPrompt) &&  value.endsWith(endChar) && 
+						value.startsWith(commandPrompt) &&  value.endsWith(endChar) &&
 						!value.endsWith(command) && processStreamBuffer.getLastOutputLineContaining(command) != null /*&& waitForOutput*/) {
 					sem.release();
 					isFinished = true;
@@ -165,7 +171,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 				this.commandResponseHandler.response(value, false);
 			}
 		}
-		
+
 	}
 	private void setCommandPrompt(String value) {
 		if (commandPrompt == null) {
@@ -178,7 +184,7 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 				commandPrompt = value.substring(0, end);
 				endChar = PROMPT_USER_CH;
 			}
-				
+
 		}
 	}
 	public boolean isFinished() {
