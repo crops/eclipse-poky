@@ -170,11 +170,11 @@ public class OptionsPage extends FiniteStateWizardPage {
 				setErrorMessage("Directory " + projectPath + " does not exist, please select git clone.");
 				return false;
 			}
-			IHostFile gitDescr = RemoteHelper.getRemoteHostFile(connection, projectPath + "/.git", new NullProgressMonitor());
-			if (gitDescr == null || !gitDescr.exists()) {
-				setErrorMessage("Directory " + projectPath + " does not contain a git repository, please select git clone.");
-				return false;
-			}
+//			IHostFile gitDescr = RemoteHelper.getRemoteHostFile(connection, projectPath + "/.git", new NullProgressMonitor());
+//			if (gitDescr == null || !gitDescr.exists()) {
+//				setErrorMessage("Directory " + projectPath + " does not contain a git repository, please select git clone.");
+//				return false;
+//			}
 
 			IHostFile validationFile = RemoteHelper.getRemoteHostFile(connection, projectPath + URI_SEPARATOR + InstallWizard.VALIDATION_FILE, new NullProgressMonitor());
 			if (validationFile == null || !validationFile.exists()) {
