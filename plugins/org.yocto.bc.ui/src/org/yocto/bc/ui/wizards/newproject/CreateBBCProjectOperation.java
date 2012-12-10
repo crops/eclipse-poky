@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Vector;
 
+import org.eclipse.core.internal.resources.ResourceException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspace;
@@ -82,6 +83,10 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 			proj.open(monitor);
 		} catch (IOException e) {
 			throw new InvocationTargetException(e);
+		} catch (ResourceException e){
+			// ignore this exception since it only occurs for special internal files from the repository on Windows platform
+			// the resource names on Windows must not contain '<', '>', ':','"', '/', '\', '|', '?', '*'
+			// the ignored files must not be removed since they are internal cooking files, but the user does not need to see/modify them
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
