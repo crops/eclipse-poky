@@ -54,7 +54,6 @@ public class OptionsPage extends FiniteStateWizardPage {
 	private ValidationListener validationListener;
 	private Text txtProjectName;
 	private Button btnGit;
-	private Button btnValidate;
 
 	private RemoteProjectContentsLocationArea locationArea;
 
@@ -67,7 +66,7 @@ public class OptionsPage extends FiniteStateWizardPage {
 	public void createControl(Composite parent) {
 		top = new Composite(parent, SWT.None);
 		top.setLayout(new GridLayout());
-		top.setLayoutData(new GridData(GridData.FILL_BOTH));
+		top.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		GridData gdFillH = new GridData(GridData.FILL_HORIZONTAL);
 
@@ -97,25 +96,13 @@ public class OptionsPage extends FiniteStateWizardPage {
 
 		locationArea = new RemoteProjectContentsLocationArea(errorReporter, top, null);
 
-		Group locationValidationGroup = new Group(top, SWT.NONE);
-		locationValidationGroup.setText("Git repository");
-		GridData gd = new GridData(GridData.VERTICAL_ALIGN_END | GridData.FILL_HORIZONTAL);
-		locationValidationGroup.setLayoutData(gd);
-		GridLayout gl = new GridLayout(1, false);
-		locationValidationGroup.setLayout(gl);
-
-		btnGit = new Button(locationValidationGroup, SWT.RADIO);
+		btnGit = new Button(top, SWT.CHECK);
 		btnGit.setText("Clone from Yocto Project &Git Repository into new location");
 		btnGit.setEnabled(true);
 		btnGit.setSelection(true);
 		btnGit.addSelectionListener(validationListener);
-
-
-		btnValidate = new Button(locationValidationGroup, SWT.RADIO);
-		btnValidate.setText("&Validate existing Git project location");
-		btnValidate.setEnabled(true);
-		btnValidate.setSelection(false);
-		btnValidate.addSelectionListener(validationListener);
+		GridData gd = new GridData(GridData.VERTICAL_ALIGN_END | GridData.FILL_HORIZONTAL);
+		btnGit.setLayoutData(gd);
 
 		setControl(top);
 	}
@@ -165,16 +152,11 @@ public class OptionsPage extends FiniteStateWizardPage {
 		String projectPath = projectLoc + separator + getProjectName();
 		IHostFile repoDest = RemoteHelper.getRemoteHostFile(connection, projectPath, new NullProgressMonitor());
 
-		if(btnValidate.getSelection()) {
+		if(!btnGit.getSelection()) {
 			if (repoDest == null || !repoDest.exists()) {
 				setErrorMessage("Directory " + projectPath + " does not exist, please select git clone.");
 				return false;
 			}
-//			IHostFile gitDescr = RemoteHelper.getRemoteHostFile(connection, projectPath + "/.git", new NullProgressMonitor());
-//			if (gitDescr == null || !gitDescr.exists()) {
-//				setErrorMessage("Directory " + projectPath + " does not contain a git repository, please select git clone.");
-//				return false;
-//			}
 
 			IHostFile validationFile = RemoteHelper.getRemoteHostFile(connection, projectPath + URI_SEPARATOR + InstallWizard.VALIDATION_FILE, new NullProgressMonitor());
 			if (validationFile == null || !validationFile.exists()) {
@@ -185,7 +167,7 @@ public class OptionsPage extends FiniteStateWizardPage {
 			if (repoDest.exists() && repoDest.isDirectory()) {
 				IHostFile gitDescr = RemoteHelper.getRemoteHostFile(connection, projectPath + "/.git", new NullProgressMonitor());
 				if (gitDescr != null && gitDescr.exists()) {
-					setErrorMessage("Directory " + projectPath + " contains a repository, please select validate repository.");
+					setErrorMessage("Directory " + projectPath + " contains a repository, please choose another location or skip cloning the repository.");
 					return false;
 				}
 			}
