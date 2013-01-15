@@ -10,27 +10,25 @@
  *******************************************************************************/
 package org.yocto.bc.bitbake;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.rse.core.model.IHost;
-import org.yocto.bc.remote.utils.RemoteHelper;
 import org.yocto.bc.ui.model.ProjectInfo;
 
 /**
  * A helper class for ProjectInfo related tasks.
- * 
+ *
  * @author kgilmer
- * 
+ *
  */
 public class ProjectInfoHelper {
+	public static final String OEFS_SCHEME = "OEFS://";
+	public static final String FILE_SCHEME = "file";
+	public static final String RSE_SCHEME = "rse";
 
 	protected static final String DEFAULT_INIT_SCRIPT = "oe-init-build-env";
 	/**
@@ -54,17 +52,17 @@ public class ProjectInfoHelper {
 //		}
 		return val;
 	}
-	
+
 //	public static String getInitScript(String path) throws IOException {
 //		File inFile = new File(path);
 //		BufferedReader br = new BufferedReader(new FileReader(inFile));
 //		StringBuffer sb = new StringBuffer();
 //		String line = null;
-//		
+//
 //		while ((line = br.readLine()) != null) {
 //			sb.append(line);
 //		}
-//		
+//
 //		br.close();
 //
 //		return sb.toString();
@@ -89,7 +87,7 @@ public class ProjectInfoHelper {
 	/**
 	 * This method will store the path to the bitbake init script for future
 	 * reference.
-	 * 
+	 *
 	 * @param path
 	 * @param projInfo
 	 * @throws IOException
@@ -121,8 +119,8 @@ public class ProjectInfoHelper {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
+
+
 	}
 
 }

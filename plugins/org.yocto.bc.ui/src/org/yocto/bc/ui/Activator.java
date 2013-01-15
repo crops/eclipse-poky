@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -130,25 +131,43 @@ public class Activator extends AbstractUIPlugin {
 	public static ImageDescriptor getImageDescriptor(String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
-
+	public static URI convertOEFSUri(URI uri){
+		if (ProjectInfoHelper.OEFS_SCHEME.startsWith(uri.getScheme())) {
+			String scheme = "";
+			if (uri.getHost() == null)
+				scheme = ProjectInfoHelper.FILE_SCHEME;
+			else
+				scheme = ProjectInfoHelper.RSE_SCHEME;
+			try {
+				return new URI(scheme, uri.getHost(), uri.getPath(), uri.getFragment());
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return null;
+	}
 	public static ProjectInfo getProjInfo(URI location) throws CoreException, InvocationTargetException, InterruptedException {
 		if (projInfoMap == null) {
 			projInfoMap = new Hashtable<URI, ProjectInfo>();
 		}
-		ProjectInfo pi = projInfoMap.get(location);
-		if (pi == null) {
-			pi = new ProjectInfo();
-			pi.setLocation(location);
-			try {
-				pi.setInitScriptPath(ProjectInfoHelper.getInitScriptPath(location));
-			} catch (IOException e) {
-				throw new InvocationTargetException(e);
+		location = convertOEFSUri(location);
+		if (location != null) {
+			ProjectInfo pi = projInfoMap.get(location);
+			if (pi == null) {
+				pi = new ProjectInfo();
+				pi.setLocation(location);
+				try {
+					pi.setInitScriptPath(ProjectInfoHelper.getInitScriptPath(location));
+				} catch (IOException e) {
+					throw new InvocationTargetException(e);
+				}
+
+				projInfoMap.put(location, pi);
 			}
-
-			projInfoMap.put(location, pi);
+			return pi;
 		}
-
-		return pi;
+		return null;
 	}
 
 	public static void notifyAllBBSession(IResource[] added, IResource[] removed, IResource[] changed) {

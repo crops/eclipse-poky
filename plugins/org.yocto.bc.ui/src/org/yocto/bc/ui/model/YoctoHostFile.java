@@ -1,6 +1,8 @@
 package org.yocto.bc.ui.model;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -8,35 +10,42 @@ import java.util.ArrayList;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
 import org.eclipse.rse.services.files.IFileService;
 import org.eclipse.rse.services.files.IHostFile;
+import org.yocto.bc.remote.utils.RemoteHelper;
+import org.yocto.bc.ui.filesystem.Messages;
+import org.yocto.bc.ui.filesystem.Policy;
 
 public class YoctoHostFile implements IHostFile{
 	private IHostFile file;
 	private URI fileURI;
 	private ProjectInfo projectInfo;
 	private IFileService fileService;
-	
+
 	public YoctoHostFile(ProjectInfo pInfo, URI fileURI, IProgressMonitor monitor) throws SystemMessageException {
 		this.projectInfo = pInfo;
 		this.fileURI = fileURI;
 		String path = fileURI.getPath();
-		int parentEnd = path.lastIndexOf("/");
-		String parentPath = path.substring(0, parentEnd);
-		String fileName = path.substring(parentEnd + 1);
+//		int parentEnd = path.lastIndexOf("/");
+//		String parentPath = path.substring(0, parentEnd);
+//		String fileName = path.substring(parentEnd + 1);
 		fileService = projectInfo.getFileService(monitor);
-		fileService.getFile(parentPath, fileName, monitor);
+		file = RemoteHelper.getRemoteHostFile(projectInfo.getConnection(), path, monitor);
+//		fileService.getFile(parentPath, fileName, monitor);
 	}
-	
+
 	public YoctoHostFile(ProjectInfo projectInfo, URI uri) {
 		this.fileURI = uri;
 		this.projectInfo = projectInfo;
 	}
-	
+
 	public IHostFile getFile() {
 		return file;
 	}
@@ -49,9 +58,11 @@ public class YoctoHostFile implements IHostFile{
 	public void setProjectInfo(ProjectInfo projectInfo) {
 		this.projectInfo = projectInfo;
 	}
+	@Override
 	public String getAbsolutePath() {
 		return file.getAbsolutePath();
 	}
+	@Override
 	public String getName() {
 		return file.getName();
 	}
@@ -62,23 +73,26 @@ public class YoctoHostFile implements IHostFile{
 		projectInfo.getURI().getPath().indexOf(file.getAbsolutePath());
 		return projectInfo.getURI();
 	}
+	@Override
 	public boolean isDirectory() {
 		return file.isDirectory();
 	}
+	@Override
 	public String getParentPath() {
 		return file.getParentPath();
 	}
 	public boolean copy(IFileStore destFileStore, IProgressMonitor monitor) {
 		IHostFile destFile;
 		try {
-			destFile = fileService.getFile(destFileStore.toURI().getPath(), destFileStore.getName(), monitor);
-			fileService.copy(file.getParentPath(), file.getName(), destFile.getParentPath(), destFile.getAbsolutePath(), monitor);
+			destFile = fileService.createFile(destFileStore.getParent().toURI().getPath(), destFileStore.getName(), monitor);
+			fileService.copy(file.getParentPath(), file.getName(), destFile.getParentPath(), destFile.getName(), monitor);
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
 			return false;
 		}
 		return true;
 	}
+	@Override
 	public boolean exists() {
 		return file.exists();
 	}
@@ -137,30 +151,76 @@ public class YoctoHostFile implements IHostFile{
 		}
 		return true;
 	}
-	public void mkdir() {
-		
+
+	/**
+	 * This method is called after a failure to modify a file or directory.
+	 * Check to see if the parent is read-only and if so then
+	 * throw an exception with a more specific message and error code.
+	 *
+	 * @param target The file that we failed to modify
+	 * @param exception The low level exception that occurred, or <code>null</code>
+	 * @throws CoreException A more specific exception if the parent is read-only
+	 */
+	private void checkReadOnlyParent() throws CoreException {
+		String parent = file.getParentPath();
+		String parentOfParent = parent.substring(0, parent.lastIndexOf("/"));
+		IHostFile parentFile;
+		try {
+			parentFile = fileService.getFile(parentOfParent, parent, new NullProgressMonitor());
+			if (parentFile == null || !parentFile.canRead() || !parentFile.canWrite()) {
+				String message = NLS.bind(Messages.readOnlyParent, parent);
+				Policy.error(EFS.ERROR_PARENT_READ_ONLY, message, null);
+			}
+		} catch (SystemMessageException e) {
+			e.printStackTrace();
+		}
+
 	}
+
+	public void mkdir(int options) {
+//		boolean shallow = (options & EFS.SHALLOW) != 0;
+		try {
+
+			if (!file.isDirectory()) {
+				file = fileService.createFolder(file.getParentPath(), file.getName(), new NullProgressMonitor());
+				if (!file.isDirectory()) {
+					checkReadOnlyParent();
+					String message = NLS.bind(Messages.failedCreateWrongType, file.getAbsolutePath());
+					Policy.error(EFS.ERROR_WRONG_TYPE, message);
+				}
+			}
+		} catch (SystemMessageException e1) {
+			e1.printStackTrace();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 	public String[] getChildNames(IProgressMonitor monitor) {
 		if (file.isDirectory()) {
 			IHostFile[] files;
 			try {
 				files = fileService.list(file.getAbsolutePath(), "*", IFileService.FILE_TYPE_FILES_AND_FOLDERS, monitor);
 				ArrayList<String> names = new ArrayList<String>();
-				
+
 				for (IHostFile f : files) {
 					names.add(f.getName());
 				}
-				return (String[])names.toArray();
+
+				String[] arrNames = new String[names.size()];
+				names.toArray(arrNames);
+				return arrNames;
 			} catch (SystemMessageException e) {
 				e.printStackTrace();
 			}
-		} 
+		}
 		return  new String[]{};
 	}
 	public IHost getConnection() {
 		return projectInfo.getConnection();
 	}
-	
+
 	public URI getChildURI(String name) {
 		try {
 			return new URI(fileURI.getScheme(), fileURI.getHost(), fileService.getFile(file.getAbsolutePath(), name, null).getAbsolutePath(), fileURI.getFragment());
@@ -181,7 +241,7 @@ public class YoctoHostFile implements IHostFile{
 	}
 	public YoctoHostFile getChildHostFile(String name) {
 		try {
-			return new YoctoHostFile(projectInfo, getChildURI(name), null);
+			return new YoctoHostFile(projectInfo, getChildURI(name), new NullProgressMonitor());
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
 			return null;
@@ -208,19 +268,21 @@ public class YoctoHostFile implements IHostFile{
 		}
 	}
 
-	public void getOutputStream(int options, IProgressMonitor monitor) {
+	public OutputStream getOutputStream(int options, IProgressMonitor monitor) {
 		try {
-			fileService.getOutputStream(file.getParentPath(), file.getName(), options, monitor);
+			return fileService.getOutputStream(file.getParentPath(), file.getName(), options, monitor);
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 
-	public void getInputStream(int options, IProgressMonitor monitor) {
+	public InputStream getInputStream(int options, IProgressMonitor monitor) {
 		try {
-			fileService.getInputStream(file.getParentPath(), file.getName(), false, monitor);
+			return fileService.getInputStream(file.getParentPath(), file.getName(), false, monitor);
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 
@@ -231,5 +293,13 @@ public class YoctoHostFile implements IHostFile{
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public IFileService getFileService() {
+		return fileService;
+	}
+
+	public void setFileService(IFileService fileService) {
+		this.fileService = fileService;
 	}
 }

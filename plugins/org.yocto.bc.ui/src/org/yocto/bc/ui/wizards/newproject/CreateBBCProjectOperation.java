@@ -12,10 +12,11 @@ package org.yocto.bc.ui.wizards.newproject;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Vector;
 
-import org.eclipse.core.internal.resources.ResourceException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspace;
@@ -23,10 +24,13 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.yocto.bc.bitbake.ProjectInfoHelper;
 import org.yocto.bc.remote.utils.RemoteHelper;
+import org.yocto.bc.ui.Activator;
 import org.yocto.bc.ui.builder.BitbakeCommanderNature;
 import org.yocto.bc.ui.model.ProjectInfo;
 
@@ -38,7 +42,6 @@ import org.yocto.bc.ui.model.ProjectInfo;
  */
 public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 
-	public static final String OEFS_SCHEME = "OEFS://";
 	public static final QualifiedName BBC_PROJECT_INIT = new QualifiedName(null, "BBC_PROJECT_INIT");
 	public static void addNatureToProject(IProject proj, String nature_id, IProgressMonitor monitor) throws CoreException {
 		IProjectDescription desc = proj.getDescription();
@@ -61,11 +64,15 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 		addNatureToProject(proj, BitbakeCommanderNature.NATURE_ID, monitor);
 	}
 
-	private IProjectDescription createProjectDescription(IWorkspace workspace, ProjectInfo projInformation) throws CoreException {
-		IProjectDescription desc = workspace.newProjectDescription(projInformation.getProjectName());
+	private IProjectDescription createProjectDescription(IWorkspace workspace, ProjectInfo projInfo) throws CoreException {
+		IProjectDescription desc = workspace.newProjectDescription(projInfo.getProjectName());
 
-		desc.setLocationURI(projInformation.getURI());
-
+//		desc.setLocationURI(projInfo.getURI());
+		try {
+			desc.setLocationURI(new URI(ProjectInfoHelper.OEFS_SCHEME + projInfo.getURI().getPath()));
+		} catch (URISyntaxException e) {
+			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Unable to load filesystem.", e));
+		}
 		return desc;
 	}
 
@@ -83,10 +90,6 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 			proj.open(monitor);
 		} catch (IOException e) {
 			throw new InvocationTargetException(e);
-		} catch (ResourceException e){
-			// ignore this exception since it only occurs for special internal files from the repository on Windows platform
-			// the resource names on Windows must not contain '<', '>', ':','"', '/', '\', '|', '?', '*'
-			// the ignored files must not be removed since they are internal cooking files, but the user does not need to see/modify them
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

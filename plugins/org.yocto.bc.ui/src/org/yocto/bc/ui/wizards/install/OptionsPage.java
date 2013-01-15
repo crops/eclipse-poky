@@ -29,7 +29,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.yocto.bc.remote.utils.RemoteHelper;
@@ -182,6 +181,7 @@ public class OptionsPage extends FiniteStateWizardPage {
 					setErrorMessage("A project with the name " + projName + " already exists");
 					return false;
 				}
+				//FIXME : do not throw exception when illegal characters show in URI ->show error on page
 				URI location = new URI("file:" + URI_SEPARATOR + URI_SEPARATOR + convertToRealPath(projectLoc) + URI_SEPARATOR + txtProjectName.getText());
 
 				IStatus status = ResourcesPlugin.getWorkspace().validateProjectLocationURI(proj, location);

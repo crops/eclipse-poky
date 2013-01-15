@@ -14,7 +14,6 @@ import java.net.URI;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.ptp.remote.core.IRemoteConnection;
 import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.services.files.IFileService;
@@ -24,13 +23,14 @@ import org.yocto.bc.remote.utils.RemoteHelper;
 public class ProjectInfo implements IModelElement {
 	private String name;
 	private URI location;
+	private URI oefsLocation;
 	private String init;
 	private IHost connection;
 	private IRemoteServices remoteServices;
-	
+
 	public ProjectInfo() {
 	}
-	
+
 	public String getInitScriptPath() {
 		return init;
 	}
@@ -40,6 +40,7 @@ public class ProjectInfo implements IModelElement {
 	public URI getURI() {
 		return location;
 	}
+	@Override
 	public void initialize() throws Exception {
 		name = new String();
 		location = new URI("");
@@ -53,7 +54,7 @@ public class ProjectInfo implements IModelElement {
 	public void setLocation(URI location) {
 		this.location = location;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -76,13 +77,21 @@ public class ProjectInfo implements IModelElement {
 	public void setRemoteServices(IRemoteServices remoteServices) {
 		this.remoteServices = remoteServices;
 	}
-	
+
 	public IFileService getFileService(IProgressMonitor monitor){
 		try {
-			return (IFileService)RemoteHelper.getConnectedRemoteFileService(connection, monitor);
+			return RemoteHelper.getConnectedRemoteFileService(connection, monitor);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public URI getOefsLocation() {
+		return oefsLocation;
+	}
+
+	public void setOefsLocation(URI oefsLocation) {
+		this.oefsLocation = oefsLocation;
 	}
 }

@@ -17,14 +17,17 @@ import org.eclipse.ui.ide.fileSystem.FileSystemContributor;
 
 public class OEFileSystemContributor extends FileSystemContributor  {
 
+	public OEFileSystemContributor() {
+	}
+
 	@Override
 	public URI browseFileSystem(String initialPath, Shell shell) {
 		return null;
 	}
-	
+
 	@Override
 	public URI getURI(String string) {
 		return super.getURI(string);
 	}
-	
+
 }

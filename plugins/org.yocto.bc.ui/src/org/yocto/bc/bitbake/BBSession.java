@@ -48,7 +48,7 @@ import org.yocto.bc.ui.model.ProjectInfo;
 /**
  * BBSession encapsulates a global bitbake configuration and is the primary interface
  * for actions against a BitBake installation.
- * 
+ *
  * @author kgilmer
  *
  */
@@ -57,10 +57,11 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	public static final int TYPE_UNKNOWN = 2;
 	public static final int TYPE_STATEMENT = 3;
 	public static final int TYPE_FLAG = 4;
-	
+
+	public static final String CONF_DIR = "/conf";
 	public static final String BUILDDIR_INDICATORS [] = {
-		"/conf/local.conf",
-		"/conf/bblayers.conf",
+		"/local.conf",
+		"/bblayers.conf",
 	};
 
 	protected final ProjectInfo pinfo;
@@ -74,7 +75,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	private final Lock wlock = rwlock.writeLock();
 	protected String parsingCmd;
 	private boolean silent = false;
-	
+
 	public BBSession(ShellSession ssession, URI projectRoot) throws IOException {
 		shell = ssession;
 		this.pinfo = new ProjectInfo();
@@ -87,7 +88,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		this(ssession, projectRoot);
 		this.silent = silent;
 	}
-	
+
 	private Collection adapttoIPath(List<File> asList, IProject project) {
 
 		List pathList = new ArrayList();
@@ -102,7 +103,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 		return pathList;
 	}
-	
+
 	private String appendAll(String[] elems, int st) {
 		StringBuffer sb = new StringBuffer();
 
@@ -112,7 +113,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 		return sb.toString();
 	}
-	
+
 	private int charCount(String trimmed, char c) {
 		int i = 0;
 		int p = 0;
@@ -124,11 +125,13 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 		return i;
 	}
-	
+
+	@Override
 	public void clear() {
 		throw new RuntimeException("BB configuration is read-only.");
 	}
 
+	@Override
 	public boolean containsKey(Object arg0) {
 		try {
 			checkValidAndLock(true);
@@ -141,6 +144,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		}
 	}
 
+	@Override
 	public boolean containsValue(Object arg0) {
 		try {
 			checkValidAndLock(true);
@@ -153,6 +157,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		}
 	}
 
+	@Override
 	public Set entrySet() {
 		try {
 			checkValidAndLock(true);
@@ -188,7 +193,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 	/**
 	 * Recursively generate list of Recipe files from a root directory.
-	 * 
+	 *
 	 * @param rootDir
 	 * @param recipes
 	 * @param fileExtension
@@ -197,6 +202,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	private void findRecipes(File rootDir, List recipes, final String fileExtension, IProject project) {
 		File[] children = rootDir.listFiles(new FileFilter() {
 
+			@Override
 			public boolean accept(File pathname) {
 				return pathname.isFile() && pathname.getName().endsWith(fileExtension);
 			}
@@ -209,6 +215,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 		File[] childDirs = rootDir.listFiles(new FileFilter() {
 
+			@Override
 			public boolean accept(File pathname) {
 				return pathname.isDirectory();
 			}
@@ -240,6 +247,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		return recipes;
 	}
 
+	@Override
 	public Object get(Object arg0) {
 		try {
 			checkValidAndLock(true);
@@ -274,9 +282,9 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 				conMan.addConsoles(new IConsole[] { sessionConsole });
 			}
 		}
-		
+
 		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(sessionConsole);
-		
+
 		return sessionConsole;
 	}
 
@@ -348,6 +356,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		if(clear)
 			console.clearConsole();
 		new WorkbenchJob("Display parsing result") {
+			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor) {
 				if(code != 0) {
 					info.setColor(JFaceResources.getColorRegistry().get(JFacePreferences.ERROR_COLOR));
@@ -396,6 +405,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		//not release lock
 	}
 
+	@Override
 	public void initialize() throws Exception {
 		try {
 			checkValidAndLock(false);
@@ -414,6 +424,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		// return trimmed.indexOf('{') > -1 && trimmed.indexOf('}') == -1;
 	}
 
+	@Override
 	public boolean isEmpty() {
 		try {
 			checkValidAndLock(true);
@@ -425,7 +436,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 			rlock.unlock();
 		}
 	}
-	
+
+	@Override
 	public Set keySet() {
 		try {
 			checkValidAndLock(true);
@@ -440,7 +452,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 	protected void parse(String content, Map outMap) throws Exception {
 		if (content == null)
-			return;	
+			return;
 		BufferedReader reader = new BufferedReader(new StringReader(content));
 		String line;
 		boolean inLine = false;
@@ -484,7 +496,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 			parseLine(line, outMap);
 		}
 	}
-	
+
 	private void parseAdditiveAssignment(String line, String operator, Map mo) throws Exception {
 		String[] elems = splitAssignment(line, "\\+=");
 
@@ -507,7 +519,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	protected URI getDefaultDepends() {
 		return null;
 	}
-	
+
 	protected Map parseBBEnvironment(String bbOut) throws Exception {
 		Map env = new Hashtable();
 		this.depends = new ArrayList<URI>();
@@ -517,8 +529,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		String included = (String) env.get("BBINCLUDED");
 		if(getDefaultDepends() != null) {
 			this.depends.add(getDefaultDepends());
-		} 
-		
+		}
+
 		if(included != null) {
 			String[] includedSplitted = included.split(" ");
 			for (String incl : includedSplitted){
@@ -531,13 +543,13 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 		return env;
 	}
-	
+
 
 	private List parseBBFiles(String bbfiles) {
 		return Arrays.asList(bbfiles.split(" "));
 	}
-	
-	//Map delegate methods 
+
+	//Map delegate methods
 
 	private void parseConditionalAssignment(String line, Map mo) throws Exception {
 		String[] elems = splitAssignment(line, "\\?=");
@@ -611,14 +623,17 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		return l;
 	}
 
+	@Override
 	public Object put(Object arg0, Object arg1) {
 		throw new RuntimeException("BB configuration is read-only.");
 	}
 
+	@Override
 	public void putAll(Map arg0) {
 		throw new RuntimeException("BB configuration is read-only.");
 	}
 
+	@Override
 	public Object remove(Object arg0) {
 		throw new RuntimeException("BB configuration is read-only.");
 	}
@@ -637,6 +652,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		return line;
 	}
 
+	@Override
 	public int size() {
 		try {
 			checkValidAndLock(true);
@@ -686,7 +702,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 	/**
 	 * Return a string with variable substitutions in place.
-	 * 
+	 *
 	 * @param expression
 	 * @return Input string with any substitutions from this file.
 	 */
@@ -710,6 +726,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		return expression;
 	}
 
+	@Override
 	public Collection values() {
 		try {
 			checkValidAndLock(true);
@@ -722,6 +739,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		}
 	}
 
+	@Override
 	public void changeNotified(IResource[] added, IResource[] removed, IResource[] changed) {
 		wlock.lock();
 		try {

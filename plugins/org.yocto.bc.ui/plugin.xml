@@ -180,8 +180,7 @@
    </extension>
    <extension
          point="org.eclipse.core.filesystem.filesystems">
-      <filesystem
-            scheme="OEFS">
+      <filesystem scheme="OEFS">
          <run
                class="org.yocto.bc.ui.filesystem.OEFileSystem">
          </run>

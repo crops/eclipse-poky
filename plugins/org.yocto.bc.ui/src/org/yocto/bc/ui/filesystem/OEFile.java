@@ -12,14 +12,9 @@
 package org.yocto.bc.ui.filesystem;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.filesystem.EFS;
@@ -32,10 +27,8 @@ import org.eclipse.core.filesystem.provider.FileStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
 import org.eclipse.rse.services.files.IFileService;
@@ -52,18 +45,13 @@ import org.yocto.bc.ui.model.YoctoHostFile;
  * operating system's file system.
  */
 public class OEFile extends FileStore {
-	private static int attributes(File aFile) {
-		if (!aFile.exists() || aFile.canWrite())
-			return EFS.NONE;
-		return EFS.ATTRIBUTE_READ_ONLY;
-	}
-	
+
 	/**
 	 * The java.io.File that this store represents.
 	 */
 	protected final YoctoHostFile file;
-	
-	private List<?> ignoredPaths;
+
+	private List<Object> ignoredPaths;
 
 	/**
 	 * The absolute file system path of the file represented by this store.
@@ -74,33 +62,16 @@ public class OEFile extends FileStore {
 
 	/**
 	 * Creates a new local file.
-	 * 
+	 *
 	 * @param file The file this local file represents
-	 * @param root 
-	 * @throws SystemMessageException 
+	 * @param root
+	 * @throws SystemMessageException
 	 */
-	public OEFile(URI fileURI, List<?> ignoredPaths, URI root, ProjectInfo projInfo, IProgressMonitor monitor) throws SystemMessageException {
+	public OEFile(URI fileURI, List<Object> ignoredPaths, URI root, ProjectInfo projInfo, IProgressMonitor monitor) throws SystemMessageException {
 		this.ignoredPaths = ignoredPaths;
 		this.root = root;
 		this.file = new YoctoHostFile(projInfo, fileURI, monitor);
 		this.filePath = file.getAbsolutePath();
-	}
-
-	/**
-	 * This method is called after a failure to modify a file or directory.
-	 * Check to see if the parent is read-only and if so then
-	 * throw an exception with a more specific message and error code.
-	 * 
-	 * @param target The file that we failed to modify
-	 * @param exception The low level exception that occurred, or <code>null</code>
-	 * @throws CoreException A more specific exception if the parent is read-only
-	 */
-	private void checkReadOnlyParent(File target, Throwable exception) throws CoreException {
-		File parent = target.getParentFile();
-		if (parent != null && (attributes(parent) & EFS.ATTRIBUTE_READ_ONLY) != 0) {
-			String message = NLS.bind(Messages.readOnlyParent, target.getAbsolutePath());
-			Policy.error(EFS.ERROR_PARENT_READ_ONLY, message, exception);
-		}
 	}
 
 	@Override
@@ -112,12 +83,26 @@ public class OEFile extends FileStore {
 	 * detect if the path is potential builddir
 	 */
 	private boolean isPotentialBuildDir(String path) {
+		String parentPath = path.substring(0, path.lastIndexOf("/"));
 		boolean ret = true;
-		for (int i=0; i < BBSession.BUILDDIR_INDICATORS.length && ret == true; i++) {
-			if((new File(path + BBSession.BUILDDIR_INDICATORS[i])).exists() == false) {
-				ret=false;
-				break;
+		try {
+			IFileService fs = file.getFileService();
+			IHostFile hostFile = fs.getFile(parentPath, path, new NullProgressMonitor());
+			if (!hostFile.isDirectory())
+				return false;
+			IHostFile confDir = fs.getFile(path, path + BBSession.CONF_DIR, new NullProgressMonitor());
+			if (!confDir.exists() || !confDir.isDirectory())
+				return false;
+			for (int i = 0; i < BBSession.BUILDDIR_INDICATORS.length && ret == true; i++) {
+				IHostFile child = fs.getFile(path, path + BBSession.CONF_DIR +  BBSession.BUILDDIR_INDICATORS[i], new NullProgressMonitor());
+				if(!child.exists() || !child.isFile()) {
+					ret = false;
+					break;
+				}
 			}
+
+		} catch (SystemMessageException e) {
+			e.printStackTrace();
 		}
 		return ret;
 	}
@@ -125,11 +110,12 @@ public class OEFile extends FileStore {
 	/*
 	 * try to find items for ignoreList
 	 */
-	private void updateIgnorePaths(String path, List list, IProgressMonitor monitor) {
+	private void updateIgnorePaths(String path, List<Object> list, IProgressMonitor monitor) {
 		if(isPotentialBuildDir(path)) {
 			BBSession config = null;
 			try {
-				ShellSession shell = new ShellSession(file.getProjectInfo(), ShellSession.SHELL_TYPE_BASH, RemoteHelper.getRemoteHostFile(file.getConnection(), root.getPath(), monitor), 
+				ShellSession shell = new ShellSession(file.getProjectInfo(), ShellSession.SHELL_TYPE_BASH,
+						RemoteHelper.getRemoteHostFile(file.getConnection(), root.getPath(), new NullProgressMonitor()),
 							ProjectInfoHelper.getInitScriptPath(root) + " " + path, null);
 				config = new BBSession(shell, root, true);
 				config.initialize();
@@ -158,18 +144,18 @@ public class OEFile extends FileStore {
 	public IFileStore[] childStores(int options, IProgressMonitor monitor) throws CoreException {
 		String[] children = childNames(options, monitor);
 		IFileStore[] wrapped = new IFileStore[children.length];
-		
+
 		for (int i = 0; i < wrapped.length; i++) {
-			String fullPath = file.toString() +File.separatorChar + children[i];
-			
+			String fullPath = file.getAbsolutePath() + File.separatorChar + children[i];
+
 			updateIgnorePaths(fullPath, ignoredPaths, monitor);
 			if (ignoredPaths.contains(fullPath)) {
 				wrapped[i] = getDeadChild(children[i]);
 			} else {
 				wrapped[i] = getChild(children[i]);
-			}			
+			}
 		}
-		
+
 		return wrapped;
 	}
 
@@ -177,7 +163,7 @@ public class OEFile extends FileStore {
 	public void copy(IFileStore destFileStore, int options, IProgressMonitor monitor) throws CoreException {
 		if (destFileStore instanceof OEFile) {
 			file.copy(destFileStore, monitor);
-			
+
 //			File source = file;
 //			File destination = ((OEFile) destFile).file;
 //			//handle case variants on a case-insensitive OS, or copying between
@@ -194,7 +180,7 @@ public class OEFile extends FileStore {
 //			}
 		}
 		//fall through to super implementation
-//		super.copy(destFile, options, monitor);
+//		super.copy(destFileStore, options, monitor);
 	}
 
 	@Override
@@ -207,13 +193,13 @@ public class OEFile extends FileStore {
 			monitor.beginTask(NLS.bind(Messages.deleting, this), 200);
 			String message = Messages.deleteProblem;
 			MultiStatus result = new MultiStatus(Policy.PI_FILE_SYSTEM, EFS.ERROR_DELETE, message, null);
-			
+
 			//don't allow Eclipse to delete entire OE directory
-			
+
 			if (!isProject()) {
 				internalDelete(file, filePath, result, monitor);
 			}
-			
+
 			if (!result.isOK())
 				throw new CoreException(result);
 		} finally {
@@ -249,10 +235,9 @@ public class OEFile extends FileStore {
 		info.setAttribute(EFS.ATTRIBUTE_HIDDEN, file.isHidden());
 		return info;
 	}
-	
+
 	@Override
 	public IFileStore getChild(IPath path) {
-		//URI fileURI, List<?> ignoredPaths, URI root, ProjectInfo projInfo, IProgressMonitor monitor
 		try {
 			return new OEFile(file.getChildURIformPath(path), ignoredPaths, root, file.getProjectInfo(), new NullProgressMonitor());
 		} catch (SystemMessageException e) {
@@ -263,12 +248,14 @@ public class OEFile extends FileStore {
 
 	@Override
 	public IFileStore getChild(String name) {
+
 		try {
 			return new OEFile(file.getChildURI(name), ignoredPaths, root, file.getProjectInfo(), new NullProgressMonitor());
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
 		}
 		return null;
+
 	}
 
 	private IFileStore getDeadChild(String name) {
@@ -311,6 +298,7 @@ public class OEFile extends FileStore {
 	 * to optimize java.io.File object creation.
 	 */
 	private boolean internalDelete(YoctoHostFile target, String pathToDelete, MultiStatus status, IProgressMonitor monitor) {
+		target.delete(monitor);
 		//first try to delete - this should succeed for files and symbolic links to directories
 //		if (target.delete() || !target.exists())
 //			return true;
@@ -395,6 +383,7 @@ public class OEFile extends FileStore {
 //			String message = NLS.bind(Messages.failedCreateWrongType, filePath);
 //			Policy.error(EFS.ERROR_WRONG_TYPE, message);
 //		}
+		file.mkdir(options);
 		return this;
 	}
 
@@ -463,59 +452,17 @@ public class OEFile extends FileStore {
 
 	@Override
 	public InputStream openInputStream(int options, IProgressMonitor monitor) throws CoreException {
-		file.getInputStream(options, monitor);
-//		monitor = Policy.monitorFor(monitor);
-//		try {
-//			monitor.beginTask("", 1); //$NON-NLS-1$
-//			return new FileInputStream(file);
-//		} catch (FileNotFoundException e) {
-//			String message;
-//			if (!file.exists())
-//				message = NLS.bind(Messages.fileNotFound, filePath);
-//			else if (file.isDirectory())
-//				message = NLS.bind(Messages.notAFile, filePath);
-//			else
-//				message = NLS.bind(Messages.couldNotRead, filePath);
-//			Policy.error(EFS.ERROR_READ, message, e);
-//			return null;
-//		} finally {
-//			monitor.done();
-//		}
-		return null;
+		return file.getInputStream(options, monitor);
 	}
 
 	@Override
 	public OutputStream openOutputStream(int options, IProgressMonitor monitor) throws CoreException {
-		file.getOutputStream(options, monitor);
-//		monitor = Policy.monitorFor(monitor);
-//		try {
-//			monitor.beginTask("", 1); //$NON-NLS-1$
-//			return new FileOutputStream(file, (options & EFS.APPEND) != 0);
-//		} catch (FileNotFoundException e) {
-//			checkReadOnlyParent(file, e);
-//			String message;
-//			String path = filePath;
-//			if (file.isDirectory())
-//				message = NLS.bind(Messages.notAFile, path);
-//			else
-//				message = NLS.bind(Messages.couldNotWrite, path);
-//			Policy.error(EFS.ERROR_WRITE, message, e);
-//			return null;
-//		} finally {
-//			monitor.done();
-//		}
-		return null;
+		return file.getOutputStream(options, monitor);
 	}
 
 	@Override
 	public void putInfo(IFileInfo info, int options, IProgressMonitor monitor) throws CoreException {
 		file.putInfo(info, options, monitor);
-//		boolean success = true;
-//		native does not currently set last modified
-//		if ((options & EFS.SET_LAST_MODIFIED) != 0)
-//			success &= file.setLastModified(info.getLastModified());
-//		if (!success && !file.exists())
-//			Policy.error(EFS.ERROR_NOT_EXISTS, NLS.bind(Messages.fileNotFound, filePath));
 	}
 
 	/* (non-Javadoc)
