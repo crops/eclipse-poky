@@ -88,8 +88,13 @@ public class OptionsPage extends FiniteStateWizardPage {
 			@Override
 			public void reportError(String errorMessage, boolean infoOnly) {
 				setMessage(errorMessage);
-				validatePage();
-				updateModel();
+				if (validatePage()) {
+	                updateModel();
+	                setPageComplete(true);
+	                return;
+	            }
+
+	            setPageComplete(false);
 			}
 		};
 
@@ -181,7 +186,6 @@ public class OptionsPage extends FiniteStateWizardPage {
 					setErrorMessage("A project with the name " + projName + " already exists");
 					return false;
 				}
-				//FIXME : do not throw exception when illegal characters show in URI ->show error on page
 				URI location = new URI("file:" + URI_SEPARATOR + URI_SEPARATOR + convertToRealPath(projectLoc) + URI_SEPARATOR + txtProjectName.getText());
 
 				IStatus status = ResourcesPlugin.getWorkspace().validateProjectLocationURI(proj, location);
