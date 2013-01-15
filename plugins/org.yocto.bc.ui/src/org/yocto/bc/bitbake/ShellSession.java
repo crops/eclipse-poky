@@ -108,7 +108,8 @@ public class ShellSession {
 		try {
 			if (projectInfo.getConnection() != null) {
 				hasErrors = RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
-				return RemoteHelper.getProcessBuffer(projectInfo.getConnection()).getMergedOutputLines();
+//				return RemoteHelper.getProcessBuffer(projectInfo.getConnection()).getMergedOutputLines();
+				return root.getAbsolutePath() + "/build/";
 			}
 			return null;
 		} catch (Exception e) {

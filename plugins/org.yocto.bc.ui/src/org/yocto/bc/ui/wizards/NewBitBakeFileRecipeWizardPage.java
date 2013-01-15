@@ -407,7 +407,10 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 
 	private String retrieveSum(String arg, String pattern) {
 		ProcessStreamBuffer buffer = RemoteHelper.getProcessBuffer(this.connection);
-		return buffer.getOutputLineContaining(arg, pattern);
+		String sum = buffer.getOutputLineContaining(arg, pattern);
+		if (sum == null)
+			return "";
+		return sum;
 	}
 
 	private URI extractPackage(URI srcURI) {

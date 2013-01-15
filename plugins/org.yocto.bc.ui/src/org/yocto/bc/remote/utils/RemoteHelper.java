@@ -272,7 +272,6 @@ public class RemoteHelper {
 					getHostShell(connection).writeToShell(fullRemoteCommand);
 					while (!adapter.isFinished())
 						Thread.sleep(2);
-//					return hostShellProcessAdapter.hasErrors();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -281,7 +280,7 @@ public class RemoteHelper {
 		return true;
 	}
 
-	public static void runBatchRemote(IHost connection, List<YoctoCommand> cmds, boolean waitForOutput) throws CoreException {
+	public static void runBatchRemote(IHost connection, List<YoctoCommand> cmds, boolean displayOutput) throws CoreException {
 		try {
 			String remoteCommand = "";
 			for (YoctoCommand cmd : cmds) {

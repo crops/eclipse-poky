@@ -8,8 +8,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.ptp.remote.core.IRemoteConnection;
-import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.core.subsystems.ISubSystem;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
@@ -23,8 +21,8 @@ import org.yocto.bc.ui.wizards.install.Messages;
 
 public class RemoteMachine {
 	public static final String PROXY = "proxy";
-	
-	private Map<String, String> environment; 	
+
+	private Map<String, String> environment;
 	private MessageConsole console;
 	private CommandResponseHandler cmdHandler;
 	private IHostShell hostShell;
@@ -39,7 +37,7 @@ public class RemoteMachine {
 	public RemoteMachine(IHost connection) {
 		setConnection(connection);
 	}
-	
+
 	public Map<String, String> getEnvironment() {
 		return environment;
 	}
@@ -70,7 +68,7 @@ public class RemoteMachine {
 		}
 		return hostShell;
 	}
-	
+
 	public YoctoHostShellProcessAdapter getHostShellProcessAdapter() {
 		try {
 			if (hostShellProcessAdapter == null)
@@ -81,11 +79,11 @@ public class RemoteMachine {
 			return null;
 		}
 	}
-	
+
 	public IShellService getShellService(IProgressMonitor monitor) throws Exception {
 		if (shellService != null)
 			return shellService;
-		
+
 		final ISubSystem subsystem = getShellSubsystem();
 
 		if (subsystem == null)
@@ -123,9 +121,6 @@ public class RemoteMachine {
 	}
 
 	public IHost getConnection() {
-//		if (connection == null) {
-//			connection = RemoteHelper.getRemoteConnectionForURI(, new NullProgressMonitor());
-//		}
 		return connection;
 	}
 	public void setConnection(IHost connection) {
@@ -134,7 +129,7 @@ public class RemoteMachine {
 
 	public IFileService getRemoteFileService(IProgressMonitor monitor) throws Exception {
 		if (fileService == null) {
-	
+
 			while(getFileSubsystem() == null)
 				Thread.sleep(2);
 			try {
@@ -144,10 +139,10 @@ public class RemoteMachine {
 			} catch (OperationCanceledException e) {
 				throw new CoreException(Status.CANCEL_STATUS);
 			}
-	
+
 			if (!getFileSubsystem().isConnected())
 				throw new Exception(Messages.ErrorConnectSubsystem);
-	
+
 			fileService = ((IFileServiceSubSystem) getFileSubsystem()).getFileService();
 		}
 		return fileService;

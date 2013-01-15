@@ -29,21 +29,22 @@ public abstract class FiniteStateWizardPage extends WizardPage {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
      */
-    public abstract void createControl(Composite parent);
+    @Override
+	public abstract void createControl(Composite parent);
 
     protected void setModelWizard() {
         if (wizard == null) {
             wizard = (FiniteStateWizard)FiniteStateWizardPage.this.getWizard();
         }
     }
-    
+
     /**
      * Add page validation logic here. Returning <code>true</code> means that
      * the page is complete and the user can go to the next page.
-     * 
+     *
      * @return
      */
     protected abstract boolean validatePage();
@@ -63,28 +64,29 @@ public abstract class FiniteStateWizardPage extends WizardPage {
     protected boolean hasContents(String value) {
         if (value == null || value.length() == 0) {
             return false;
-        } 
-        
+        }
+
         return true;
     }
-    
+
     /**
      * This method is called right before a page is displayed.
      * This occurs on user action (Next/Back buttons).
      */
     public abstract void pageDisplay();
-    
+
 	/**
 	 * This method is called on the concrete WizardPage after the user has
 	 * gone to the page after.
 	 */
 	public abstract void pageCleanup();
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.IDialogPage#setVisible(boolean)
 	 */
+	@Override
 	public void setVisible(boolean arg0) {
-	    
+
 		if (!arg0 && previousState) {
 			pageCleanup();
 		} else if (arg0 && !previousState) {
@@ -92,59 +94,63 @@ public abstract class FiniteStateWizardPage extends WizardPage {
 		} else if (arg0 && previousState) {
 			pageDisplay();
 		}
-		
+
 		previousState = arg0;
-		
+
 		super.setVisible(arg0);
 	}
-	
+
     public class ValidationListener implements SelectionListener, ModifyListener, Listener, ISelectionChangedListener, FocusListener {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.events.SelectionEvent)
          */
-        public void widgetSelected(SelectionEvent e) {
+        @Override
+		public void widgetSelected(SelectionEvent e) {
             validate();
         }
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
          */
-        public void widgetDefaultSelected(SelectionEvent e) {
+        @Override
+		public void widgetDefaultSelected(SelectionEvent e) {
         }
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see org.eclipse.swt.events.ModifyListener#modifyText(org.eclipse.swt.events.ModifyEvent)
          */
-        public void modifyText(ModifyEvent e) {
+        @Override
+		public void modifyText(ModifyEvent e) {
             validate();
         }
 
-        public void validate() {                       
+        public void validate() {
             if (validatePage()) {
                 updateModel();
                 setPageComplete(true);
                 return;
             }
-
             setPageComplete(false);
         }
 
         /* (non-Javadoc)
          * @see org.eclipse.swt.widgets.Listener#handleEvent(org.eclipse.swt.widgets.Event)
          */
-        public void handleEvent(Event event) {
-            
+        @Override
+		public void handleEvent(Event event) {
+
             validate();
         }
 
-        public void selectionChanged(SelectionChangedEvent event) {
+        @Override
+		public void selectionChanged(SelectionChangedEvent event) {
             validate();
         }
 

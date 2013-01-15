@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardContainer;
@@ -28,13 +29,13 @@ import org.yocto.bc.ui.wizards.newproject.CreateBBCProjectOperation;
 
 /**
  * A wizard for installing a fresh copy of an OE system.
- * 
+ *
  * @author kgilmer
- * 
+ *
  * A Wizard for creating a fresh Yocto bitbake project and new poky build tree from git
- * 
+ *
  * @modified jzhang
- * 
+ *
  */
 public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard {
 
@@ -43,14 +44,14 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 	protected static final String INSTALL_SCRIPT = "INSTALL_SCRIPT";
 	protected static final String INSTALL_DIRECTORY = "Install Directory";
 	protected static final String INIT_SCRIPT = "Init Script";
-	
+
 	protected static final String SELECTED_CONNECTION = "SEL_CONNECTION";
 	protected static final String SELECTED_REMOTE_SERVICE = "SEL_REMOTE_SERVICE";
 
 	protected static final String PROJECT_NAME = "Project Name";
 	protected static final String DEFAULT_INIT_SCRIPT = "oe-init-build-env";
 	protected static final String DEFAULT_INSTALL_DIR = "~/yocto";
-	
+
 	protected static final String GIT_CLONE = "Git Clone";
 	public static final String VALIDATION_FILE = DEFAULT_INIT_SCRIPT;
 
@@ -61,12 +62,11 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 		this.model = new Hashtable<String, Object>();
 		model.put(INSTALL_DIRECTORY, DEFAULT_INSTALL_DIR);
 		model.put(INIT_SCRIPT, DEFAULT_INIT_SCRIPT);
-		
+
 		setWindowTitle("Yocto Project BitBake Commander");
 		setNeedsProgressMonitor(true);
-		
-	}
 
+	}
 
 	public InstallWizard(IStructuredSelection selection) {
 		model = new Hashtable<String, Object>();
@@ -77,13 +77,13 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 	 * instanceof WelcomePage) { if (model.containsKey(WelcomePage.ACTION_USE))
 	 * { return bbcProjectPage; } } else if (page instanceof ProgressPage) {
 	 * return bitbakePage; }
-	 * 
+	 *
 	 * if (super.getNextPage(page) != null) { System.out.println("next page: " +
 	 * super.getNextPage(page).getClass().getName()); } else {
 	 * System.out.println("end page"); }
-	 * 
+	 *
 	 * return super.getNextPage(page); }
-	 * 
+	 *
 	 * @Override public boolean canFinish() { System.out.println("can finish: "
 	 * + super.canFinish()); return super.canFinish(); }
 	 */
@@ -102,7 +102,7 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 		WizardPage page = (WizardPage) getPage("Options");
 		page.setPageComplete(true);
 		Map<String, Object> options = model;
-		
+
 		try {
 			URI uri = new URI("");
 			if (options.containsKey(INSTALL_DIRECTORY)) {
@@ -110,20 +110,20 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 			}
 			IRemoteConnection remoteConnection = ((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION));
 			IRemoteServices remoteServices = ((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE));
-			IHost connection = RemoteHelper.getRemoteConnectionByName(remoteConnection.getName());
-			CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(connection);
-				
+			final IHost connection = RemoteHelper.getRemoteConnectionByName(remoteConnection.getName());
+			final CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(connection);
+			final YoctoRunnableWithProgress adapter = (YoctoRunnableWithProgress)RemoteHelper.getHostShellProcessAdapter(connection);
+			final IWizardContainer container = this.getContainer();
 			if (((Boolean)options.get(GIT_CLONE)).booleanValue()) {
 				String cmd = "/usr/bin/git clone --progress";
 				String args = "git://git.yoctoproject.org/poky.git " + uri.getPath();
 				String taskName = "Checking out Yocto git repository";
-				YoctoRunnableWithProgress adapter = (YoctoRunnableWithProgress)RemoteHelper.getHostShellProcessAdapter(connection);
+
 				adapter.setRemoteConnection(remoteConnection);
 				adapter.setRemoteServices(remoteServices);
 				adapter.setTaskName(taskName);
 				adapter.setCmd(cmd);
 				adapter.setArgs(args);
-				IWizardContainer container = this.getContainer();
 				try {
 					container.run(true, true, adapter);
 				} catch (InvocationTargetException e) {
@@ -146,19 +146,35 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				pinfo.setName(prjName);
 				pinfo.setConnection(connection);
 				pinfo.setRemoteServices(remoteServices);
-			
-				ConsoleWriter cw = new ConsoleWriter();
-				this.getContainer().run(true, true, new BBConfigurationInitializeOperation(pinfo, cw));
+
+				final ConsoleWriter cw = new ConsoleWriter();
+				final ProjectInfo pInfoFinal = pinfo;
+
+				Thread t = new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						try {
+							Thread.sleep(2000);
+							new BBConfigurationInitializeOperation(pInfoFinal, null).run(new NullProgressMonitor());
+						} catch (InvocationTargetException e) {
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+
 				console = RemoteHelper.getConsole(connection);
 				console.newMessageStream().println(cw.getContents());
 
 				model.put(InstallWizard.KEY_PINFO, pinfo);
 				Activator.putProjInfo(pinfo.getURI(), pinfo);
 
-				this.getContainer().run(true, true, new CreateBBCProjectOperation(pinfo));
+				container.run(true, true, new CreateBBCProjectOperation(pinfo));
+				t.start();
 				return true;
 			}
-			return true;
 		} catch (Exception e) {
 			Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
 					IStatus.ERROR, e.getMessage(), e));
@@ -167,6 +183,7 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 		return false;
 	}
 
+	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 	}
 

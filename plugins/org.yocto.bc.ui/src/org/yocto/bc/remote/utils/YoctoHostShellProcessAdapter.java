@@ -140,7 +140,8 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 				}
 				System.out.println(value);
 				this.processStreamBuffer.addErrorLine(value);
-				this.commandResponseHandler.response(value, false);
+				if (this.commandResponseHandler != null)
+					this.commandResponseHandler.response(value, false);
 			}
 		} else {
 			for (IHostOutput line : lines) {
@@ -156,7 +157,8 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 				reportProgress(value);
 				System.out.println(value);
 				this.processStreamBuffer.addOutputLine(value);
-				this.commandResponseHandler.response(value, false);
+				if (this.commandResponseHandler != null)
+					this.commandResponseHandler.response(value, false);
 			}
 		}
 
@@ -183,6 +185,14 @@ public class YoctoHostShellProcessAdapter extends  HostShellProcessAdapter {
 
 	public IProgressMonitor getOwnMonitor() {
 		return new NullProgressMonitor();
+	}
+
+	public CommandResponseHandler getCommandResponseHandler() {
+		return commandResponseHandler;
+	}
+
+	public void setCommandResponseHandler(CommandResponseHandler commandResponseHandler) {
+		this.commandResponseHandler = commandResponseHandler;
 	}
 
 }

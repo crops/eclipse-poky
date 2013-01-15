@@ -26,7 +26,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -51,12 +50,12 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 	private NewBitBakeFileRecipeWizardPage page;
 	private ISelection selection;
 	private IHost connection;
-	
+
 	public NewBitBakeFileRecipeWizard() {
 		super();
 		setNeedsProgressMonitor(true);
 	}
- 
+
 	@Override
 	public void addPages() {
 		page = new NewBitBakeFileRecipeWizardPage(selection, connection);
@@ -72,12 +71,12 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 			throwCoreException("Container \"" + element.getContainer() + "\" does not exist.");
 		}
 		IContainer container = (IContainer) resource;
-		
+
 		// If the extension wasn't specified, assume .bb
 		if (!fileName.endsWith(".bb") && !fileName.endsWith(".inc") && !fileName.endsWith(".conf")) {
 			fileName = fileName + ".bb";
 		}
-		
+
 		final IFile file = container.getFile(new Path(fileName));
 		try {
 			InputStream stream = openContentStream(element);
@@ -92,6 +91,7 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 		monitor.worked(1);
 		monitor.setTaskName("Opening file for editing...");
 		getShell().getDisplay().asyncExec(new Runnable() {
+			@Override
 			public void run() {
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				try {
@@ -106,14 +106,15 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 	/**
 	 * We will accept the selection in the workbench to see if we can initialize
 	 * from it.
-	 * 
+	 *
 	 * @see IWorkbenchWizard#init(IWorkbench, IStructuredSelection)
 	 */
+	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.selection = selection;
 		if (selection instanceof IStructuredSelection) {
-			Object element = ((IStructuredSelection)selection).getFirstElement();
-			
+			Object element = selection.getFirstElement();
+
 			if (element instanceof IResource) {
 				IProject p = ((IResource)element).getProject();
 				try {
@@ -126,28 +127,28 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				
+
 			}
 		}
 	}
 
 	/**
 	 * We will initialize file contents with a sample text.
-	 * @param srcuri 
-	 * @param author 
-	 * @param homepage 
-	 * @param license 
-	 * @param description 
-	 * @param fileName 
-	 * @param newPage 
+	 * @param srcuri
+	 * @param author
+	 * @param homepage
+	 * @param license
+	 * @param description
+	 * @param fileName
+	 * @param newPage
 	 */
 
 	private InputStream openContentStream(BitbakeRecipeUIElement element) {
-		
+
 		StringBuffer sb = new StringBuffer();
-		
+
 		sb.append("DESCRIPTION = \"" + element.getDescription() + "\"\n");
-		
+
 		if (element.getAuthor().length() > 0) {
 			sb.append("AUTHOR = \"" + element.getAuthor() + "\"\n");
 		}
@@ -155,11 +156,11 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 		if (element.getHomePage().length() > 0) {
 			sb.append("HOMEPAGE = \"" + element.getHomePage() + "\"\n");
 		}
-		
+
 		if (element.getSection().length() > 0) {
 			sb.append("SECTION = \"" + element.getSection() + "\"\n");
 		}
-		
+
 		if (element.getLicense().length() > 0) {
 			sb.append("LICENSE = \"" + element.getLicense() + "\"\n");
 		}
@@ -167,26 +168,26 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 		if (element.getChecksum().length() > 0) {
 			sb.append("LIC_FILES_CHKSUM = \"" + element.getChecksum() + "\"\n");
 		}
-		
+
 		if (element.getSrcuri().length() > 0) {
 			sb.append("SRC_URI = \"" + element.getSrcuri() + "\"\n");
 		}
-		
+
 		if (element.getMd5sum().length() > 0) {
 			sb.append("SRC_URI[md5sum] = \"" + element.getMd5sum() + "\"\n");
 		}
-	
+
 		if (element.getsha256sum().length() > 0) {
 			sb.append("SRC_URI[sha256sum] = \"" + element.getsha256sum() + "\"\n");
 		}
-		
+
 		ArrayList<String> inheritance = element.getInheritance();
 		if (!inheritance.isEmpty()) {
 			Object ia[] = inheritance.toArray();
 			String inheritance_str = "inherit ";
 			for(int i=0; i<ia.length; i++)
 				inheritance_str += ((String) ia[i]) + " ";
-			sb.append(inheritance_str); 
+			sb.append(inheritance_str);
 		}
 		sb.append("\n");
 
@@ -195,10 +196,11 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performFinish() {
-		
+
 		final BitbakeRecipeUIElement element = page.populateUIElement();
-		
+
 		IRunnableWithProgress op = new IRunnableWithProgress() {
+			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
 					doFinish(element, monitor);

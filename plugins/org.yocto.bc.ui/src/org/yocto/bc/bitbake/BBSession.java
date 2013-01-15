@@ -13,8 +13,8 @@ package org.yocto.bc.bitbake;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +58,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	public static final int TYPE_STATEMENT = 3;
 	public static final int TYPE_FLAG = 4;
 
+	public static final String BB_ENV_FILE = "bitbake.env";
+
 	public static final String CONF_DIR = "/conf";
 	public static final String BUILDDIR_INDICATORS [] = {
 		"/local.conf",
@@ -81,7 +83,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		this.pinfo = new ProjectInfo();
 		pinfo.setLocation(projectRoot);
 		pinfo.setInitScriptPath(ProjectInfoHelper.getInitScriptPath(projectRoot));
-		this.parsingCmd = "DISABLE_SANITY_CHECKS=\"1\" bitbake -e";
+		this.parsingCmd = "sh -c 'DISABLE_SANITY_CHECKS=\"1\" bitbake -e >& " + BB_ENV_FILE + "  '" ;
 	}
 
 	public BBSession(ShellSession ssession, URI projectRoot, boolean silent) throws IOException {
@@ -387,11 +389,11 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 				if(!initialized) { //recheck
 					boolean hasErrors = false;
 					String result = shell.execute(parsingCmd, hasErrors);
-					if(!hasErrors) {
-						properties = parseBBEnvironment(result);
-					} else {
-						properties = parseBBEnvironment("");
-					}
+
+					//FIXME : wait for bitbake to finish
+
+					properties = parseBBEnvironment(result);
+
 					initialized = true;
 				}
 			} finally {
@@ -450,10 +452,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		}
 	}
 
-	protected void parse(String content, Map outMap) throws Exception {
-		if (content == null)
-			return;
-		BufferedReader reader = new BufferedReader(new StringReader(content));
+	protected void parse(String bbOutfilePath, Map outMap) throws Exception {
+		BufferedReader reader = new BufferedReader(new FileReader(bbOutfilePath + BB_ENV_FILE));
 		String line;
 		boolean inLine = false;
 		StringBuffer sb = null;
@@ -520,11 +520,11 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		return null;
 	}
 
-	protected Map parseBBEnvironment(String bbOut) throws Exception {
+	protected Map parseBBEnvironment(String bbOutFilePath) throws Exception {
 		Map env = new Hashtable();
 		this.depends = new ArrayList<URI>();
 
-		parse(bbOut, env);
+		parse(bbOutFilePath, env);
 
 		String included = (String) env.get("BBINCLUDED");
 		if(getDefaultDepends() != null) {
@@ -768,4 +768,5 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	public Map<String, String> getProperties() {
 		return (Map<String, String>) properties;
 	}
+
 }

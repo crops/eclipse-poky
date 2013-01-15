@@ -40,12 +40,14 @@ public class BBConfigurationInitializeOperation implements IRunnableWithProgress
 	public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 		BBSession session;
 		try {
+			System.out.println("Initialize bitbake session ...");
 			monitor.beginTask("Initialize bitbake session ...", RemoteHelper.TOTALWORKLOAD);
 			ProjectInfoHelper.store(RemoteHelper.getRemoteConnectionByName(pinfo.getConnection().getName()), pinfo.getURI(), pinfo, monitor);
 			session = Activator.getBBSession(pinfo, writer, monitor);
 			session.initialize();
 			monitor.worked(90);
 			monitor.done();
+			System.out.println("Bitbake session initialized successfully.");
 		} catch (Exception e) {
 			throw new InvocationTargetException(e);
 		}
