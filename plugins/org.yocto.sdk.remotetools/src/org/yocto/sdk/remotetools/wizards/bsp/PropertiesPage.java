@@ -398,7 +398,7 @@ public class PropertiesPage extends WizardPage {
 			 existingButton.setSelection(false);
 			 kbCombo.removeAll();
 			 
-			 kb_property = "\"" + kernel_choice + "\"."+NEW_KBRANCH_NAME;
+			 kb_property = "\\\"" + kernel_choice + "\\\"."+NEW_KBRANCH_NAME;
 			 String[] values = getValues(kb_property);
 			 if (values != null)
 				 kbCombo.setItems(values);
@@ -435,14 +435,20 @@ public class PropertiesPage extends WizardPage {
 		 canFlipToNextPage();
 		 getWizard().getContainer().updateButtons();
 	}
-	
+	private String getSourceCmd(){
+		String metadataLoc = bspElem.getMetadataLoc();
+		return "source " + metadataLoc + MainPage.INIT_FILE  +" > temps; rm -rf temps;";
+	}
 	private String[] getValues(String property) {
 		ArrayList<String> values = new ArrayList<String>();
 		
-		String values_cmd = bspElem.getMetadataLoc() + "/scripts/" + VALUES_CMD_PREFIX + bspElem.getKarch() + VALUES_CMD_SURFIX + property;
+		String values_cmd = getSourceCmd() + bspElem.getMetadataLoc() + "/scripts/" + VALUES_CMD_PREFIX + bspElem.getKarch() + VALUES_CMD_SURFIX + property;
 		try {
-			Runtime rt = Runtime.getRuntime();
-			Process proc = rt.exec(values_cmd);
+//			Runtime rt = Runtime.getRuntime();
+//			Process proc = rt.exec(values_cmd);
+			ProcessBuilder builder = new ProcessBuilder(new String[] {"sh", "-c", values_cmd});
+			Process proc = builder.start();
+			
 			InputStream stdin = proc.getInputStream();
 			InputStreamReader isr = new InputStreamReader(stdin);
 			BufferedReader br = new BufferedReader(isr);

@@ -56,6 +56,7 @@ public class MainPage extends WizardPage {
 	private static final String PROPERTIES_CMD_PREFIX = "yocto-bsp list ";
 	private static final String PROPERTIES_CMD_SURFIX = " properties -o ";
 	private static final String PROPERTIES_FILE = "/tmp/properties.json";
+	static final String INIT_FILE = "/oe-init-build-env";
 
 	private Button btnMetadataLoc;
 	private Button btnBspOutLoc;
@@ -287,14 +288,71 @@ public class MainPage extends WizardPage {
 		}
 		
 		bspElem.setBspName(bspname);
+//		if (!textBspOutLoc.getText().isEmpty())
+//			bspElem.setBspOutLoc(textBspOutLoc.getText());
 		if (!textBspOutLoc.getText().isEmpty())
 			bspElem.setBspOutLoc(textBspOutLoc.getText());
+		else
+			bspElem.setBspOutLoc("");
+		if (!textBspOutLoc.getText().isEmpty())
+			bspElem.setBuildLoc(textBspOutLoc.getText());
+		else {
+			bspElem.setBuildLoc(metadata_loc + "/build");
+			checkBuildDir();
+		}
 		bspElem.setMetadataLoc(metadata_loc);
 		bspElem.setKarch(karch);
 		bspElem.setQarch(qarch);
 		bspElem.setValidPropertiesFile(createPropertiesFile());
 		
 		return true;
+	}
+	private Status createBuildDir(String buildLoc) {
+		String metadataDir = textMetadataLoc.getText();
+
+		// if we do  not change the directory to metadata location the script will be looked into the directory indicated by user.dir system property
+		// system.property usually points to the location from where eclipse was started
+		String createBuildDirCmd = "cd " + metadataDir + ";source " + metadataDir + INIT_FILE + " " + buildLoc;
+
+		try {
+			ProcessBuilder builder = new ProcessBuilder(new String[] {"sh", "-c", createBuildDirCmd});
+			Process proc = builder.start();
+			InputStream errorStream = proc.getErrorStream();
+			InputStreamReader isr = new InputStreamReader(errorStream);
+			BufferedReader br = new BufferedReader(isr);
+			String line = null;
+			String status = "";
+			while ( (line = br.readLine()) != null) {
+				status += line;
+			}
+
+			if (proc.waitFor() != 0)
+				return new Status(IStatus.ERROR, "not_used", 0, status, null);;
+			return new Status(IStatus.OK, "not_used", 0, "", null);
+		} catch (Exception e) {
+			return  new Status(IStatus.ERROR, "not_used", 0, e.getMessage(), null);
+		}
+	}
+	private Status checkBuildDir() {
+
+		String metadataLoc = textMetadataLoc.getText();
+
+		String buildLoc = metadataLoc + "/build";
+		return createBuildDir(buildLoc);
+	}
+	private String getBuildDir() {
+
+		String metadataLoc = textMetadataLoc.getText();
+		String buildLoc = textBspOutLoc.getText();
+
+		if (buildLoc.isEmpty()) {
+			buildLoc = metadataLoc + "/build";
+		} 
+		File buildLocDir = new File(buildLoc);
+		if (!buildLocDir.exists()) {
+			createBuildDir(buildLoc);
+		}
+		return buildLoc;
 	}
 	
 	private boolean createPropertiesFile() {
@@ -319,14 +377,22 @@ public class MainPage extends WizardPage {
 		}
 		return true;
 	}
-	
+	private String getSourceCmd(){
+		String metadataLoc = textMetadataLoc.getText();
+		return "source " + metadataLoc + INIT_FILE + " " + getBuildDir() +" > temps; rm -rf temps;";
+	}
 	private ArrayList<String> getKArches() {
 		ArrayList<String> karches = new ArrayList<String>();
-		
-		String get_karch_cmd = textMetadataLoc.getText() + "/scripts/" + KARCH_CMD;
+		String metadataLoc = textMetadataLoc.getText();
+
+		String get_karch_cmd = getSourceCmd() + metadataLoc + "/scripts/" + KARCH_CMD;
 		try {
-			Runtime rt = Runtime.getRuntime();
-			Process proc = rt.exec(get_karch_cmd);
+//			Runtime rt = Runtime.getRuntime();
+//			Process proc = rt.exec(get_karch_cmd);
+			
+			ProcessBuilder builder = new ProcessBuilder(new String[] {"sh", "-c", get_karch_cmd});
+			Process proc = builder.start();
+			
 			InputStream stdin = proc.getInputStream();
 			InputStreamReader isr = new InputStreamReader(stdin);
 			BufferedReader br = new BufferedReader(isr);
@@ -351,11 +417,15 @@ public class MainPage extends WizardPage {
 
 	private ArrayList<String> getQArches() {
 		ArrayList<String> qarches = new ArrayList<String>();
+		String metadataLoc = textMetadataLoc.getText();
 		
-		String get_qarch_cmd = textMetadataLoc.getText() + "/scripts/" + QARCH_CMD;
+		String get_qarch_cmd = getSourceCmd() + metadataLoc + "/scripts/" + QARCH_CMD;
 		try {
-			Runtime rt = Runtime.getRuntime();
-			Process proc = rt.exec(get_qarch_cmd);
+//			Runtime rt = Runtime.getRuntime();
+//			Process proc = rt.exec(get_qarch_cmd);
+			ProcessBuilder builder = new ProcessBuilder(new String[] {"sh", "-c", get_qarch_cmd});
+			Process proc = builder.start();
+			
 			InputStream stdin = proc.getInputStream();
 			InputStreamReader isr = new InputStreamReader(stdin);
 			BufferedReader br = new BufferedReader(isr);
