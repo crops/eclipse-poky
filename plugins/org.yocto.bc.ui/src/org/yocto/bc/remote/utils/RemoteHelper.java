@@ -99,7 +99,11 @@ public class RemoteHelper {
 		if (host == null) {
 			// this is a local connection
 			ISystemRegistry sr = RSECorePlugin.getTheSystemRegistry();
-			return sr.getLocalHost();
+			IHost local = null;
+			while (local == null) {
+				local = sr.getLocalHost();
+			}
+			return local;
 		}
 		ISystemRegistry sr = RSECorePlugin.getTheSystemRegistry();
 		IHost[] connections = sr.getHosts();
@@ -237,6 +241,7 @@ public class RemoteHelper {
 			IHostFile remoteFile = fileService.getFile(remotePath.removeLastSegments(1).toString(), remotePath.lastSegment(), new SubProgressMonitor(monitor, 5));
 			return remoteFile;
 		} catch (Exception e) {
+			e.printStackTrace();
 	    }finally {
 			monitor.done();
 		}

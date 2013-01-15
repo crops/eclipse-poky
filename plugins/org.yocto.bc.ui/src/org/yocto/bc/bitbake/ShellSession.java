@@ -86,8 +86,12 @@ public class ShellSession {
 
 	private void initializeShell(IProgressMonitor monitor) throws IOException {
 		try {
-			RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""));
-			RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(exportCmd, root.getAbsolutePath(), ""));
+			if (root != null) {
+				RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""));
+				RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(exportCmd, root.getAbsolutePath(), ""));
+			} else {
+				throw new Exception("Root file not found!");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -103,9 +107,8 @@ public class ShellSession {
 
 		try {
 			if (projectInfo.getConnection() != null) {
-				IHost connection = RemoteHelper.getRemoteConnectionByName(projectInfo.getConnection().getName());
-				hasErrors = RemoteHelper.runCommandRemote(connection, new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
-				return RemoteHelper.getProcessBuffer(connection).getMergedOutputLines();
+				hasErrors = RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
+				return RemoteHelper.getProcessBuffer(projectInfo.getConnection()).getMergedOutputLines();
 			}
 			return null;
 		} catch (Exception e) {

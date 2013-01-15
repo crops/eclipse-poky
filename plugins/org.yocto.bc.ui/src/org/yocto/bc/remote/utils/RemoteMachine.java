@@ -123,6 +123,9 @@ public class RemoteMachine {
 	}
 
 	public IHost getConnection() {
+//		if (connection == null) {
+//			connection = RemoteHelper.getRemoteConnectionForURI(, new NullProgressMonitor());
+//		}
 		return connection;
 	}
 	public void setConnection(IHost connection) {
@@ -132,9 +135,8 @@ public class RemoteMachine {
 	public IFileService getRemoteFileService(IProgressMonitor monitor) throws Exception {
 		if (fileService == null) {
 	
-			if (getFileSubsystem() == null)
-				throw new Exception(Messages.ErrorNoSubsystem);
-	
+			while(getFileSubsystem() == null)
+				Thread.sleep(2);
 			try {
 				getFileSubsystem().connect(monitor, false);
 			} catch (CoreException e) {

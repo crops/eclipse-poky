@@ -746,4 +746,8 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 			wlock.unlock();
 		}
 	}
+
+	public Map<String, String> getProperties() {
+		return (Map<String, String>) properties;
+	}
 }

@@ -29,9 +29,15 @@ class BBVariableTextHover implements ITextHover {
 
 	public BBVariableTextHover(BBSession session, URI file) {
 		this.session = session;
-//		envMap = session;
+		envMap = getEnvironmentMap();
 		LoadRecipeJob loadRecipeJob = new LoadRecipeJob(getFilename(file), file);
 		loadRecipeJob.schedule();
+	}
+
+	private Map<String, String> getEnvironmentMap() {
+		if (envMap == null)
+			envMap = this.session.getProperties();
+		return envMap;
 	}
 
 	private String getFilename(URI uri) {
@@ -77,7 +83,7 @@ class BBVariableTextHover implements ITextHover {
 		}
 		
 		String key = new String(line, start + 2, i - start - 2);
-		String val = (String) envMap.get(key);
+		String val = (String) getEnvironmentMap().get(key);
 		
 		if (val == null) {
 			val = "";
@@ -103,7 +109,7 @@ class BBVariableTextHover implements ITextHover {
 			try {
 				BBRecipe recipe = Activator.getBBRecipe(session, filePath);
 				recipe.initialize();
-//				envMap = recipe;
+				envMap = recipe;
 			} catch (Exception e) {
 				return new Status(IStatus.WARNING, Activator.PLUGIN_ID, "Unable to load session for " + filePath, e);
 			} 
