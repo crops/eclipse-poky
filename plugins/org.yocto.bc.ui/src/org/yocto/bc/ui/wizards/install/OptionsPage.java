@@ -313,7 +313,7 @@ public class OptionsPage extends FiniteStateWizardPage {
 		if (!Character.isJavaIdentifierStart(chars[0]))
 			return false;
 		for (int i = 1; i < chars.length; i++)
-			if (!Character.isJavaIdentifierPart(chars[i]))
+			if (!Character.isJavaIdentifierPart(chars[i]) && chars[i] != '-')
 				return false;
 		return true;
 	}
