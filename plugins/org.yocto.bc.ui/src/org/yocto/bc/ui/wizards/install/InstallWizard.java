@@ -6,7 +6,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardContainer;
@@ -20,6 +19,7 @@ import org.eclipse.ui.console.MessageConsole;
 import org.yocto.bc.remote.utils.CommandResponseHandler;
 import org.yocto.bc.remote.utils.ConsoleWriter;
 import org.yocto.bc.remote.utils.RemoteHelper;
+import org.yocto.bc.remote.utils.YoctoCommand;
 import org.yocto.bc.remote.utils.YoctoRunnableWithProgress;
 import org.yocto.bc.ui.Activator;
 import org.yocto.bc.ui.model.ProjectInfo;
@@ -112,18 +112,17 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 			IRemoteServices remoteServices = ((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE));
 			final IHost connection = RemoteHelper.getRemoteConnectionByName(remoteConnection.getName());
 			final CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(connection);
-			final YoctoRunnableWithProgress adapter = (YoctoRunnableWithProgress)RemoteHelper.getHostShellProcessAdapter(connection);
 			final IWizardContainer container = this.getContainer();
 			if (((Boolean)options.get(GIT_CLONE)).booleanValue()) {
 				String cmd = "/usr/bin/git clone --progress";
 				String args = "git://git.yoctoproject.org/poky.git " + uri.getPath();
 				String taskName = "Checking out Yocto git repository";
 
+				YoctoRunnableWithProgress adapter = new YoctoRunnableWithProgress(new YoctoCommand(cmd, "", args));
+
 				adapter.setRemoteConnection(remoteConnection);
 				adapter.setRemoteServices(remoteServices);
 				adapter.setTaskName(taskName);
-				adapter.setCmd(cmd);
-				adapter.setArgs(args);
 				try {
 					container.run(true, true, adapter);
 				} catch (InvocationTargetException e) {
@@ -148,31 +147,15 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				pinfo.setRemoteServices(remoteServices);
 
 				final ConsoleWriter cw = new ConsoleWriter();
-				final ProjectInfo pInfoFinal = pinfo;
-
-				Thread t = new Thread(new Runnable() {
-
-					@Override
-					public void run() {
-						try {
-							Thread.sleep(2000);
-							new BBConfigurationInitializeOperation(pInfoFinal, null).run(new NullProgressMonitor());
-						} catch (InvocationTargetException e) {
-							e.printStackTrace();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				});
-
+//				final ProjectInfo pInfoFinal = pinfo;
+				container.run(false, false, new BBConfigurationInitializeOperation(pinfo, null));
 				console = RemoteHelper.getConsole(connection);
 				console.newMessageStream().println(cw.getContents());
 
 				model.put(InstallWizard.KEY_PINFO, pinfo);
 				Activator.putProjInfo(pinfo.getURI(), pinfo);
 
-				container.run(true, true, new CreateBBCProjectOperation(pinfo));
-				t.start();
+				container.run(false, false, new CreateBBCProjectOperation(pinfo));
 				return true;
 			}
 		} catch (Exception e) {

@@ -8,27 +8,27 @@ public class ProcessStreamBuffer {
 	private static final String WHITESPACES = "\\s+";
 	List<String> errorLines;
 	List<String> outputLines;
-	
+
 	ProcessStreamBuffer(){
 		errorLines = new ArrayList<String>();
 		outputLines = new ArrayList<String>();
 	}
-	
+
 	public void addErrorLine(String line){
 		errorLines.add(line);
 	}
 	public void addOutputLine(String line){
 		outputLines.add(line);
 	}
-	
+
 	public List<String> getOutputLines(){
 		return outputLines;
 	}
-	
+
 	public List<String> getErrorLines(){
 		return errorLines;
 	}
-	
+
 	public String getMergedOutputLines(){
 		String returnVal = "";
 		for (int i = 0; i < outputLines.size(); i++) {
@@ -65,6 +65,6 @@ public class ProcessStreamBuffer {
 				}
 			}
 		}
-		return null;
+		return "";
 	}
 }

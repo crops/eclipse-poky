@@ -204,7 +204,7 @@ public class NewBitBakeFileRecipeWizard extends Wizard implements INewWizard {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
 					doFinish(element, monitor);
-					RemoteHelper.runCommandRemote(connection, new YoctoCommand("rm -rf " + element.getMetaDir() + "/temp", "", ""));
+					RemoteHelper.handleRunCommandRemote(connection, new YoctoCommand("rm -rf " + element.getMetaDir() + "/temp", "", ""), monitor);
 				} catch (Exception e) {
 					throw new InvocationTargetException(e);
 				} finally {

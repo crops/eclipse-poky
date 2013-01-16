@@ -14,7 +14,6 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -25,6 +24,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
 import org.eclipse.rse.core.RSECorePlugin;
 import org.eclipse.rse.core.model.IHost;
@@ -35,11 +35,11 @@ import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
 import org.eclipse.rse.services.files.IFileService;
 import org.eclipse.rse.services.files.IHostFile;
 import org.eclipse.rse.services.shells.IHostShell;
+import org.eclipse.rse.services.shells.IShellService;
 import org.eclipse.rse.subsystems.files.core.model.RemoteFileUtility;
 import org.eclipse.rse.subsystems.files.core.servicesubsystem.FileServiceSubSystem;
 import org.eclipse.rse.subsystems.files.core.servicesubsystem.IFileServiceSubSystem;
 import org.eclipse.rse.subsystems.files.core.subsystems.IRemoteFileSubSystem;
-import org.eclipse.rse.subsystems.shells.core.subsystems.IRemoteCmdSubSystem;
 import org.eclipse.ui.console.MessageConsole;
 import org.yocto.bc.ui.Activator;
 import org.yocto.bc.ui.wizards.install.Messages;
@@ -67,10 +67,6 @@ public class RemoteHelper {
 
 	public static CommandResponseHandler getCommandHandler(IHost connection) {
 		return getRemoteMachine(connection).getCmdHandler();
-	}
-
-	public static YoctoHostShellProcessAdapter getHostShellProcessAdapter(IHost connection) {
-		return getRemoteMachine(connection).getHostShellProcessAdapter();
 	}
 
 	public static ProcessStreamBuffer getProcessBuffer(IHost connection) {
@@ -198,13 +194,37 @@ public class RemoteHelper {
 		return getRemoteMachine(connection).getShellService(monitor);
 	}
 
-	public static ISubSystem getCmdSubsystem(IHost host) {
-		if (host == null)
-			return null;
-		ISubSystem[] subSystems = host.getSubSystems();
-		for (int i = 0; i < subSystems.length; i++) {
-			if (subSystems[i] instanceof IRemoteCmdSubSystem)
-				return subSystems[i];
+	public static void handleRunCommandRemote(IHost connection, YoctoCommand cmd, IProgressMonitor monitor){
+		try {
+			CommandRunnable cmdRun = new CommandRunnable(connection, cmd, monitor);
+			cmdRun.run();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static IHostShell runCommandRemote(IHost connection, YoctoCommand cmd,
+			IProgressMonitor monitor) throws CoreException {
+
+		monitor.beginTask(NLS.bind(Messages.RemoteShellExec_1,
+				cmd, cmd.getArguments()), 10);
+
+		String remoteCommand = cmd.getCommand() + " " + cmd.getArguments() + " ; echo " + TERMINATOR + "; exit ;";
+
+		IShellService shellService;
+		try {
+			shellService = (IShellService) getConnectedShellService(connection, new SubProgressMonitor(monitor, 7));
+
+			String env[] = getRemoteMachine(connection).prepareEnvString(monitor);
+
+			try {
+				IHostShell hostShell = shellService.runCommand(cmd.getInitialDirectory(), remoteCommand, env, new SubProgressMonitor(monitor, 3));
+				return hostShell;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
 		return null;
 	}
@@ -246,54 +266,6 @@ public class RemoteHelper {
 			monitor.done();
 		}
 		return null;
-	}
-
-	public static boolean runCommandRemote(final IHost connection, final YoctoCommand cmd) throws Exception {
-		final String remoteCommand = cmd.getCommand() + " " + cmd.getArguments();
-		final boolean hasErrors = false;
-
-		if (!cmd.getInitialDirectory().isEmpty()) {
-			writeToShell(connection, "cd " + cmd.getInitialDirectory());
-		}
-		if (!hasErrors)
-			writeToShell(connection, remoteCommand);
-
-		return hasErrors;
-	}
-
-	public static boolean writeToShell(final IHost connection, final String remoteCommand){
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					YoctoHostShellProcessAdapter adapter = getHostShellProcessAdapter(connection);
-					String fullRemoteCommand = remoteCommand + "; echo " + TERMINATOR + ";";
-					adapter.setLastCommand(fullRemoteCommand);
-					getHostShell(connection).writeToShell(fullRemoteCommand);
-					while (!adapter.isFinished())
-						Thread.sleep(2);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}).run();
-		return true;
-	}
-
-	public static void runBatchRemote(IHost connection, List<YoctoCommand> cmds, boolean displayOutput) throws CoreException {
-		try {
-			String remoteCommand = "";
-			for (YoctoCommand cmd : cmds) {
-				remoteCommand = cmd.getCommand() + " " + cmd.getArguments();
-				if (!cmd.getInitialDirectory().isEmpty()) {
-					writeToShell(connection, "cd " + cmd.getInitialDirectory());
-				}
-				writeToShell(connection, remoteCommand);
-			}
-
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
 	}
 
 	/**
@@ -343,10 +315,6 @@ public class RemoteHelper {
 			e.printStackTrace();
 		}
 		return false;
-	}
-
-	public static void clearProcessBuffer(IHost connection) {
-		getHostShellProcessAdapter(connection).clearProcessBuffer();
 	}
 
 }

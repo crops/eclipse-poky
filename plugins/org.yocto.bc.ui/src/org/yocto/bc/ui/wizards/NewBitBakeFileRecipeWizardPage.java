@@ -28,6 +28,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -91,7 +92,6 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	private static final String MIRRORS_FILE = "mirrors.bbclass";
 	private static final String CLASSES_FOLDER = "classes";
 	private static final String COPYING_FILE = "COPYING";
-	private static final String WHITESPACES = "\\s+";
 	private static final String CMAKE_LIST = "cmakelists.txt";
 	private static final String CMAKE = "cmake";
 	private static final String SETUP_SCRIPT = "setup.py";
@@ -104,9 +104,9 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 
 	private HashMap<String, String> mirrorTable;
 	private URI extractDir;
-	private YoctoCommand licenseChecksumCmd;
-	protected YoctoCommand md5YCmd;
-	protected YoctoCommand sha256YCmd;
+	protected ProcessStreamBuffer md5Buffer;
+	protected ProcessStreamBuffer sha256Buffer;
+	protected ProcessStreamBuffer md5CopyingBuffer;
 
 	public NewBitBakeFileRecipeWizardPage(ISelection selection, IHost connection) {
 		super("wizardPage");
@@ -331,12 +331,11 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	}
 
 	private void handleLocalPopulate(URI srcURI, IProgressMonitor monitor) {
-		populateLicenseFileChecksum(srcURI);
+		populateLicenseFileChecksum(srcURI, monitor);
 		populateInheritance(srcURI, monitor);
 	}
 
 	private void handleRemotePopulate(final URI srcURI, IProgressMonitor monitor) throws Exception {
-		RemoteHelper.clearProcessBuffer(connection);
 		populateRecipeName(srcURI);
 
 		this.getContainer().run(true, true, new IRunnableWithProgress() {
@@ -345,47 +344,53 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException,
 					InterruptedException {
 				monitor.beginTask("Populating recipe fields ... ", 100);
-				List<YoctoCommand> commands = new ArrayList<YoctoCommand>();
 
 				try {
 					String metaDirLocPath = metaDirLoc.getPath();
-
 					monitor.subTask("Cleaning environment");
-					commands.add(new YoctoCommand("rm -rf " + TEMP_FOLDER_NAME, metaDirLocPath, ""));
-					commands.add(new YoctoCommand( "mkdir " + TEMP_FOLDER_NAME, metaDirLocPath, ""));
+					YoctoCommand rmYCmd = new YoctoCommand("rm -rf " + TEMP_FOLDER_NAME, metaDirLocPath, "");
+					RemoteHelper.handleRunCommandRemote(connection, rmYCmd, new SubProgressMonitor(monitor, 5));
+
+					YoctoCommand mkdirYCmd = new YoctoCommand( "mkdir " + TEMP_FOLDER_NAME, metaDirLocPath, "");
+					RemoteHelper.handleRunCommandRemote(connection, mkdirYCmd, new SubProgressMonitor(monitor, 5));
+
 					updateTempFolderPath();
 					monitor.worked(10);
 
 					monitor.subTask("Downloading package sources");
-					commands.add(new YoctoCommand("wget " + srcURI.toURL(), tempFolderPath, ""));
 
 					updateTempFolderPath();
-					RemoteHelper.runBatchRemote(connection, commands, true);
 
-					commands.clear();
+					YoctoCommand wgetYCmd = new YoctoCommand("wget " + srcURI.toURL(), tempFolderPath, "");
+					RemoteHelper.handleRunCommandRemote(connection, wgetYCmd, new SubProgressMonitor(monitor, 40));
+
 					monitor.worked(50);
 
 					monitor.subTask("Compute package checksums");
 					String md5Cmd = "md5sum " + srcFileNameExt;
-					md5YCmd = new YoctoCommand(md5Cmd, tempFolderPath, "");
-					RemoteHelper.runCommandRemote(connection, md5YCmd);
+					YoctoCommand md5YCmd = new YoctoCommand(md5Cmd, tempFolderPath, "");
+
+					RemoteHelper.handleRunCommandRemote(connection, md5YCmd, new SubProgressMonitor(monitor, 10));
+					md5Buffer =  md5YCmd.getProcessBuffer();
 
 					monitor.worked(60);
 
 					String sha256Cmd = "sha256sum " + srcFileNameExt;
-					sha256YCmd = new YoctoCommand(sha256Cmd, tempFolderPath, "");
-					RemoteHelper.runCommandRemote(connection, sha256YCmd);
+					YoctoCommand sha256YCmd = new YoctoCommand(sha256Cmd, tempFolderPath, "");
+					RemoteHelper.handleRunCommandRemote(connection, sha256YCmd, new SubProgressMonitor(monitor, 10));
+					sha256Buffer = sha256YCmd.getProcessBuffer();
 
 					monitor.worked(70);
 
 					monitor.subTask("Extracting package");
-					extractDir = extractPackage(srcURI);
+					extractDir = extractPackage(srcURI, new SubProgressMonitor(monitor, 0));
 					monitor.worked(80);
 
-					licenseChecksumCmd = populateLicenseFileChecksum(extractDir);
+					YoctoCommand licenseChecksumCmd = populateLicenseFileChecksum(extractDir, new SubProgressMonitor(monitor, 10));
+					md5CopyingBuffer = 	licenseChecksumCmd.getProcessBuffer();
 
 					monitor.subTask("Creating mirror lookup table");
-					mirrorTable = createMirrorLookupTable();
+					mirrorTable = createMirrorLookupTable(new SubProgressMonitor(monitor, 10));
 
 					monitor.worked(90);
 					monitor.done();
@@ -397,23 +402,15 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		updateSrcUri(mirrorTable, srcURI);
 		populateInheritance(extractDir, monitor);
 
-		String md5Val = retrieveSum(srcFileNameExt, md5Pattern);
+		String md5Val = md5Buffer.getOutputLineContaining(srcFileNameExt, md5Pattern);
 		md5sumText.setText(Pattern.matches(md5Pattern,  md5Val) ? md5Val : "");
-		String sha256Val = retrieveSum(srcFileNameExt, sha256Pattern);
+		String sha256Val = sha256Buffer.getOutputLineContaining(srcFileNameExt, sha256Pattern);
 		sha256sumText.setText(Pattern.matches(sha256Pattern,  sha256Val) ? sha256Val : "");
-		String checkSumVal =  retrieveSum(COPYING_FILE, md5Pattern);
+		String checkSumVal =  md5CopyingBuffer.getOutputLineContaining(COPYING_FILE, md5Pattern);
 		checksumText.setText(RemoteHelper.createNewURI(extractDir, COPYING_FILE).toString() + ";md5=" + (Pattern.matches(md5Pattern,  checkSumVal) ? checkSumVal : ""));
 	}
 
-	private String retrieveSum(String arg, String pattern) {
-		ProcessStreamBuffer buffer = RemoteHelper.getProcessBuffer(this.connection);
-		String sum = buffer.getOutputLineContaining(arg, pattern);
-		if (sum == null)
-			return "";
-		return sum;
-	}
-
-	private URI extractPackage(URI srcURI) {
+	private URI extractPackage(URI srcURI, IProgressMonitor monitor) {
 		try {
 			String path = srcFileNameExt;
 			String tarCmd = "tar ";
@@ -423,7 +420,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 				tarCmd += "-xvf ";
 			}
 
-			RemoteHelper.runCommandRemote(connection, new YoctoCommand(tarCmd + path, tempFolderPath, ""));
+			RemoteHelper.handleRunCommandRemote(connection, new YoctoCommand(tarCmd + path, tempFolderPath, ""), monitor);
 
 			return RemoteHelper.createNewURI(metaDirLoc, TEMP_FOLDER_NAME + "/" + srcFileName);
 
@@ -459,13 +456,13 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		}
 	}
 
-	private YoctoCommand populateLicenseFileChecksum(URI extractDir) {
+	private YoctoCommand populateLicenseFileChecksum(URI extractDir, IProgressMonitor monitor) {
 		if (extractDir == null)
 			throw new RuntimeException("Something went wrong during source extraction!");
 
 		try {
 			YoctoCommand catCmd = new YoctoCommand("md5sum " + COPYING_FILE, extractDir.getPath(), "");
-			RemoteHelper.runCommandRemote(connection, catCmd);
+			RemoteHelper.handleRunCommandRemote(connection, catCmd, monitor);
 			return catCmd;
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to process file for MD5 calculation", e);
@@ -494,11 +491,11 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		return "";
 	}
 
-	private HashMap<String, String> createMirrorLookupTable() throws Exception {
+	private HashMap<String, String> createMirrorLookupTable(IProgressMonitor monitor) throws Exception {
 		HashMap<String, String> mirrorMap = new HashMap<String, String>();
 
 		YoctoCommand cmd = new YoctoCommand("cat " + MIRRORS_FILE, getMetaFolderPath() + CLASSES_FOLDER, "");
-		RemoteHelper.runCommandRemote(connection, cmd);
+		RemoteHelper.handleRunCommandRemote(connection, cmd, monitor);
 
 		if (!cmd.getProcessBuffer().hasErrors()){
 			String delims = "[\\t]+";

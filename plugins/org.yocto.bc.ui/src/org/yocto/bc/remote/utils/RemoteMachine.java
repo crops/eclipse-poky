@@ -1,6 +1,10 @@
 package org.yocto.bc.remote.utils;
 
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -8,10 +12,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.core.subsystems.ISubSystem;
+import org.eclipse.rse.internal.services.local.shells.LocalShellService;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
 import org.eclipse.rse.services.files.IFileService;
+import org.eclipse.rse.services.shells.HostShellProcessAdapter;
 import org.eclipse.rse.services.shells.IHostShell;
 import org.eclipse.rse.services.shells.IShellService;
 import org.eclipse.rse.subsystems.files.core.servicesubsystem.IFileServiceSubSystem;
@@ -26,7 +33,6 @@ public class RemoteMachine {
 	private MessageConsole console;
 	private CommandResponseHandler cmdHandler;
 	private IHostShell hostShell;
-	private YoctoHostShellProcessAdapter hostShellProcessAdapter;
 	private IShellService shellService;
 	private ProcessStreamBuffer processBuffer;
 	private IHost connection;
@@ -36,6 +42,111 @@ public class RemoteMachine {
 
 	public RemoteMachine(IHost connection) {
 		setConnection(connection);
+	}
+	private ProcessStreamBuffer processOutput(Process process, IProgressMonitor monitor) throws Exception {
+		if (process == null)
+			throw new Exception("An error has occured while trying to run remote command!");
+		ProcessStreamBuffer processBuffer = new ProcessStreamBuffer();
+
+		BufferedReader inbr = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader errbr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		boolean cancel = false;
+		while (!cancel) {
+			if(monitor.isCanceled()) {
+				cancel = true;
+				throw new InterruptedException("User Cancelled");
+			}
+			StringBuffer buffer = new StringBuffer();
+			int c;
+			while ((c = errbr.read()) != -1) {
+				char ch = (char) c;
+				buffer.append(ch);
+				if (ch == '\n'){
+					String str = buffer.toString();
+					processBuffer.addErrorLine(str);
+					System.out.println(str);
+					if (str.trim().equals(RemoteHelper.TERMINATOR)) {
+						break;
+					}
+					buffer.delete(0, buffer.length());
+				}
+			}
+
+			while ((c = inbr.read()) != -1) {
+				char ch = (char) c;
+				buffer.append(ch);
+				if (ch == '\n'){
+					String str = buffer.toString();
+					processBuffer.addOutputLine(str);
+					System.out.println(str);
+					if (str.trim().equals(RemoteHelper.TERMINATOR)) {
+						break;
+					}
+					buffer.delete(0, buffer.length());
+				}
+			}
+			cancel = true;
+		}
+		return processBuffer;
+	}
+
+	public String[] prepareEnvString(IProgressMonitor monitor){
+		String[] env = null;
+		try {
+			if (shellService instanceof LocalShellService) {
+				env  = shellService.getHostEnvironment();
+			} else {
+				List<String> envList = new ArrayList<String>();
+				getRemoteEnvProxyVars(monitor);
+				String value = "";
+				for (String varName : environment.keySet()){
+					value = varName + "=" + environment.get(varName);
+					envList.add(value);
+				}
+				env = envList.toArray(new String[envList.size()]);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return env;
+	}
+	public void getRemoteEnvProxyVars(IProgressMonitor monitor){
+		try {
+			if (environment != null && !environment.isEmpty())
+				return;
+
+			environment = new HashMap<String, String>();
+
+			IShellService shellService = getShellService(new SubProgressMonitor(monitor, 7));
+
+			HostShellProcessAdapter p = null;
+			ProcessStreamBuffer buffer = null;
+			try {
+				SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, 3);
+				IHostShell hostShell = shellService.runCommand("", "env" + " ; echo " + RemoteHelper.TERMINATOR + "; exit;", new String[]{}, subMonitor);
+				p = new HostShellProcessAdapter(hostShell);
+				buffer = processOutput(p, subMonitor);
+				for(int i = 0; i < buffer.getOutputLines().size(); i++) {
+					String out = buffer.getOutputLines().get(i);
+					String[] tokens = out.split("=");
+					if (tokens.length != 2)
+						continue;
+					String varName = tokens[0];
+					String varValue = tokens[1];
+					if (varName.contains(PROXY))
+						environment.put(varName, varValue);
+				}
+			} catch (Exception e) {
+				if (p != null) {
+					p.destroy();
+				}
+				e.printStackTrace();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Map<String, String> getEnvironment() {
@@ -60,6 +171,7 @@ public class RemoteMachine {
 		try {
 			if (hostShell == null) {
 				hostShell = getShellService(new NullProgressMonitor()).launchShell("", new String[]{}, new NullProgressMonitor());
+				prepareEnvString(new NullProgressMonitor());
 			}
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
@@ -67,17 +179,6 @@ public class RemoteMachine {
 			e.printStackTrace();
 		}
 		return hostShell;
-	}
-
-	public YoctoHostShellProcessAdapter getHostShellProcessAdapter() {
-		try {
-			if (hostShellProcessAdapter == null)
-				hostShellProcessAdapter = new YoctoRunnableWithProgress(getHostShell(), getProcessBuffer(), getCmdHandler());
-			return hostShellProcessAdapter;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
 	}
 
 	public IShellService getShellService(IProgressMonitor monitor) throws Exception {

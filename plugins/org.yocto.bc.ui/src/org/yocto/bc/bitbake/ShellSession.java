@@ -48,6 +48,7 @@ public class ShellSession {
 	public static final String LT = System.getProperty("line.separator");
 	public static final String exportCmd = "export BB_ENV_EXTRAWHITE=\"DISABLE_SANITY_CHECKS $BB_ENV_EXTRAWHITE\"";
 	public static final String exportColumnsCmd = "export COLUMNS=1000";
+	private static final String BUILD_DIR = "/build/";
 
 	public static String getFilePath(String file) throws IOException {
 		File f = new File(file);
@@ -87,8 +88,11 @@ public class ShellSession {
 	private void initializeShell(IProgressMonitor monitor) throws IOException {
 		try {
 			if (root != null) {
-				RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""));
-				RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(exportCmd, root.getAbsolutePath(), ""));
+				IHost connection = projectInfo.getConnection();
+//				RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""));
+				RemoteHelper.handleRunCommandRemote(connection, new YoctoCommand("source " + initCmd, root.getAbsolutePath(), ""), monitor);
+//				RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(exportCmd, root.getAbsolutePath(), ""));
+				RemoteHelper.handleRunCommandRemote(connection,  new YoctoCommand(exportCmd, root.getAbsolutePath(), ""), monitor);
 			} else {
 				throw new Exception("Root file not found!");
 			}
@@ -107,9 +111,11 @@ public class ShellSession {
 
 		try {
 			if (projectInfo.getConnection() != null) {
-				hasErrors = RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
+//				hasErrors = RemoteHelper.runCommandRemote(projectInfo.getConnection(), new YoctoCommand(command, root.getAbsolutePath() + "/build/", ""));
+				command = getInitCmd() + command;
+				RemoteHelper.handleRunCommandRemote(projectInfo.getConnection(), new YoctoCommand(command, getBuildDirAbsolutePath(), ""), new NullProgressMonitor());
 //				return RemoteHelper.getProcessBuffer(projectInfo.getConnection()).getMergedOutputLines();
-				return root.getAbsolutePath() + "/build/";
+				return getBuildDirAbsolutePath();
 			}
 			return null;
 		} catch (Exception e) {
@@ -118,9 +124,16 @@ public class ShellSession {
 		return null;
 	}
 
+	private String getBuildDirAbsolutePath(){
+		return root.getAbsolutePath() + BUILD_DIR;
+	}
+
+    private String getInitCmd() {
+    	return "source " + initCmd + " " + getBuildDirAbsolutePath() + " > tempsf; rm -rf tempsf;";
+	}
+
 synchronized
 	public void execute(String command, ICommandResponseHandler handler) throws IOException {
-		System.out.println(command);
 		execute(command, TERMINATOR, handler);
 	}
 
