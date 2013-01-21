@@ -78,6 +78,14 @@ public class ShellSession {
 //	private final Writer out;
 	private ProjectInfo projectInfo;
 
+	public ProjectInfo getProjectInfo() {
+		return projectInfo;
+	}
+
+	public void setProjectInfo(ProjectInfo projectInfo) {
+		this.projectInfo = projectInfo;
+	}
+
 	public ShellSession(ProjectInfo pInfo, int shellType, IHostFile root, String initCmd, Writer out) throws IOException {
 		this.projectInfo = pInfo;
 		this.root = root;
@@ -129,7 +137,7 @@ public class ShellSession {
 	}
 
     private String getInitCmd() {
-    	return "source " + initCmd + " " + getBuildDirAbsolutePath() + " > tempsf; rm -rf tempsf;";
+    	return "source " + initCmd + " " + getBuildDirAbsolutePath() + " > tempsf; rm -rf tempsf;" + exportCmd + ";" + exportColumnsCmd + ";" + "cd " + getBuildDirAbsolutePath()  + ";";
 	}
 
 synchronized

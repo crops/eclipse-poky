@@ -61,7 +61,7 @@ public class Activator extends AbstractUIPlugin {
 		URI key = session.getProjInfoRoot();// + filePath;
 		BBRecipe recipe = (BBRecipe) bbRecipeMap.get(key);
 		if (recipe == null) {
-			recipe = new BBRecipe(session,filePath);
+			recipe = new BBRecipe(session, filePath);
 			bbRecipeMap.put(key, recipe);
 		}
 
@@ -75,7 +75,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @throws IOException
 	 */
 	public static BBSession getBBSession(ProjectInfo projectInfo, Writer out, IProgressMonitor monitor) throws IOException {
-		URI projectRoot = projectInfo.getURI();
+		URI projectRoot = projectInfo.getOriginalURI();
 		if (bbSessionMap == null) {
 			bbSessionMap = new Hashtable<URI, BBSession>();
 		}
@@ -97,7 +97,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @throws Exception
 	 */
 	public static BBSession getBBSession(ProjectInfo projectInfo, IProgressMonitor monitor) throws Exception {
-		URI projectRoot = projectInfo.getURI();
+		URI projectRoot = projectInfo.getOriginalURI();
 		if (bbSessionMap == null) {
 			bbSessionMap = new Hashtable<URI, BBSession>();
 		}
@@ -151,12 +151,12 @@ public class Activator extends AbstractUIPlugin {
 		if (projInfoMap == null) {
 			projInfoMap = new Hashtable<URI, ProjectInfo>();
 		}
-		location = convertOEFSUri(location);
+//		location = convertOEFSUri(location);
 		if (location != null) {
 			ProjectInfo pi = projInfoMap.get(location);
 			if (pi == null) {
 				pi = new ProjectInfo();
-				pi.setLocation(location);
+				pi.setLocationURI(location);
 				try {
 					pi.setInitScriptPath(ProjectInfoHelper.getInitScriptPath(location));
 				} catch (IOException e) {
@@ -195,7 +195,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @throws IOException
 	 */
 	private static ShellSession getShellSession(ProjectInfo projInfo, Writer out, IProgressMonitor monitor) throws IOException {
-		URI absolutePath = projInfo.getURI();
+		URI absolutePath = projInfo.getOriginalURI();
 		if (shellMap == null) {
 			shellMap = new Hashtable<String, ShellSession>();
 		}

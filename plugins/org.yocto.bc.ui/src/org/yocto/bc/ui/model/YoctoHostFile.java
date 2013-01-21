@@ -21,6 +21,7 @@ import org.eclipse.rse.services.files.IFileService;
 import org.eclipse.rse.services.files.IHostFile;
 import org.yocto.bc.remote.utils.RemoteHelper;
 import org.yocto.bc.ui.filesystem.Messages;
+import org.yocto.bc.ui.filesystem.OEFile;
 import org.yocto.bc.ui.filesystem.Policy;
 
 public class YoctoHostFile implements IHostFile{
@@ -33,12 +34,8 @@ public class YoctoHostFile implements IHostFile{
 		this.projectInfo = pInfo;
 		this.fileURI = fileURI;
 		String path = fileURI.getPath();
-//		int parentEnd = path.lastIndexOf("/");
-//		String parentPath = path.substring(0, parentEnd);
-//		String fileName = path.substring(parentEnd + 1);
 		fileService = projectInfo.getFileService(monitor);
 		file = RemoteHelper.getRemoteHostFile(projectInfo.getConnection(), path, monitor);
-//		fileService.getFile(parentPath, fileName, monitor);
 	}
 
 	public YoctoHostFile(ProjectInfo projectInfo, URI uri) {
@@ -67,11 +64,11 @@ public class YoctoHostFile implements IHostFile{
 		return file.getName();
 	}
 	public URI getProjectLocationURI() {
-		return projectInfo.getURI();
+		return projectInfo.getOriginalURI();
 	}
 	public URI getLocationURI() {
-		projectInfo.getURI().getPath().indexOf(file.getAbsolutePath());
-		return projectInfo.getURI();
+		projectInfo.getOriginalURI().getPath().indexOf(file.getAbsolutePath());
+		return projectInfo.getOriginalURI();
 	}
 	@Override
 	public boolean isDirectory() {
@@ -84,7 +81,9 @@ public class YoctoHostFile implements IHostFile{
 	public boolean copy(IFileStore destFileStore, IProgressMonitor monitor) {
 		IHostFile destFile;
 		try {
-			destFile = fileService.createFile(destFileStore.getParent().toURI().getPath(), destFileStore.getName(), monitor);
+			OEFile oeFile = (OEFile)destFileStore;
+			String parentPath = oeFile.getParentPath();
+			destFile = fileService.createFile(parentPath, destFileStore.getName(), monitor);
 			fileService.copy(file.getParentPath(), file.getName(), destFile.getParentPath(), destFile.getName(), monitor);
 		} catch (SystemMessageException e) {
 			e.printStackTrace();
@@ -250,7 +249,10 @@ public class YoctoHostFile implements IHostFile{
 
 	public URI getChildURIformPath(IPath path) {
 		try {
-			return new URI(fileURI.getScheme(), fileURI.getHost(), fileService.getFile(file.getAbsolutePath(), path.toPortableString(), null).getAbsolutePath(), fileURI.getFragment());
+			String fileName =  path.lastSegment();
+			path = path.removeLastSegments(1);
+			String newPath = fileService.getFile(file.getAbsolutePath() + "/" + path.toPortableString(), fileName, null).getAbsolutePath();
+			return new URI(fileURI.getScheme(), fileURI.getHost(), newPath, fileURI.getFragment());
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 			return null;

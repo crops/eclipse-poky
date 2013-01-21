@@ -11,19 +11,21 @@
 package org.yocto.bc.ui.model;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.rse.core.model.IHost;
 import org.eclipse.rse.services.files.IFileService;
+import org.yocto.bc.bitbake.ProjectInfoHelper;
 import org.yocto.bc.remote.utils.RemoteHelper;
+import org.yocto.bc.ui.filesystem.YoctoLocation;
 
 
 public class ProjectInfo implements IModelElement {
 	private String name;
-	private URI location;
-	private URI oefsLocation;
+	private YoctoLocation location;
 	private String init;
 	private IHost connection;
 	private IRemoteServices remoteServices;
@@ -37,13 +39,13 @@ public class ProjectInfo implements IModelElement {
 	public String getProjectName() {
 		return name;
 	}
-	public URI getURI() {
-		return location;
+	public URI getOriginalURI() {
+		return location.getOriginalURI();
 	}
 	@Override
 	public void initialize() throws Exception {
 		name = new String();
-		location = new URI("");
+		location = new YoctoLocation();
 		init = new String();
 	}
 
@@ -51,8 +53,20 @@ public class ProjectInfo implements IModelElement {
 		this.init = init;
 	}
 
-	public void setLocation(URI location) {
-		this.location = location;
+	public void setLocationURI(URI location) {
+		if (this.location == null)
+			this.location = new YoctoLocation();
+		this.location.setOriginalURI(location);
+		try {
+			this.location.setOEFSURI(new URI(ProjectInfoHelper.OEFS_SCHEME + location.getPath() ));
+		} catch (URISyntaxException e) {
+			try {
+				this.location.setOEFSURI(new URI(""));
+			} catch (URISyntaxException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		}
 	}
 
 	public void setName(String name) {
@@ -61,7 +75,7 @@ public class ProjectInfo implements IModelElement {
 
 	public IHost getConnection() {
 		if (connection == null) {
-			connection = RemoteHelper.getRemoteConnectionForURI(location, new NullProgressMonitor());
+			connection = RemoteHelper.getRemoteConnectionForURI(location.getOriginalURI(), new NullProgressMonitor());
 		}
 		return connection;
 	}
@@ -87,11 +101,7 @@ public class ProjectInfo implements IModelElement {
 		}
 	}
 
-	public URI getOefsLocation() {
-		return oefsLocation;
-	}
-
-	public void setOefsLocation(URI oefsLocation) {
-		this.oefsLocation = oefsLocation;
+	public URI getOEFSURI() {
+		return location.getOEFSURI();
 	}
 }

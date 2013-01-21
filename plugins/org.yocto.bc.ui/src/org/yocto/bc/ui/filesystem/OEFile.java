@@ -37,6 +37,7 @@ import org.yocto.bc.bitbake.BBSession;
 import org.yocto.bc.bitbake.ProjectInfoHelper;
 import org.yocto.bc.bitbake.ShellSession;
 import org.yocto.bc.remote.utils.RemoteHelper;
+import org.yocto.bc.ui.Activator;
 import org.yocto.bc.ui.model.ProjectInfo;
 import org.yocto.bc.ui.model.YoctoHostFile;
 
@@ -57,6 +58,10 @@ public class OEFile extends FileStore {
 	 * The absolute file system path of the file represented by this store.
 	 */
 	protected final String filePath;
+
+	public String getFilePath() {
+		return filePath;
+	}
 
 	private final URI root;
 
@@ -84,17 +89,18 @@ public class OEFile extends FileStore {
 	 */
 	private boolean isPotentialBuildDir(String path) {
 		String parentPath = path.substring(0, path.lastIndexOf("/"));
+		String name = path.substring(path.lastIndexOf("/") + 1);
 		boolean ret = true;
 		try {
 			IFileService fs = file.getFileService();
-			IHostFile hostFile = fs.getFile(parentPath, path, new NullProgressMonitor());
+			IHostFile hostFile = fs.getFile(parentPath, name, new NullProgressMonitor());
 			if (!hostFile.isDirectory())
 				return false;
-			IHostFile confDir = fs.getFile(path, path + BBSession.CONF_DIR, new NullProgressMonitor());
+			IHostFile confDir = fs.getFile(path, BBSession.CONF_DIR, new NullProgressMonitor());
 			if (!confDir.exists() || !confDir.isDirectory())
 				return false;
 			for (int i = 0; i < BBSession.BUILDDIR_INDICATORS.length && ret == true; i++) {
-				IHostFile child = fs.getFile(path, path + BBSession.CONF_DIR +  BBSession.BUILDDIR_INDICATORS[i], new NullProgressMonitor());
+				IHostFile child = fs.getFile(path + "/" + BBSession.CONF_DIR, BBSession.BUILDDIR_INDICATORS[i], new NullProgressMonitor());
 				if(!child.exists() || !child.isFile()) {
 					ret = false;
 					break;
@@ -114,10 +120,11 @@ public class OEFile extends FileStore {
 		if(isPotentialBuildDir(path)) {
 			BBSession config = null;
 			try {
-				ShellSession shell = new ShellSession(file.getProjectInfo(), ShellSession.SHELL_TYPE_BASH,
-						RemoteHelper.getRemoteHostFile(file.getConnection(), root.getPath(), new NullProgressMonitor()),
-							ProjectInfoHelper.getInitScriptPath(root) + " " + path, null);
-				config = new BBSession(shell, root, true);
+//				ShellSession shell = new ShellSession(file.getProjectInfo(), ShellSession.SHELL_TYPE_BASH,
+//						RemoteHelper.getRemoteHostFile(file.getConnection(), root.getPath(), new NullProgressMonitor()),
+//							ProjectInfoHelper.getInitScriptPath(root) + " " + path, null);
+//				config = new BBSession(shell, root, true);
+				config = Activator.getBBSession(Activator.getProjInfo(root), monitor);
 				config.initialize();
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -146,7 +153,7 @@ public class OEFile extends FileStore {
 		IFileStore[] wrapped = new IFileStore[children.length];
 
 		for (int i = 0; i < wrapped.length; i++) {
-			String fullPath = file.getAbsolutePath() + File.separatorChar + children[i];
+			String fullPath = file.getAbsolutePath() + "/" + children[i];
 
 			updateIgnorePaths(fullPath, ignoredPaths, monitor);
 			if (ignoredPaths.contains(fullPath)) {
@@ -164,23 +171,7 @@ public class OEFile extends FileStore {
 		if (destFileStore instanceof OEFile) {
 			file.copy(destFileStore, monitor);
 
-//			File source = file;
-//			File destination = ((OEFile) destFile).file;
-//			//handle case variants on a case-insensitive OS, or copying between
-//			//two equivalent files in an environment that supports symbolic links.
-//			//in these nothing needs to be copied (and doing so would likely lose data)
-//			try {
-//				if (source.getCanonicalFile().equals(destination.getCanonicalFile())) {
-//					//nothing to do
-//					return;
-//				}
-//			} catch (IOException e) {
-//				String message = NLS.bind(Messages.couldNotRead, source.getAbsolutePath());
-//				Policy.error(EFS.ERROR_READ, message, e);
-//			}
 		}
-		//fall through to super implementation
-//		super.copy(destFileStore, options, monitor);
 	}
 
 	@Override
@@ -372,17 +363,6 @@ public class OEFile extends FileStore {
 
 	@Override
 	public IFileStore mkdir(int options, IProgressMonitor monitor) throws CoreException {
-//		boolean shallow = (options & EFS.SHALLOW) != 0;
-//		//must be a directory
-//		if (shallow)
-//			file.mkdir();
-//		else
-//			file.mkdirs();
-//		if (!file.isDirectory()) {
-//			checkReadOnlyParent(file, null);
-//			String message = NLS.bind(Messages.failedCreateWrongType, filePath);
-//			Policy.error(EFS.ERROR_WRONG_TYPE, message);
-//		}
 		file.mkdir(options);
 		return this;
 	}
@@ -390,64 +370,6 @@ public class OEFile extends FileStore {
 	@Override
 	public void move(IFileStore destFile, int options, IProgressMonitor monitor) throws CoreException {
 		file.move(destFile, monitor);
-//		if (!(destFile instanceof OEFile)) {
-//			super.move(destFile, options, monitor);
-//			return;
-//		}
-//		File source = file;
-//		File destination = ((OEFile) destFile).file;
-//		boolean overwrite = (options & EFS.OVERWRITE) != 0;
-//		monitor = Policy.monitorFor(monitor);
-//		try {
-//			monitor.beginTask(NLS.bind(Messages.moving, source.getAbsolutePath()), 10);
-//			//this flag captures case renaming on a case-insensitive OS, or moving
-//			//two equivalent files in an environment that supports symbolic links.
-//			//in these cases we NEVER want to delete anything
-//			boolean sourceEqualsDest = false;
-//			try {
-//				sourceEqualsDest = source.getCanonicalFile().equals(destination.getCanonicalFile());
-//			} catch (IOException e) {
-//				String message = NLS.bind(Messages.couldNotMove, source.getAbsolutePath());
-//				Policy.error(EFS.ERROR_WRITE, message, e);
-//			}
-//			if (!sourceEqualsDest && !overwrite && destination.exists()) {
-//				String message = NLS.bind(Messages.fileExists, destination.getAbsolutePath());
-//				Policy.error(EFS.ERROR_EXISTS, message);
-//			}
-//			if (source.renameTo(destination)) {
-//				// double-check to ensure we really did move
-//				// since java.io.File#renameTo sometimes lies
-//				if (!sourceEqualsDest && source.exists()) {
-//					// XXX: document when this occurs
-//					if (destination.exists()) {
-//						// couldn't delete the source so remove the destination and throw an error
-//						// XXX: if we fail deleting the destination, the destination (root) may still exist
-//						new OEFile(destination, ignoredPaths, root).delete(EFS.NONE, null);
-//						String message = NLS.bind(Messages.couldnotDelete, source.getAbsolutePath());
-//						Policy.error(EFS.ERROR_DELETE, message);
-//					}
-//					// source exists but destination doesn't so try to copy below
-//				} else {
-//					if (!destination.exists()) {
-//						// neither the source nor the destination exist. this is REALLY bad
-//						String message = NLS.bind(Messages.failedMove, source.getAbsolutePath(), destination.getAbsolutePath());
-//						Policy.error(EFS.ERROR_WRITE, message);
-//					}
-//					//the move was successful
-//					monitor.worked(10);
-//					return;
-//				}
-//			}
-//			// for some reason renameTo didn't work
-//			if (sourceEqualsDest) {
-//				String message = NLS.bind(Messages.couldNotMove, source.getAbsolutePath());
-//				Policy.error(EFS.ERROR_WRITE, message, null);
-//			}
-//			// fall back to default implementation
-//			super.move(destFile, options, Policy.subMonitorFor(monitor, 10));
-//		} finally {
-//			monitor.done();
-//		}
 	}
 
 	@Override
@@ -470,9 +392,6 @@ public class OEFile extends FileStore {
 	 */
 	@Override
 	public File toLocalFile(int options, IProgressMonitor monitor) throws CoreException {
-//		if (options == EFS.CACHE)
-//			return super.toLocalFile(options, monitor);
-//		return file;
 		return file.toLocalFile();
 	}
 
@@ -494,5 +413,9 @@ public class OEFile extends FileStore {
 
 	public ProjectInfo getProjectInfo() {
 		return file.getProjectInfo();
+	}
+
+	public String getParentPath() {
+		return filePath.substring(0, filePath.lastIndexOf("/"));
 	}
 }

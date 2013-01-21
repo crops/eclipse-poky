@@ -23,6 +23,7 @@ import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.ptp.remote.core.exception.RemoteConnectionException;
 import org.eclipse.ptp.remote.rse.core.RSEConnection;
 import org.eclipse.rse.core.model.IHost;
+import org.eclipse.rse.services.files.IFileService;
 import org.eclipse.rse.services.files.IHostFile;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -169,7 +170,12 @@ public class OptionsPage extends FiniteStateWizardPage {
 				return false;
 			}
 		} else { //git clone
-			if (repoDest.exists() && repoDest.isDirectory()) {
+			if (repoDest != null && repoDest.exists() && repoDest.isDirectory()) {
+				IHostFile[] hostFiles = RemoteHelper.getRemoteDirContent(connection, repoDest.getAbsolutePath(), "", IFileService.FILE_TYPE_FILES_AND_FOLDERS, new NullProgressMonitor());
+				if (hostFiles.length != 0) {
+					setErrorMessage("Directory " + projectPath + " is not empty, please choose another location.");
+					return false;
+				}
 				IHostFile gitDescr = RemoteHelper.getRemoteHostFile(connection, projectPath + "/.git", new NullProgressMonitor());
 				if (gitDescr != null && gitDescr.exists()) {
 					setErrorMessage("Directory " + projectPath + " contains a repository, please choose another location or skip cloning the repository.");

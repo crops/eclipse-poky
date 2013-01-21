@@ -52,6 +52,7 @@ public class CommandRunnable implements Runnable{
 			}
 			StringBuffer buffer = new StringBuffer();
 			int c;
+			if (errbr != null)
 			while ((c = errbr.read()) != -1) {
 				char ch = (char) c;
 				buffer.append(ch);
@@ -66,7 +67,7 @@ public class CommandRunnable implements Runnable{
 					buffer.delete(0, buffer.length());
 				}
 			}
-
+			if (inbr != null)
 			while ((c = inbr.read()) != -1) {
 				char ch = (char) c;
 				buffer.append(ch);

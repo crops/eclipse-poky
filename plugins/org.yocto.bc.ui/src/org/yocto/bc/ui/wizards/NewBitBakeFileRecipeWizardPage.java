@@ -25,6 +25,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -52,6 +53,8 @@ import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 import org.yocto.bc.remote.utils.ProcessStreamBuffer;
 import org.yocto.bc.remote.utils.RemoteHelper;
 import org.yocto.bc.remote.utils.YoctoCommand;
+import org.yocto.bc.ui.Activator;
+import org.yocto.bc.ui.model.ProjectInfo;
 
 public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 	private Text containerText;
@@ -246,7 +249,17 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 		}
 
 		IProject project = container.getProject();
-		metaDirLoc = RemoteHelper.createNewURI(project.getLocationURI(), "meta");
+		ProjectInfo projInfo = null;
+		try {
+			projInfo = Activator.getProjInfo(project.getLocationURI());
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		metaDirLoc = RemoteHelper.createNewURI(projInfo.getOriginalURI(), "meta");
 
 		if (fileName.length() == 0) {
 			updateStatus("File name must be specified");
@@ -356,7 +369,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 
 					updateTempFolderPath();
 					monitor.worked(10);
-
+					
 					monitor.subTask("Downloading package sources");
 
 					updateTempFolderPath();
@@ -365,7 +378,7 @@ public class NewBitBakeFileRecipeWizardPage extends WizardPage {
 					RemoteHelper.handleRunCommandRemote(connection, wgetYCmd, new SubProgressMonitor(monitor, 40));
 
 					monitor.worked(50);
-
+					
 					monitor.subTask("Compute package checksums");
 					String md5Cmd = "md5sum " + srcFileNameExt;
 					YoctoCommand md5YCmd = new YoctoCommand(md5Cmd, tempFolderPath, "");

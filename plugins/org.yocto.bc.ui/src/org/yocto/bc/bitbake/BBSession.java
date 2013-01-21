@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,15 +35,18 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.rse.core.model.IHost;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.progress.WorkbenchJob;
+import org.yocto.bc.remote.utils.RemoteHelper;
 import org.yocto.bc.ui.model.IModelElement;
 import org.yocto.bc.ui.model.ProjectInfo;
 
@@ -60,10 +65,10 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 	public static final String BB_ENV_FILE = "bitbake.env";
 
-	public static final String CONF_DIR = "/conf";
+	public static final String CONF_DIR = "conf";
 	public static final String BUILDDIR_INDICATORS [] = {
-		"/local.conf",
-		"/bblayers.conf",
+		"local.conf",
+		"bblayers.conf",
 	};
 
 	protected final ProjectInfo pinfo;
@@ -81,9 +86,9 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	public BBSession(ShellSession ssession, URI projectRoot) throws IOException {
 		shell = ssession;
 		this.pinfo = new ProjectInfo();
-		pinfo.setLocation(projectRoot);
+		pinfo.setLocationURI(projectRoot);
 		pinfo.setInitScriptPath(ProjectInfoHelper.getInitScriptPath(projectRoot));
-		this.parsingCmd = "sh -c 'DISABLE_SANITY_CHECKS=\"1\" bitbake -e >& " + BB_ENV_FILE + "  '" ;
+		this.parsingCmd = "DISABLE_SANITY_CHECKS=\"1\" bitbake -e >& " + BB_ENV_FILE;
 	}
 
 	public BBSession(ShellSession ssession, URI projectRoot, boolean silent) throws IOException {
@@ -190,7 +195,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	}
 
 	public URI getProjInfoRoot() {
-		return pinfo.getURI();
+		return pinfo.getOriginalURI();
 	}
 
 	/**
@@ -271,7 +276,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	 */
 	public MessageConsole getConsole() {
 		if (sessionConsole == null) {
-			String cName = ProjectInfoHelper.getProjectName(pinfo.getURI()) + " Console";
+			String cName = ProjectInfoHelper.getProjectName(pinfo.getOriginalURI()) + " Console";
 			IConsoleManager conMan = ConsolePlugin.getDefault().getConsoleManager();
 			IConsole[] existing = conMan.getConsoles();
 			for (int i = 0; i < existing.length; i++)
@@ -391,10 +396,10 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 					String result = shell.execute(parsingCmd, hasErrors);
 
 					//FIXME : wait for bitbake to finish
-
 					properties = parseBBEnvironment(result);
 
 					initialized = true;
+					//FIXME: cleanup BB env file
 				}
 			} finally {
 				//downgrade lock
@@ -453,7 +458,10 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	}
 
 	protected void parse(String bbOutfilePath, Map outMap) throws Exception {
-		BufferedReader reader = new BufferedReader(new FileReader(bbOutfilePath + BB_ENV_FILE));
+		IHost connection = shell.getProjectInfo().getConnection();
+		InputStream is = RemoteHelper.getRemoteInputStream(connection, bbOutfilePath, BB_ENV_FILE, new NullProgressMonitor());
+		RemoteHelper.getRemoteHostFile(connection, bbOutfilePath + BB_ENV_FILE, new NullProgressMonitor());
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 		String line;
 		boolean inLine = false;
 		StringBuffer sb = null;
@@ -767,6 +775,10 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 	public Map<String, String> getProperties() {
 		return (Map<String, String>) properties;
+	}
+
+	public ProjectInfo getProjectInfo() {
+		return pinfo;
 	}
 
 }

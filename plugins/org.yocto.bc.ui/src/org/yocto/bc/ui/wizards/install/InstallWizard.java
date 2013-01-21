@@ -141,7 +141,7 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				String prjName = (String) options.get(PROJECT_NAME);
 				ProjectInfo pinfo = new ProjectInfo();
 				pinfo.setInitScriptPath(initPath);
-				pinfo.setLocation(uri);
+				pinfo.setLocationURI(uri);
 				pinfo.setName(prjName);
 				pinfo.setConnection(connection);
 				pinfo.setRemoteServices(remoteServices);
@@ -153,7 +153,7 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				console.newMessageStream().println(cw.getContents());
 
 				model.put(InstallWizard.KEY_PINFO, pinfo);
-				Activator.putProjInfo(pinfo.getURI(), pinfo);
+				Activator.putProjInfo(pinfo.getOEFSURI(), pinfo);
 
 				container.run(false, false, new CreateBBCProjectOperation(pinfo));
 				return true;

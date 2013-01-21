@@ -67,7 +67,7 @@ public class ImportYoctoProjectWizard extends FiniteStateWizard  implements IImp
 	public boolean performFinish() {
 		ProjectInfo pinfo = new ProjectInfo();
 		pinfo.setInitScriptPath((String) projectModel.get(ImportYoctoProjectWizard.KEY_INITPATH));
-		pinfo.setLocation((URI) projectModel.get(ImportYoctoProjectWizard.KEY_LOCATION));
+		pinfo.setLocationURI((URI) projectModel.get(ImportYoctoProjectWizard.KEY_LOCATION));
 		pinfo.setName((String) projectModel.get(ImportYoctoProjectWizard.KEY_NAME));
 		
 		try {
@@ -86,7 +86,7 @@ public class ImportYoctoProjectWizard extends FiniteStateWizard  implements IImp
 		projectModel.put(ImportYoctoProjectWizard.KEY_PINFO, pinfo);
 		//setPageComplete(valid);
 		//ProjectInfo pinfo = (ProjectInfo) projectModel.get(KEY_PINFO);
-		Activator.putProjInfo(pinfo.getURI(), pinfo);
+		Activator.putProjInfo(pinfo.getOEFSURI(), pinfo);
 		try {
 			getContainer().run(false, false, new CreateBBCProjectOperation(pinfo));
 		} catch (Exception e) {

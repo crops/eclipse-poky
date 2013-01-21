@@ -11,6 +11,9 @@
 package org.yocto.bc.ui.editors.bitbake;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+
+import javax.security.auth.login.Configuration;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -43,11 +46,17 @@ public class BitBakeDocumentProvider extends FileDocumentProvider {
 	public static final String RECIPE_COMMENT= "RECIPE_COMMENT"; //$NON-NLS-1$
 	
 	private IHost connection;
+
+	private BitBakeSourceViewerConfiguration viewerConfiguration;
 	
 	private static final String[] CONTENT_TYPES= {
 			RECIPE_CODE,
 			RECIPE_COMMENT
 	};
+
+	public BitBakeDocumentProvider(BitBakeSourceViewerConfiguration viewerConfiguration) {
+		this.viewerConfiguration = viewerConfiguration;
+	}
 
 	private IDocumentPartitioner createRecipePartitioner() {
 		IPredicateRule[] rules= { new SingleLineRule("#", null, new Token(RECIPE_COMMENT), (char) 0, true, false) }; //$NON-NLS-1$
@@ -73,13 +82,17 @@ public class BitBakeDocumentProvider extends FileDocumentProvider {
 		if (element instanceof IFileEditorInput) {
 			IFileEditorInput input= (IFileEditorInput) element;
 
-		    URI uri = input.getFile().getLocationURI();
-			if (uri == null)
-				return true;
-
-			if (connection == null) 
-				connection = RemoteHelper.getRemoteConnectionForURI(uri, new NullProgressMonitor());
-			return !RemoteHelper.fileExistsRemote(connection, new NullProgressMonitor(), uri.getPath());
+		    URI root = viewerConfiguration.getBBSession().getProjInfoRoot();
+		    String relPath = input.getFile().getProjectRelativePath().toPortableString();
+		    try {
+				URI fileURI = new URI(root.getScheme(), root.getHost(), root.getPath() + "/" + relPath, root.getFragment());
+				if (connection == null) 
+					//connection = RemoteHelper.getRemoteConnectionForURI(fileURI, new NullProgressMonitor());
+					connection = viewerConfiguration.getBBSession().getProjectInfo().getConnection();
+				return !RemoteHelper.fileExistsRemote(connection, new NullProgressMonitor(), fileURI.getPath());
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
 		}
 
 		return super.isDeleted(element);

@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.yocto.bc.ui.editors.bitbake;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.ITextHover;
@@ -33,9 +36,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
-
 import org.yocto.bc.bitbake.BBLanguageHelper;
 import org.yocto.bc.bitbake.BBSession;
+import org.yocto.bc.bitbake.ProjectInfoHelper;
 
 public class BitBakeSourceViewerConfiguration extends TextSourceViewerConfiguration {
 
@@ -66,7 +69,15 @@ public class BitBakeSourceViewerConfiguration extends TextSourceViewerConfigurat
 	public ITextHover getTextHover(ISourceViewer sv, String contentType) {
 		//only .bb file support Text Hover.
 		if (textHover == null && targetFile.getFileExtension().equals(BBLanguageHelper.BITBAKE_RECIPE_FILE_EXTENSION)) {
-			textHover = new BBVariableTextHover(session, targetFile.getLocationURI());
+				URI root = session.getProjInfoRoot();
+				try {
+					URI targetFIleURI = new URI(root.getScheme(), root.getHost(), root.getPath() + "/" +targetFile.getProjectRelativePath().toPortableString(), root.getFragment());
+					textHover = new BBVariableTextHover(session, targetFIleURI);
+				} catch (URISyntaxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 		}
 		
 		return textHover;
@@ -192,4 +203,9 @@ public class BitBakeSourceViewerConfiguration extends TextSourceViewerConfigurat
 	public void setBBSession(BBSession session) {
 		this.session = session;		
 	}
+	
+	public BBSession getBBSession() {
+		return this.session;		
+	}
+	
 }

@@ -42,7 +42,7 @@ public class BBConfigurationInitializeOperation implements IRunnableWithProgress
 		try {
 			System.out.println("Initialize bitbake session ...");
 			monitor.beginTask("Initialize bitbake session ...", RemoteHelper.TOTALWORKLOAD);
-			ProjectInfoHelper.store(RemoteHelper.getRemoteConnectionByName(pinfo.getConnection().getName()), pinfo.getURI(), pinfo, monitor);
+			ProjectInfoHelper.store(RemoteHelper.getRemoteConnectionByName(pinfo.getConnection().getName()), pinfo.getOriginalURI(), pinfo, monitor);
 			session = Activator.getBBSession(pinfo, writer, monitor);
 			session.initialize();
 			monitor.worked(90);

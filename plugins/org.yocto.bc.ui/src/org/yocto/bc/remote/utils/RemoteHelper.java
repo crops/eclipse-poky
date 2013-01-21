@@ -11,6 +11,7 @@
 package org.yocto.bc.remote.utils;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -268,6 +269,24 @@ public class RemoteHelper {
 		return null;
 	}
 
+	public static InputStream getRemoteInputStream(IHost connection, String parentPath, String remoteFilePath, IProgressMonitor monitor){
+		assert(connection != null);
+		monitor.beginTask(Messages.InfoDownload, 100);
+
+		try {
+			IFileService fileService = getConnectedRemoteFileService(connection, new SubProgressMonitor(monitor, 10));
+			
+			return fileService.getInputStream(parentPath, remoteFilePath, false, monitor);
+//			IHostFile remoteFile = fileService.getFile(remotePath.removeLastSegments(1).toString(), remotePath.lastSegment(), new SubProgressMonitor(monitor, 5));
+//			return remoteFile;
+		} catch (Exception e) {
+			e.printStackTrace();
+	    }finally {
+			monitor.done();
+		}
+		return null;
+	}
+	
 	/**
 	 * Throws a core exception with an error status object built from the given
 	 * message, lower level exception, and error code.

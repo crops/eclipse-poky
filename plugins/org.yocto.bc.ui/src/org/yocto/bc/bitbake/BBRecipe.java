@@ -23,7 +23,7 @@ public class BBRecipe extends BBSession {
 	private final URI fileURI;
 
 	public BBRecipe(BBSession session, URI filePath) throws IOException {
-		super(session.shell, session.pinfo.getURI());
+		super(session.shell, session.pinfo.getOriginalURI());
 		this.session = session;
 		this.fileURI = filePath;
 		this.parsingCmd = "DISABLE_SANITY_CHECKS=\"1\" bitbake -e -b " + filePath.getPath() + " >& " + BB_ENV_FILE;

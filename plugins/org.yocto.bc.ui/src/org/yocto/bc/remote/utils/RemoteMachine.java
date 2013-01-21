@@ -1,11 +1,11 @@
 package org.yocto.bc.remote.utils;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -18,7 +18,6 @@ import org.eclipse.rse.core.subsystems.ISubSystem;
 import org.eclipse.rse.internal.services.local.shells.LocalShellService;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
 import org.eclipse.rse.services.files.IFileService;
-import org.eclipse.rse.services.shells.HostShellProcessAdapter;
 import org.eclipse.rse.services.shells.IHostShell;
 import org.eclipse.rse.services.shells.IShellService;
 import org.eclipse.rse.subsystems.files.core.servicesubsystem.IFileServiceSubSystem;
@@ -43,13 +42,16 @@ public class RemoteMachine {
 	public RemoteMachine(IHost connection) {
 		setConnection(connection);
 	}
-	private ProcessStreamBuffer processOutput(Process process, IProgressMonitor monitor) throws Exception {
-		if (process == null)
+	private ProcessStreamBuffer processOutput(IHostShell shell, IProgressMonitor monitor) throws Exception {
+		if (shell == null)
 			throw new Exception("An error has occured while trying to run remote command!");
 		ProcessStreamBuffer processBuffer = new ProcessStreamBuffer();
-
-		BufferedReader inbr = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		BufferedReader errbr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		
+		Lock lock = shell.getStandardOutputReader().getReaderLock();
+		lock.lock();
+		BufferedReader inbr =  shell.getStandardOutputReader().getReader();
+		BufferedReader errbr =  shell.getStandardErrorReader().getReader();
+		
 		boolean cancel = false;
 		while (!cancel) {
 			if(monitor.isCanceled()) {
@@ -58,6 +60,7 @@ public class RemoteMachine {
 			}
 			StringBuffer buffer = new StringBuffer();
 			int c;
+			if (errbr != null)
 			while ((c = errbr.read()) != -1) {
 				char ch = (char) c;
 				buffer.append(ch);
@@ -71,7 +74,7 @@ public class RemoteMachine {
 					buffer.delete(0, buffer.length());
 				}
 			}
-
+			if (inbr != null)
 			while ((c = inbr.read()) != -1) {
 				char ch = (char) c;
 				buffer.append(ch);
@@ -120,13 +123,13 @@ public class RemoteMachine {
 
 			IShellService shellService = getShellService(new SubProgressMonitor(monitor, 7));
 
-			HostShellProcessAdapter p = null;
+//			HostShellProcessAdapter p = null;
 			ProcessStreamBuffer buffer = null;
 			try {
 				SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, 3);
 				IHostShell hostShell = shellService.runCommand("", "env" + " ; echo " + RemoteHelper.TERMINATOR + "; exit;", new String[]{}, subMonitor);
-				p = new HostShellProcessAdapter(hostShell);
-				buffer = processOutput(p, subMonitor);
+//				p = new HostShellProcessAdapter(hostShell);
+				buffer = processOutput(hostShell, subMonitor);
 				for(int i = 0; i < buffer.getOutputLines().size(); i++) {
 					String out = buffer.getOutputLines().get(i);
 					String[] tokens = out.split("=");
@@ -138,9 +141,9 @@ public class RemoteMachine {
 						environment.put(varName, varValue);
 				}
 			} catch (Exception e) {
-				if (p != null) {
-					p.destroy();
-				}
+//				if (p != null) {
+//					p.destroy();
+//				}
 				e.printStackTrace();
 			}
 
