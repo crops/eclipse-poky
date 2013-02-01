@@ -1,9 +1,7 @@
 package org.yocto.bc.remote.utils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.locks.Lock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -100,69 +98,12 @@ public class YoctoRunnableWithProgress implements IRunnableWithProgress {
 		public void run() {
 			try {
 				hostShell = RemoteHelper.runCommandRemote(this.connection, command, monitor);
-				command.setProcessBuffer(processOutput());
+				command.setProcessBuffer(RemoteHelper.processOutput(monitor, hostShell, cmdHandler, new char[]{'\n', '\r'}));
 			} catch (CoreException e) {
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
-		private ProcessStreamBuffer processOutput() throws Exception {
-			if (hostShell == null)
-				throw new Exception("An error has occured while trying to run remote command!");
-			monitor.beginTask(taskName, RemoteHelper.TOTALWORKLOAD);
-			Lock lock = hostShell.getStandardOutputReader().getReaderLock();
-			lock.lock();
-			ProcessStreamBuffer processBuffer = new ProcessStreamBuffer();
-			BufferedReader inbr = hostShell.getStandardOutputReader().getReader();
-			BufferedReader errbr = hostShell.getStandardErrorReader().getReader();
-			boolean cancel = false;
-			while (!cancel) {
-				if(monitor.isCanceled()) {
-					cancel = true;
-					lock.unlock();
-					throw new InterruptedException("User Cancelled");
-				}
-				StringBuffer buffer = new StringBuffer();
-				int c;
-				if (errbr != null) {
-					while ((c = errbr.read()) != -1) {
-						char ch = (char) c;
-						buffer.append(ch);
-						if (ch == '\n' || ch == '\r'){
-							String str = buffer.toString();
-							processBuffer.addOutputLine(str);
-							System.out.println(str);
-							if (ch == '\r')
-								reportProgress(str);
-							if (str.trim().equals(RemoteHelper.TERMINATOR)) {
-								break;
-							}
-							cmdHandler.response(str, false);
-							buffer.delete(0, buffer.length());
-						}
-					}
-				}
-				if (inbr != null) {
-					while ((c = inbr.read()) != -1) {
-						char ch = (char) c;
-						buffer.append(ch);
-						if (ch == '\n'){
-							String str = buffer.toString();
-							processBuffer.addOutputLine(str);
-							System.out.println(str);
-							if (str.trim().equals(RemoteHelper.TERMINATOR)) {
-								break;
-							}
-							cmdHandler.response(str, false);
-							buffer.delete(0, buffer.length());
-						}
-					}
-				}
-				cancel = true;
-			}
-			lock.unlock();
-			return processBuffer;
 		}
 	}
 	private void updateMonitor(final int work){

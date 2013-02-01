@@ -10,12 +10,16 @@
  ********************************************************************************/
 package org.yocto.bc.remote.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -35,6 +39,7 @@ import org.eclipse.rse.services.IService;
 import org.eclipse.rse.services.clientserver.messages.SystemMessageException;
 import org.eclipse.rse.services.files.IFileService;
 import org.eclipse.rse.services.files.IHostFile;
+import org.eclipse.rse.services.shells.HostShellProcessAdapter;
 import org.eclipse.rse.services.shells.IHostShell;
 import org.eclipse.rse.services.shells.IShellService;
 import org.eclipse.rse.subsystems.files.core.model.RemoteFileUtility;
@@ -78,6 +83,62 @@ public class RemoteHelper {
 		return getRemoteMachine(connection).getHostShell();
 	}
 
+	public static ProcessStreamBuffer processOutput(IProgressMonitor monitor, IHostShell hostShell, CommandResponseHandler cmdHandler, char[] ending) throws Exception {
+		if (hostShell == null)
+			throw new Exception("An error has occured while trying to run remote command!");
+
+		Lock lock = hostShell.getLock();
+		lock.lock();
+		ProcessStreamBuffer processBuffer = new ProcessStreamBuffer();
+		
+		BufferedReader inbr = hostShell.getReader(false);
+		BufferedReader errbr = hostShell.getReader(true);
+		
+		boolean cancel = false;
+		while (!cancel) {
+			if(monitor.isCanceled()) {
+				cancel = true;
+				lock.unlock();
+				throw new InterruptedException("User Cancelled");
+			}
+			StringBuffer buffer = new StringBuffer();
+			int c;
+			if (errbr != null)
+				while ((c = errbr.read()) != -1) {
+					char ch = (char) c;
+					buffer.append(ch);
+					if (Arrays.asList(ending).contains(ch)){
+						String str = buffer.toString();
+						processBuffer.addErrorLine(str);
+						System.out.println(str);
+						if (str.trim().equals(RemoteHelper.TERMINATOR)) {
+							break;
+						}
+						cmdHandler.response(str, true);
+						buffer.delete(0, buffer.length());
+					}
+				}
+			if (inbr != null)
+				while ((c = inbr.read()) != -1) {
+					char ch = (char) c;
+					buffer.append(ch);
+					if (ch == '\n'){
+						String str = buffer.toString();
+						processBuffer.addOutputLine(str);
+						System.out.println(str);
+						if (str.trim().equals(RemoteHelper.TERMINATOR)) {
+							break;
+						}
+						cmdHandler.response(str, false);
+						buffer.delete(0, buffer.length());
+					}
+				}
+			cancel = true;
+		}
+		lock.unlock();
+		return processBuffer;
+	}
+	
 	public static IHost getRemoteConnectionByName(String remoteConnection) {
 		if (remoteConnection == null)
 			return null;
