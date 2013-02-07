@@ -25,6 +25,16 @@ public class BBConfigurationInitializeOperation implements IRunnableWithProgress
 
 	private final ProjectInfo pinfo;
 	private final Writer writer;
+	private boolean errorOccured = false;
+	private String errorMessage = "";
+
+	public boolean isErrorOccured() {
+		return errorOccured;
+	}
+
+	public void setErrorOccured(boolean errorOccured) {
+		this.errorOccured = errorOccured;
+	}
 
 	public BBConfigurationInitializeOperation(ProjectInfo pinfo) {
 		this.pinfo = pinfo;
@@ -47,9 +57,19 @@ public class BBConfigurationInitializeOperation implements IRunnableWithProgress
 			session.initialize();
 			monitor.worked(90);
 			monitor.done();
-			System.out.println("Bitbake session initialized successfully.");
+			errorOccured = session.errorOccured();
+			errorMessage = session.getErrorLines();
+			if (!errorOccured) {
+				System.out.println("Bitbake session initialized successfully.");
+				errorMessage = "";
+			} else 
+				System.out.println("An error occured and Bitbake session was not initialized.");
 		} catch (Exception e) {
 			throw new InvocationTargetException(e);
 		}
+	}
+
+	public String getErrorMessage() {
+		return errorMessage;
 	}
 }

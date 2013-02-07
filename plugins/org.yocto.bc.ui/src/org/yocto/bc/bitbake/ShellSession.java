@@ -218,4 +218,8 @@ synchronized
 		interrupt = true;
 	}
 
+	public void printError(String errorLines) {
+		RemoteHelper.getCommandHandler(projectInfo.getConnection()).response(errorLines, true);
+	}
+
 }

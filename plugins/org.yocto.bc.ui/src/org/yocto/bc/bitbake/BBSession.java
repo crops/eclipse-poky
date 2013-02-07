@@ -76,12 +76,14 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 	protected Map<?,?> properties = null;
 	protected List <URI> depends = null;
 	protected boolean initialized = false;
+	protected boolean errorOccured = false;
 	protected MessageConsole sessionConsole;
 	private final ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock();
 	private final Lock rlock = rwlock.readLock();
 	private final Lock wlock = rwlock.writeLock();
 	protected String parsingCmd;
 	private boolean silent = false;
+	private String errorLines = "";
 
 	public BBSession(ShellSession ssession, URI projectRoot) throws IOException {
 		shell = ssession;
@@ -398,7 +400,15 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 					//FIXME : wait for bitbake to finish
 					properties = parseBBEnvironment(result);
 
-					initialized = true;
+					if (properties.size() == 0) { // there was an error in sourcing bitbake environment
+						shell.printError(errorLines);
+						errorOccured = true;
+					} else {
+						errorLines = "";
+						errorOccured = false;
+						initialized = true;
+					}
+					
 					//FIXME: cleanup BB env file
 				}
 			} finally {
@@ -468,6 +478,7 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 		Stack blockStack = new Stack();
 
 		while ((line = reader.readLine()) != null) {
+			errorLines += line;
 			String trimmed = line.trim();
 			if (trimmed.length() == 0 || line.startsWith("#")) {
 				// weed out the blank and comment lines
@@ -779,6 +790,14 @@ public class BBSession implements IBBSessionListener, IModelElement, Map {
 
 	public ProjectInfo getProjectInfo() {
 		return pinfo;
+	}
+
+	public boolean errorOccured() {
+		return errorOccured;
+	}
+
+	public String getErrorLines() {
+		return errorLines;
 	}
 
 }

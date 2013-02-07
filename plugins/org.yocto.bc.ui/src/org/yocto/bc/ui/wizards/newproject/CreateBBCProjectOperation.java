@@ -44,6 +44,7 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 
 	public static final QualifiedName BBC_PROJECT_INIT = new QualifiedName(null, "BBC_PROJECT_INIT");
 	public static void addNatureToProject(IProject proj, String nature_id, IProgressMonitor monitor) throws CoreException {
+		try {
 		IProjectDescription desc = proj.getDescription();
 		Vector<String> natureIds = new Vector<String>();
 
@@ -52,6 +53,10 @@ public class CreateBBCProjectOperation extends WorkspaceModifyOperation {
 		desc.setNatureIds(natureIds.toArray(new String[natureIds.size()]));
 
 		proj.setDescription(desc, monitor);
+		} catch (Exception e) {
+			//this should not happen
+			e.printStackTrace();
+		}
 	}
 
 	private ProjectInfo projInfo;

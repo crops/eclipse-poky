@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.dstore.core.model.CommandHandler;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardContainer;
 import org.eclipse.jface.wizard.WizardPage;
@@ -57,6 +58,7 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 
 	private Map<String, Object> model;
 	private MessageConsole console;
+	private OptionsPage optionsPage;
 
 	public InstallWizard() {
 		this.model = new Hashtable<String, Object>();
@@ -89,7 +91,8 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 	 */
 	@Override
 	public void addPages() {
-		addPage(new OptionsPage(model));
+		optionsPage = new OptionsPage(model);
+		addPage(optionsPage);
 	}
 
 	@Override
@@ -110,9 +113,9 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 			}
 			IRemoteConnection remoteConnection = ((IRemoteConnection)model.get(InstallWizard.SELECTED_CONNECTION));
 			IRemoteServices remoteServices = ((IRemoteServices)model.get(InstallWizard.SELECTED_REMOTE_SERVICE));
-			final IHost connection = RemoteHelper.getRemoteConnectionByName(remoteConnection.getName());
-			final CommandResponseHandler cmdHandler = RemoteHelper.getCommandHandler(connection);
-			final IWizardContainer container = this.getContainer();
+			IHost connection = RemoteHelper.getRemoteConnectionByName(remoteConnection.getName());
+			CommandResponseHandler cmdHandler = new CommandResponseHandler(RemoteHelper.getConsole(connection));
+			IWizardContainer container = this.getContainer();
 			if (((Boolean)options.get(GIT_CLONE)).booleanValue()) {
 				String cmd = "/usr/bin/git clone --progress";
 				String args = "git://git.yoctoproject.org/poky.git " + uri.getPath();
@@ -147,11 +150,16 @@ public class InstallWizard extends FiniteStateWizard implements IWorkbenchWizard
 				pinfo.setRemoteServices(remoteServices);
 
 				final ConsoleWriter cw = new ConsoleWriter();
-//				final ProjectInfo pInfoFinal = pinfo;
-				container.run(false, false, new BBConfigurationInitializeOperation(pinfo, null));
+				BBConfigurationInitializeOperation configInitOp = new BBConfigurationInitializeOperation(pinfo, null);
+				container.run(false, false, configInitOp);
 				console = RemoteHelper.getConsole(connection);
 				console.newMessageStream().println(cw.getContents());
-
+				
+				if (configInitOp.isErrorOccured()) {
+					optionsPage.setErrorMessage(configInitOp.getErrorMessage());
+					return false;
+				}
+				
 				model.put(InstallWizard.KEY_PINFO, pinfo);
 				Activator.putProjInfo(pinfo.getOEFSURI(), pinfo);
 
