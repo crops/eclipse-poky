@@ -446,7 +446,7 @@ public class PropertiesPage extends WizardPage {
 
 		String valuesCmd = "export BUILDDIR=" + build_dir + ";" + bspElem.getMetadataLoc() + "/scripts/" + VALUES_CMD_PREFIX + bspElem.getKarch() + VALUES_CMD_SURFIX + property;
 		try {
-			ProcessBuilder builder = new ProcessBuilder(new String[] {"sh", "-c", valuesCmd});
+			ProcessBuilder builder = new ProcessBuilder(new String[] {"bash", "-c", valuesCmd});
 			builder.redirectErrorStream(true);
 			Process process = builder.start();
 			BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -497,7 +497,7 @@ public class PropertiesPage extends WizardPage {
 
 			String values_cmd = "export BUILDDIR=" + build_dir + ";" + bspElem.getMetadataLoc() + "/scripts/" + VALUES_CMD_PREFIX + bspElem.getKarch() + VALUES_CMD_SURFIX + property;
 			try {
-				ProcessBuilder builder = new ProcessBuilder(new String[] {"sh", "-c", values_cmd});
+				ProcessBuilder builder = new ProcessBuilder(new String[] {"bash", "-c", values_cmd});
 				builder.redirectErrorStream(true);
 				Process process = builder.start();
 				BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
