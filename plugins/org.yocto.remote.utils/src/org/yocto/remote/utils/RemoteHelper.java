@@ -25,6 +25,9 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -51,8 +54,13 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.ptp.internal.remote.core.RemoteServicesImpl;
+import org.eclipse.ptp.internal.remote.core.RemoteServicesProxy;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.core.IRemoteConnectionManager;
 import org.eclipse.ptp.remote.core.IRemoteFileManager;
+import org.eclipse.ptp.remote.core.IRemoteProcess;
+import org.eclipse.ptp.remote.core.IRemoteProcessBuilder;
 import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.rse.core.IRSECoreStatusCodes;
 import org.eclipse.rse.core.IRSEInitListener;
@@ -184,9 +192,60 @@ public class RemoteHelper {
 		for (int i = 0; i < connections.length; i++)
 			if (connections[i].getAliasName().equals(remoteConnection))
 				return connections[i];
-		return null;
+		return null; // TODO Connection is not found in the list--need to react
+		// somehow, throw the exception?
+
 	}
 
+	@SuppressWarnings("restriction")
+	public static IRemoteConnection getConnectionByURI(URI uri) {
+		if (uri == null)
+			return null;
+		RemoteServicesProxy[] serviceProxies = RemoteServicesImpl.getRemoteServiceProxies();
+		for (RemoteServicesProxy proxy : serviceProxies) {
+			if (proxy.getScheme().equalsIgnoreCase(uri.getScheme())) {
+				System.out.println(proxy);
+				IRemoteServices services = proxy.getServices();
+				IRemoteConnectionManager connMgr = services.getConnectionManager();
+				return connMgr.getConnection(uri);
+			}
+		}
+		return null;
+	}
+	
+	public static Process remoteExec(IRemoteConnection conn, List<String> command) {
+		IRemoteProcessBuilder builder = conn.getRemoteServices().getProcessBuilder(conn, command);
+		try {
+			IRemoteProcess proc = builder.start();
+			//FIXME: find a way to run commands remotely and obtain a Process(as with remoteShellExec)
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	/*
+	public static IService getConnectedRemoteFileService(
+			IHost currentConnection, IProgressMonitor monitor) throws Exception {
+		final ISubSystem subsystem = getFileSubsystem(currentConnection);
+
+		if (subsystem == null)
+			throw new Exception(Messages.ErrorNoSubsystem);
+
+		try {
+			subsystem.connect(monitor, false);
+		} catch (CoreException e) {
+			throw e;
+		} catch (OperationCanceledException e) {
+			throw new CoreException(Status.CANCEL_STATUS);
+		}
+
+		if (!subsystem.isConnected())
+			throw new Exception(Messages.ErrorConnectSubsystem);
+
+		return ((IFileServiceSubSystem) subsystem).getFileService();
+	}
+*/
 	public static ISubSystem getFileSubsystem(IHost host) {
 		if (host == null)
 			return null;
@@ -330,6 +389,52 @@ public class RemoteHelper {
 		return inputString.replaceAll(" ", "\\\\ "); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
+	public static Process remoteShellExec(IHost connection,
+			String prelaunchCmd, String remoteCommandPath, String arguments, String[] env,
+			IProgressMonitor monitor) throws CoreException {
+
+		monitor.beginTask(NLS.bind(Messages.RemoteShellExec_1,
+				remoteCommandPath, arguments), 10);
+		String realRemoteCommand = arguments == null ? spaceEscapify(remoteCommandPath)
+				: spaceEscapify(remoteCommandPath) + " " + arguments; //$NON-NLS-1$
+
+		String remoteCommand = realRemoteCommand + CMD_DELIMITER + EXIT_CMD;
+
+		if(prelaunchCmd != null) {
+			if (!prelaunchCmd.trim().equals("")) //$NON-NLS-1$
+				remoteCommand = prelaunchCmd + CMD_DELIMITER + remoteCommand;
+		}
+
+		IShellService shellService;
+		Process p = null;
+		try {
+			shellService = (IShellService) getConnectedShellService(
+							connection,
+							new SubProgressMonitor(monitor, 7));
+
+			// This is necessary because runCommand does not actually run the
+			// command right now.
+			try {
+				IHostShell hostShell = shellService.launchShell(
+						"", env, new SubProgressMonitor(monitor, 3)); //$NON-NLS-1$
+				hostShell.writeToShell(remoteCommand);
+				p = new HostShellProcessAdapter(hostShell);
+			} catch (Exception e) {
+				if (p != null) {
+					p.destroy();
+				}
+				abort(Messages.RemoteShellExec_2, e,
+						IRSECoreStatusCodes.EXCEPTION_OCCURRED);
+			}
+		} catch (Exception e1) {
+			abort(e1.getMessage(), e1,
+					IRSECoreStatusCodes.EXCEPTION_OCCURRED);
+		}
+
+		monitor.done();
+		return p;
+	}
+	
 	public static Process remoteShellExec(IHost connection,
 			String prelaunchCmd, String remoteCommandPath, String arguments,
 			IProgressMonitor monitor) throws CoreException {

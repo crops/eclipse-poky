@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+ <extension
+          point="org.eclipse.cdt.core.templateProcessTypes">
+       <processType
+             name="NewAutotoolsProject"
+             processRunner="org.eclipse.cdt.internal.autotools.core.wizards.NewAutotoolsProject">
+          <simple
+                name="name">
+          </simple>
+          <simple
+                external="true"
+                name="location"
+                nullable="true">
+          </simple>
+          <simple
+                name="artifactExtension">
+          </simple>
+          <simple
+                external="true"
+                name="isCProject">
+          </simple>
+       </processType>
+       <processType
+             name="SetAutotoolsStringOptionValue"
+             processRunner="org.eclipse.cdt.internal.autotools.core.wizards.SetAutotoolsStringOptionValue">
+          <simple
+                name="name">
+          </simple>
+          <complexArray
+                name="resourcePaths">
+             <baseType>
+                <simple
+                      name="id">
+                </simple>
+                <simple
+                      name="value">
+                </simple>
+             </baseType>
+          </complexArray>
+       </processType>
+    </extension>
+</plugin>
