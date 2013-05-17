@@ -8,7 +8,7 @@
  * Contributors:
  * Intel - initial API and implementation
  *******************************************************************************/
-package org.yocto.sdk.ide.wizard;
+package org.yocto.remote.sdk.ui.templates;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -24,7 +24,6 @@ import org.eclipse.cdt.core.templateengine.process.ProcessFailureException;
 import org.eclipse.cdt.core.templateengine.process.ProcessRunner;
 import org.eclipse.cdt.core.templateengine.process.processes.Messages;
 import org.eclipse.cdt.internal.autotools.core.configure.AutotoolsConfigurationManager;
-import org.eclipse.cdt.internal.ui.wizards.ICDTCommonProjectWizard;
 import org.eclipse.cdt.make.core.MakeCorePlugin;
 import org.eclipse.cdt.make.core.scannerconfig.IDiscoveredPathManager;
 import org.eclipse.cdt.make.core.scannerconfig.IDiscoveredPathManager.IDiscoveredPathInfo;
@@ -37,7 +36,9 @@ import org.eclipse.cdt.managedbuilder.core.IOption;
 import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
 import org.eclipse.cdt.managedbuilder.templateengine.ProjectCreatedActions;
 import org.eclipse.cdt.managedbuilder.ui.wizards.MBSCustomPageManager;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.cdt.ui.wizards.CDTMainWizardPage;
+import org.eclipse.cdt.internal.ui.wizards.ICDTCommonProjectWizard;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceDescription;
@@ -48,7 +49,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.wizard.IWizardPage;
+import org.yocto.remote.sdk.core.RemoteAutotoolsNewProjectNature;
 import org.yocto.sdk.ide.YoctoGeneralException;
 import org.yocto.sdk.ide.YoctoProfileElement;
 import org.yocto.sdk.ide.YoctoSDKChecker;
@@ -60,10 +61,11 @@ import org.yocto.sdk.ide.natures.YoctoSDKCMakeProjectNature;
 import org.yocto.sdk.ide.natures.YoctoSDKEmptyProjectNature;
 import org.yocto.sdk.ide.natures.YoctoSDKNatureUtils;
 import org.yocto.sdk.ide.natures.YoctoSDKProjectNature;
+import org.yocto.sdk.ide.utils.ProjectPreferenceUtils;
 import org.yocto.sdk.ide.utils.YoctoSDKUtils;
 
 @SuppressWarnings("restriction")
-public class NewYoctoProjectTemplateProcess extends ProcessRunner {
+public class NewRemoteYPTemplateProcess extends ProcessRunner {
 	protected boolean savedAutoBuildingValue;
 	protected ProjectCreatedActions pca;
 	protected IManagedBuildInfo info;
@@ -75,7 +77,7 @@ public class NewYoctoProjectTemplateProcess extends ProcessRunner {
 	private boolean isAutotoolsProject;
 	private boolean isCMakeProject;
 
-	public NewYoctoProjectTemplateProcess() {
+	public NewRemoteYPTemplateProcess() {
 		pca = new ProjectCreatedActions();
 
 		isCProject = false;
@@ -205,7 +207,7 @@ public class NewYoctoProjectTemplateProcess extends ProcessRunner {
 		YoctoSDKChecker.checkIfGloballySelectedYoctoProfileIsValid();
 
 		YoctoProfileElement profileElement = YoctoSDKUtils.getProfilesFromDefaultStore();
-		YoctoSDKUtils.saveProfilesToProjectPreferences(profileElement, project);
+		ProjectPreferenceUtils.saveProfiles(profileElement, project);
 
 		IPreferenceStore selecteProfileStore = YoctoSDKPlugin.getProfilePreferenceStore(profileElement.getSelectedProfile());
 		YoctoUIElement elem = YoctoSDKUtils.getElemFromStore(selecteProfileStore);
@@ -226,7 +228,7 @@ public class NewYoctoProjectTemplateProcess extends ProcessRunner {
 				AutotoolsConfigurationManager.getInstance().saveConfigs(project);
 			}
 
-			YoctoSDKNatureUtils.addNature(project, YoctoSDKAutotoolsProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID, monitor);
+			YoctoSDKNatureUtils.addNature(project, RemoteAutotoolsNewProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID, monitor);
 			YoctoSDKAutotoolsProjectNature.configureAutotoolsOptions(project);
 		} else if (isCMakeProject) {
 			YoctoSDKNatureUtils.addNature(project, YoctoSDKCMakeProjectNature.YoctoSDK_CMAKE_NATURE_ID, monitor);

@@ -8,7 +8,7 @@
  * Contributors:
  * Intel - initial API and implementation
  *******************************************************************************/
-package org.yocto.sdk.ide.wizard;
+package org.yocto.remote.sdk.ui.templates;
 
 import java.net.URI;
 
@@ -17,22 +17,21 @@ import org.eclipse.cdt.core.templateengine.process.ProcessArgument;
 import org.eclipse.cdt.core.templateengine.process.ProcessFailureException;
 import org.eclipse.cdt.core.templateengine.process.ProcessRunner;
 import org.eclipse.cdt.core.templateengine.process.processes.Messages;
-import org.eclipse.core.filesystem.EFS;
-import org.eclipse.core.filesystem.IFileInfo;
-import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.rse.core.model.IHost;
+import org.yocto.remote.sdk.core.RemoteAutotoolsNewProjectNature;
+import org.yocto.remote.utils.RemoteHelper;
 import org.yocto.sdk.ide.YoctoSDKMessages;
-import org.yocto.sdk.ide.natures.YoctoSDKAutotoolsProjectNature;
 
-public class NewYoctoAutotoolsProjectPostProcess extends ProcessRunner {
+public class NewRemoteAutotoolsYPPostProcess extends ProcessRunner {
 
 	public static final String CHMOD_COMMAND = "chmod +x "; //$NON-NLS-1$
 	public static final String AUTOGEN_SCRIPT_NAME = "autogen.sh"; //$NON-NLS-1$
 
-	public NewYoctoAutotoolsProjectPostProcess() {}
+	public NewRemoteAutotoolsYPPostProcess() {}
 
 	public void process(TemplateCore template, ProcessArgument[] args, String processId, IProgressMonitor monitor) throws ProcessFailureException {
 
@@ -42,44 +41,15 @@ public class NewYoctoAutotoolsProjectPostProcess extends ProcessRunner {
 		try {
 			if (!project.exists()) {
 				throw new ProcessFailureException(Messages.getString("NewManagedProject.4") + projectName); //$NON-NLS-1$
-			} else if (!project.hasNature(YoctoSDKAutotoolsProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID)) {
+			} else if (!project.hasNature(RemoteAutotoolsNewProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID)) {
 				throw new ProcessFailureException(Messages.getString("NewManagedProject.3") + //$NON-NLS-1$
 						YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.WrongProjectNature", //$NON-NLS-1$
 								projectName));
 			} else {
-				URI path = project.getLocationURI();
-				IFileStore fs = EFS.getStore(path);
-				fs = fs.getFileStore(new Path(AUTOGEN_SCRIPT_NAME));
-				IFileInfo fileinfo = EFS.createFileInfo();
-				fileinfo.setAttribute(EFS.ATTRIBUTE_EXECUTABLE, true);
-				fs.putInfo(fileinfo,EFS.SET_ATTRIBUTES, null);
-				/*
-				IPath path = project.getLocation();
-				String path_str = path.toString();
-				String autogen_cmd = CHMOD_COMMAND + path_str + File.separator + AUTOGEN_SCRIPT_NAME;
-				try {
-					Runtime rt = Runtime.getRuntime();
-					Process proc = rt.exec(autogen_cmd);
-					InputStream stdin = proc.getInputStream();
-					InputStreamReader isr = new InputStreamReader(stdin);
-					BufferedReader br = new BufferedReader(isr);
-					String line = null;
-					String error_message = ""; //$NON-NLS-1$
-
-					while ( (line = br.readLine()) != null) {
-						error_message = error_message + line;
-					}
-
-					int exitVal = proc.waitFor();
-					if (exitVal != 0) {
-						throw new ProcessFailureException(
-								YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.ChmodFailure", //$NON-NLS-1$
-										projectName));
-					}
-				} catch (Throwable t) {
-					t.printStackTrace();
-
-				}*/
+				URI uri = project.getLocationURI();
+				IRemoteConnection remConn = RemoteHelper.getConnectionByURI(uri);
+				IHost host = RemoteHelper.getRemoteConnectionByName(remConn.getName());
+				RemoteHelper.remoteShellExec(host, "", "/bin/sh", "-c \"" + CHMOD_COMMAND  + uri.getPath() + "/" + AUTOGEN_SCRIPT_NAME + "\"", monitor);
 			}
 		} catch (Exception e) {
 			throw new ProcessFailureException(Messages.getString("NewManagedProject.3") + e.getMessage(), e); //$NON-NLS-1$
