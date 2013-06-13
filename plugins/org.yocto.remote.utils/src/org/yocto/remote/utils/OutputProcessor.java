@@ -18,6 +18,7 @@ import java.util.concurrent.locks.Lock;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.rse.internal.services.local.shells.LocalHostShell;
 import org.eclipse.rse.internal.services.shells.TerminalServiceHostShell;
+import org.eclipse.rse.services.shells.AbstractHostShell;
 import org.eclipse.rse.services.shells.HostShellProcessAdapter;
 import org.eclipse.rse.services.shells.IHostShell;
 
@@ -48,15 +49,9 @@ public abstract class OutputProcessor{
 		}
 		BufferedReader inbr = null;
 		BufferedReader errbr = null;
-
-		if (hostShell instanceof LocalHostShell) {
-			inbr = ((LocalHostShell)hostShell).getReader(false);
-			errbr = ((LocalHostShell)hostShell).getReader(true);
-		} else {
-			Process p = new HostShellProcessAdapter(hostShell);
-			inbr = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			errbr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-		}
+		AbstractHostShell aHostShell = (AbstractHostShell)hostShell;
+		inbr = aHostShell.getReader(false);
+		errbr = aHostShell.getReader(true);
 		boolean cancel = false;
 		while (!cancel) {
 			if(monitor.isCanceled()) {
