@@ -17,13 +17,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
-
+import java.net.URI;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.cdt.core.CCorePlugin;
 import org.eclipse.cdt.core.envvar.IContributedEnvironment;
 import org.eclipse.cdt.core.envvar.IEnvironmentVariable;
@@ -34,6 +38,8 @@ import org.eclipse.cdt.core.settings.model.ICProjectDescription;
 import org.eclipse.cdt.debug.core.ICDTLaunchConfigurationConstants;
 import org.eclipse.cdt.debug.mi.core.IMILaunchConfigurationConstants;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -295,14 +301,20 @@ public class YoctoSDKUtils {
 			//If get default Debugger successfully, go ahead!
 
 			//create the gdbinit file
-			String sDebugInitFile = project.getLocation().toString() + "/.gdbinit";
-			FileWriter out = new FileWriter(new File(sDebugInitFile));
-			out.write("set sysroot " + sSysroot);
-			out.flush();
-			out.close();
-
-			//set the launch configuration
+			URI location = project.getLocationURI();
+			IFileStore fs = EFS.getStore(location);
 			String projectName = project.getName();
+			fs.getFileStore(new Path(".gdbinit"));
+			OutputStream os = fs.openOutputStream(EFS.OVERWRITE, null);
+			String path = project.getLocationURI().getPath();
+			String rawPath = project.getLocationURI().getRawPath();
+			String str = project.getLocationURI().toString();
+			String asciiStr = project.getLocationURI().toASCIIString();
+			PrintWriter pw = new PrintWriter(os);
+			pw.write("set sysroot " + sSysroot);
+			pw.flush();
+			pw.close();
+			//set the launch configuration
 			String configName = projectName+"_gdb_"+sTargetTriplet;
 			int i;
 			ILaunchConfiguration[] configs=lManager.getLaunchConfigurations(configType);
@@ -318,7 +330,8 @@ public class YoctoSDKUtils {
 			Set<String> modes=new HashSet<String>();
 			modes.add("debug");
 			w_copy.setPreferredLaunchDelegate(modes, "org.eclipse.rse.remotecdt.launch");
-			w_copy.setAttribute(IMILaunchConfigurationConstants.ATTR_GDB_INIT, sDebugInitFile);
+			//w_copy.setAttribute(IMILaunchConfigurationConstants.ATTR_GDB_INIT, sDebugInitFile);
+			w_copy.setAttribute(IMILaunchConfigurationConstants.ATTR_GDB_INIT, fs.getName());
 			w_copy.setAttribute(IMILaunchConfigurationConstants.ATTR_DEBUGGER_AUTO_SOLIB, false);
 			w_copy.setAttribute(IMILaunchConfigurationConstants.ATTR_DEBUG_NAME, strDebugger);
 			w_copy.setAttribute(IMILaunchConfigurationConstants.ATTR_DEBUGGER_PROTOCOL, "mi");
@@ -340,11 +353,6 @@ public class YoctoSDKUtils {
 		}
 		catch (CoreException e)
 		{
-			System.out.println(e.getMessage());
-		}
-		catch (IOException e)
-		{
-			System.out.println("Failed to generate debug init file!");
 			System.out.println(e.getMessage());
 		}
 	}

@@ -14,7 +14,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.cdt.core.templateengine.TemplateCore;
 import org.eclipse.cdt.core.templateengine.process.ProcessArgument;
 import org.eclipse.cdt.core.templateengine.process.ProcessFailureException;
@@ -23,6 +27,7 @@ import org.eclipse.cdt.core.templateengine.process.processes.Messages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.yocto.sdk.ide.YoctoSDKMessages;
 import org.yocto.sdk.ide.natures.YoctoSDKAutotoolsProjectNature;
@@ -47,32 +52,12 @@ public class NewYoctoAutotoolsProjectPostProcess extends ProcessRunner {
 						YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.WrongProjectNature", //$NON-NLS-1$
 								projectName));
 			} else {
-				IPath path = project.getLocation();
-				String path_str = path.toString();
-				String autogen_cmd = CHMOD_COMMAND + path_str + File.separator + AUTOGEN_SCRIPT_NAME;
-				try {
-					Runtime rt = Runtime.getRuntime();
-					Process proc = rt.exec(autogen_cmd);
-					InputStream stdin = proc.getInputStream();
-					InputStreamReader isr = new InputStreamReader(stdin);
-					BufferedReader br = new BufferedReader(isr);
-					String line = null;
-					String error_message = ""; //$NON-NLS-1$
-
-					while ( (line = br.readLine()) != null) {
-						error_message = error_message + line;
-					}
-
-					int exitVal = proc.waitFor();
-					if (exitVal != 0) {
-						throw new ProcessFailureException(
-								YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.ChmodFailure", //$NON-NLS-1$
-										projectName));
-					}
-				} catch (Throwable t) {
-					t.printStackTrace();
-
-				}
+				URI path = project.getLocationURI();
+				IFileStore fs = EFS.getStore(path);
+				fs = fs.getFileStore(new Path(AUTOGEN_SCRIPT_NAME));
+				IFileInfo fileinfo = EFS.createFileInfo();
+				fileinfo.setAttribute(EFS.ATTRIBUTE_EXECUTABLE, true);
+				fs.putInfo(fileinfo,EFS.SET_ATTRIBUTES, null);
 			}
 		} catch (Exception e) {
 			throw new ProcessFailureException(Messages.getString("NewManagedProject.3") + e.getMessage(), e); //$NON-NLS-1$
