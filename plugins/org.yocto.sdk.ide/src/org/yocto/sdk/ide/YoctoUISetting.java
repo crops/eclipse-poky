@@ -14,9 +14,17 @@ import java.io.File;
 import java.util.ArrayList;
 
 import org.eclipse.cdt.ui.templateengine.uitree.InputUIElement;
+import org.eclipse.core.filesystem.IFileInfo;
+import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.ui.IRemoteUIConstants;
+import org.eclipse.ptp.remote.ui.IRemoteUIFileManager;
+import org.eclipse.ptp.remote.ui.IRemoteUIServices;
+import org.eclipse.ptp.remote.ui.RemoteUIServices;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -29,14 +37,14 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
+import org.yocto.remote.utils.RemoteHelper;
+import org.yocto.remote.utils.RemoteConnectionBox;
 import org.yocto.sdk.ide.YoctoSDKChecker.SDKCheckRequestFrom;
 import org.yocto.sdk.ide.YoctoSDKChecker.SDKCheckResults;
 import org.yocto.sdk.ide.preferences.PreferenceConstants;
@@ -70,6 +78,8 @@ public class YoctoUISetting {
 	private Label targetArchLabel;
 	private Label kernel_label;
 	private Label option_label;
+
+	private RemoteConnectionBox connBox;
 
 	public YoctoUISetting(YoctoUIElement elem)
 	{
@@ -160,14 +170,25 @@ public class YoctoUISetting {
 		button.setText(InputUIElement.BROWSELABEL);
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
-			public void widgetSelected(SelectionEvent event) {
-				String dirName;
-				if (key.equals(PreferenceConstants.TOOLCHAIN_ROOT)|| key.equals(PreferenceConstants.SYSROOT))
-					dirName = new DirectoryDialog(parent.getShell()).open();
-				else
-					dirName = new FileDialog(parent.getShell()).open();
-				if (dirName != null) {
-					text.setText(dirName);
+			public void widgetSelected(SelectionEvent e) {
+				if (connBox.getConnection() != null) {
+					connBox.checkConnection();
+					if (connBox.getConnection().isOpen()) {
+						IRemoteUIServices remoteUIServices = RemoteUIServices.getRemoteUIServices(connBox.getConnection().getRemoteServices());
+						if (remoteUIServices != null) {
+							IRemoteUIFileManager fileMgr = remoteUIServices.getUIFileManager();
+							if (fileMgr != null) {
+								String correctPath = text.getText();
+								fileMgr.setConnection(connBox.getConnection());
+								String selectedPath = fileMgr.browseDirectory(
+										text.getShell(),
+										"", correctPath, IRemoteUIConstants.NONE); //$NON-NLS-1$
+								if (selectedPath != null) {
+									text.setText(selectedPath);
+								}
+							}
+						}
+					}
 				}
 			}
 		});
@@ -215,6 +236,8 @@ public class YoctoUISetting {
 		GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		GridLayout layout = new GridLayout(2, false);
 
+		connBox = new RemoteConnectionBox(composite, yoctoUIElement.getConnection());
+
 		crossCompilerGroup = new Group(composite, SWT.NONE);
 		layout= new GridLayout(2, false);
 		crossCompilerGroup.setLayout(layout);
@@ -224,7 +247,6 @@ public class YoctoUISetting {
 		crossCompilerGroup.setText("Cross Compiler Options:");		
 
 		if (yoctoUIElement.getEnumPokyMode() == YoctoUIElement.PokyMode.POKY_SDK_MODE) {
-
 			btnSDKRoot = (Button)addRadioButton(crossCompilerGroup, "Standalone pre-built toolchain", PreferenceConstants.SDK_MODE + "_1", true);
 			btnPokyRoot = (Button)addRadioButton(crossCompilerGroup, "Build system derived toolchain", PreferenceConstants.SDK_MODE + "_2", false);
 		}
@@ -290,7 +312,6 @@ public class YoctoUISetting {
 
 			btnDevice = (Button)addRadioButton(targetGroup, "External HW", PreferenceConstants.TARGET_MODE + "_2", true);
 		}
-		
 		updateQemuControlState();
 
 		//we add the listener at the end for avoiding the useless event trigger when control
@@ -329,6 +350,8 @@ public class YoctoUISetting {
 		elem.setStrQemuKernelLoc(textKernelLoc.getText());
 		elem.setStrQemuOption(textQemuOption.getText());
 		elem.setStrSysrootLoc(textSysrootLoc.getText());
+		elem.setRemoteService(connBox.getRemoteServices());
+		elem.setConnection(connBox.getConnection());
 		return elem;
 	}
 
@@ -476,25 +499,36 @@ public class YoctoUISetting {
 	/* Search current supported Target triplet from the toolchain root
 	 * by parsing ENV script file name
 	 */
-	private static ArrayList<String> getTargetTripletList(String strFileName)
-	{
-		File fFile = new File(strFileName);
-		if (!fFile.exists())
+	private ArrayList<String> getTargetTripletList(String strFileName) {
+		IRemoteConnection conn = null;
+		if (yoctoUIElement.getConnection() == null) {
+			if (connBox == null)
+				return null;
+			conn = connBox.getConnection();
+		} else {
+			conn = yoctoUIElement.getConnection();
+		}
+		if (conn == null)
+			return null;
+		IFileInfo hostFile = RemoteHelper.getRemoteFileInfo(conn, strFileName, new NullProgressMonitor());
+
+		if (hostFile == null || !hostFile.exists())
 			return null;
 
 		ArrayList<String> arrTarget = new ArrayList<String>();
-		String[] strFileArray = fFile.list();
-		for (int i = 0; i < strFileArray.length; i++)
-		{
-			if (strFileArray[i].startsWith(ENV_SCRIPT_FILE_PREFIX)) {
-				arrTarget.add(strFileArray[i].substring(ENV_SCRIPT_FILE_PREFIX.length()));
+
+		IFileStore[] children = RemoteHelper.getRemoteFileChildren(conn, strFileName, new NullProgressMonitor());
+		for (int i = 0; i < children.length; i++) {
+			String childName = children[i].getName();
+			if (childName.startsWith(ENV_SCRIPT_FILE_PREFIX)) {
+				arrTarget.add(childName.substring(ENV_SCRIPT_FILE_PREFIX.length()));
 			}
 		}
 		return arrTarget;
 
 	}
 
-	private static String[] getTargetArray(YoctoUIElement elem)
+	private String[] getTargetArray(YoctoUIElement elem)
 	{
 		ArrayList<String> arrTarget;
 		String sEnvFilePath = elem.getStrToolChainRoot();

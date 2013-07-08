@@ -231,6 +231,8 @@ public class YoctoSDKPreferencePage extends PreferencePage implements IWorkbench
 		}
 		store.setValue(PreferenceConstants.TOOLCHAIN_ROOT, elem.getStrToolChainRoot());
 		store.setValue(PreferenceConstants.TOOLCHAIN_TRIPLET, elem.getStrTarget());
+		store.setValue(PreferenceConstants.REMOTE_SERVICE_PROVIDER, elem.getRemoteService().getId());
+		store.setValue(PreferenceConstants.CONNECTION_NAME, elem.getConnection().getName());
 	}
 
 	private void resetProfileInAffectedProjects(String usedProfile)

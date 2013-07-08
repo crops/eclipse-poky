@@ -40,4 +40,8 @@ public class PreferenceConstants {
 	public static final String SELECTED_PROFILE = "selectedProfile";
 
 	public static final String PROJECT_SPECIFIC_PROFILE = "##PROJECT_SPECIFIC_PROFILE##";
+
+	public static final String REMOTE_SERVICE_PROVIDER = "remoteServiceProvider";
+
+	public static final String CONNECTION_NAME = "connectionName";
 }

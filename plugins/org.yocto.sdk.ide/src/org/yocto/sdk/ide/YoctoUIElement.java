@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.yocto.sdk.ide;
 
+import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.core.IRemoteServices;
+
 public class YoctoUIElement {
 	public enum PokyMode
 	{
@@ -30,7 +33,9 @@ public class YoctoUIElement {
 	private String strSysrootLoc;
 	private PokyMode enumPokyMode;
 	private String strToolChainRoot;
-	private int intTargetIndex;	
+	private int intTargetIndex;
+	private IRemoteConnection connection;
+	private IRemoteServices remoteService;
 
 	public YoctoUIElement()
 	{
@@ -42,6 +47,7 @@ public class YoctoUIElement {
 		this.strSysrootLoc = "";
 		this.intTargetIndex = -1;
 		this.strTarget = "";
+		this.connection = null;
 	}
 
 	public PokyMode getEnumPokyMode() {
@@ -101,6 +107,14 @@ public class YoctoUIElement {
 		this.strSysrootLoc = strSysrootLoc;
 	}
 
+	public IRemoteConnection getConnection() {
+		return connection;
+	}
+
+	public void setConnection(IRemoteConnection iRemoteConnection) {
+		this.connection = iRemoteConnection;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -156,6 +170,16 @@ public class YoctoUIElement {
 				return false;
 		} else if (!strToolChainRoot.equals(other.strToolChainRoot))
 			return false;
+		else if (!connection.equals(other.connection))
+			return false;
 		return true;
+	}
+
+	public IRemoteServices getRemoteService() {
+		return remoteService;
+	}
+
+	public void setRemoteService(IRemoteServices remoteService) {
+		this.remoteService = remoteService;
 	}
 }

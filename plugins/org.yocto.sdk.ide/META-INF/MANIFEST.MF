@@ -36,3 +36,7 @@ Export-Package: org.yocto.sdk.ide,
  org.yocto.sdk.ide.actions,
  org.yocto.sdk.ide.preferences,
  org.yocto.sdk.ide.wizard
+Import-Package: org.eclipse.ptp.remote.core,
+ org.eclipse.ptp.remote.ui,
+ org.eclipse.ptp.remotetools.core,
+ org.yocto.remote.utils

@@ -14,15 +14,14 @@
 package org.yocto.sdk.ide;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.eclipse.core.filesystem.IFileInfo;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.yocto.sdk.ide.natures.YoctoSDKProjectNature;
+import org.yocto.remote.utils.RemoteHelper;
 import org.yocto.sdk.ide.utils.YoctoSDKUtils;
 import org.yocto.sdk.ide.utils.YoctoSDKUtilsConstants;
 
@@ -56,7 +55,9 @@ public class YoctoSDKChecker {
 		TOOLCHAIN_NO_SYSROOT(
 				"Poky.Toolchain.No.Sysroot", false),
 		TOOLCHAIN_HOST_MISMATCH(
-				"Poky.Toolchain.Host.Mismatch", false);
+				"Poky.Toolchain.Host.Mismatch", false),
+		CONNECTION_EMPTY(
+				"", true);
 
 		private static final String DEFAULT_ADVICE = "Default.Advice";
 		private static final String ADVICE_SUFFIX = ".Advice";
@@ -114,18 +115,20 @@ public class YoctoSDKChecker {
 	}
 
 	public static SDKCheckResults checkYoctoSDK(YoctoUIElement elem) {
+		if (elem.getConnection() == null)
+			return SDKCheckResults.CONNECTION_EMPTY;
 		if (elem.getStrToolChainRoot().isEmpty())
 			return SDKCheckResults.TOOLCHAIN_LOCATION_EMPTY;
 		else {
-			File fToolChain = new File(elem.getStrToolChainRoot());
+			IFileInfo fToolChain = RemoteHelper.getRemoteFileInfo(elem.getConnection(), elem.getStrToolChainRoot(), new NullProgressMonitor());
 			if (!fToolChain.exists())
-				return SDKCheckResults.TOOLCHAIN_LOCATION_NONEXIST;
+				return SDKCheckResults.SYSROOT_NONEXIST;
 		}
 
 		if (elem.getStrSysrootLoc().isEmpty()) {
 			return SDKCheckResults.SYSROOT_EMPTY;
 		} else {
-			File fSysroot = new File(elem.getStrSysrootLoc());
+			IFileInfo fSysroot =  RemoteHelper.getRemoteFileInfo(elem.getConnection(), elem.getStrSysrootLoc(), new NullProgressMonitor());
 			if (!fSysroot.exists())
 				return SDKCheckResults.SYSROOT_NONEXIST;
 		}
@@ -134,14 +137,14 @@ public class YoctoSDKChecker {
 			//Check for SDK compatible with the host arch
 			String platform = getPlatformArch();
 			String sysroot_dir_str = elem.getStrToolChainRoot() + "/" + SYSROOTS_DIR;
-			File sysroot_dir = new File(sysroot_dir_str);
-			if (!sysroot_dir.exists())
-				return SDKCheckResults.TOOLCHAIN_NO_SYSROOT;
+			IFileInfo hostFile = RemoteHelper.getRemoteFileInfo(elem.getConnection(), elem.getStrSysrootLoc(), new NullProgressMonitor());
+			if (!hostFile.exists())
+				return SDKCheckResults.SYSROOT_NONEXIST;
 
 			String toolchain_host_arch = null;
 
 			try {
-				toolchain_host_arch = findHostArch(sysroot_dir);
+				toolchain_host_arch = RemoteHelper.findHostArch(elem.getConnection(), sysroot_dir_str);
 			} catch(NullPointerException e) {
 				return SDKCheckResults.TOOLCHAIN_NO_SYSROOT;
 			}
@@ -166,7 +169,8 @@ public class YoctoSDKChecker {
 			String sFileName;
 
 			if (elem.getEnumPokyMode() == YoctoUIElement.PokyMode.POKY_SDK_MODE) {
-				sFileName = elem.getStrToolChainRoot()+"/" + YoctoSDKUtilsConstants.DEFAULT_ENV_FILE_PREFIX + elem.getStrTarget();
+				sFileName = elem.getStrToolChainRoot()+"/" + YoctoSDKUtilsConstants.DEFAULT_ENV_FILE_PREFIX + 
+						elem.getStrTarget();
 			} else {
 				//POKY TREE Mode
 				sFileName = elem.getStrToolChainRoot() + YoctoSDKUtilsConstants.DEFAULT_TMP_PREFIX +
@@ -174,16 +178,15 @@ public class YoctoSDKChecker {
 			}
 
 			try {
-				File file = new File(sFileName);
+				InputStream is = RemoteHelper.getRemoteInputStream(elem.getConnection(), sFileName, new NullProgressMonitor());
 				boolean bVersion = false;
 
-				if (file.exists()) {
-					BufferedReader input = new BufferedReader(new FileReader(file));
-
+				if (is != null) {
+					BufferedReader input = new BufferedReader(new InputStreamReader(is));
 					try {
 						String line = null;
 
-						while ((line = input.readLine()) != null) {
+						 while ((line = input.readLine()) != null) {
 							if (line.startsWith("export "+ SDK_VERSION)) {
 								int beginIndex = 2;
 								String sVersion = "";
@@ -222,8 +225,8 @@ public class YoctoSDKChecker {
 			if (elem.getStrQemuKernelLoc().isEmpty()) {
 				return SDKCheckResults.QEMU_KERNEL_EMPTY;
 			} else {
-				File fQemuKernel = new File(elem.getStrQemuKernelLoc());
-				if (!fQemuKernel.exists())
+				IFileInfo hostFile = RemoteHelper.getRemoteFileInfo(elem.getConnection(), elem.getStrQemuKernelLoc(), new NullProgressMonitor());
+				if (!hostFile.exists())
 					return SDKCheckResults.QEMU_KERNEL_NONEXIST;
 			}
 		}
@@ -262,30 +265,4 @@ public class YoctoSDKChecker {
 		return value;
 	}
 
-	private static String findHostArch(File sysroot_dir) {
-		FilenameFilter nativeFilter = new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				if (name.endsWith("sdk-linux")) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-		};
-
-		File[] files = sysroot_dir.listFiles(nativeFilter);
-		String arch = null;
-
-		for (File file : files) {
-			if (file.isDirectory()) {
-				String path = file.getName();
-				String[] subPath = path.split("-");
-				arch = subPath[0];
-			} else {
-				continue;
-			}
-		}
-
-		return arch;
-	}
 }
