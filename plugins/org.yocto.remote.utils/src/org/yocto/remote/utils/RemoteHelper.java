@@ -36,6 +36,9 @@ import org.eclipse.core.internal.filesystem.InternalFileSystemCore;
 import org.eclipse.core.internal.resources.LocalMetaArea;
 import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileInfo;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
@@ -43,10 +46,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.core.IRemoteFileManager;
+import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.rse.core.IRSECoreStatusCodes;
 import org.eclipse.rse.core.IRSEInitListener;
 import org.eclipse.rse.core.IRSESystemType;
@@ -404,6 +411,7 @@ public class RemoteHelper {
 				return;
 			}
 	}
+
 	public static RemoteMachine getRemoteMachine(IHost connection){
 		if (!getMachines().containsKey(connection))
 			getMachines().put(connection, new RemoteMachine(connection));
@@ -595,4 +603,71 @@ public class RemoteHelper {
 		}
 		return false;
 	}
+
+	public static InputStream getRemoteInputStream(IRemoteConnection connection, String remoteFilePath, IProgressMonitor monitor){
+        assert(connection != null);
+        monitor.beginTask(Messages.InfoDownload, 100);
+        IRemoteServices remoteServices = connection.getRemoteServices();
+        IRemoteFileManager fileMgr = remoteServices.getFileManager(connection);
+        IFileStore resource = fileMgr.getResource(remoteFilePath);
+		try {
+			if (!resource.fetchInfo().exists())
+				return null;
+			return resource.openInputStream(EFS.NONE, monitor);
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+        return null;
+	}
+	public static IFileInfo getRemoteFileInfo(IRemoteConnection connection, String remoteFilePath, IProgressMonitor monitor){
+         assert(connection != null);
+         monitor.beginTask(Messages.InfoDownload, 100);
+         IRemoteServices remoteServices = connection.getRemoteServices();
+         IRemoteFileManager fileMgr = remoteServices.getFileManager(connection);
+         IFileStore resource = fileMgr.getResource(remoteFilePath);
+         IFileInfo info = resource.fetchInfo();
+         return info;
+	}
+
+	public static IFileStore[] getRemoteFileChildren(IRemoteConnection connection, String remoteParent, IProgressMonitor monitor){
+        assert(connection != null);
+        monitor.beginTask(Messages.InfoDownload, 100);
+        IRemoteServices remoteServices = connection.getRemoteServices();
+        IRemoteFileManager fileMgr = remoteServices.getFileManager(connection);
+        IFileStore resource = fileMgr.getResource(remoteParent);
+		try {
+			if (!resource.fetchInfo().exists())
+				return null;
+			IFileStore[] children = resource.childStores(EFS.NONE, new NullProgressMonitor());
+			return children;
+		}  catch (CoreException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static String findHostArch(IRemoteConnection connection, String remoteParent) {
+			String arch = null;
+			IRemoteServices remoteServices = connection.getRemoteServices();
+	        IRemoteFileManager fileMgr = remoteServices.getFileManager(connection);
+	        IFileStore resource = fileMgr.getResource(remoteParent);
+			try {
+				if (!resource.fetchInfo().exists())
+					return null;
+				IFileStore[] children = resource.childStores(EFS.NONE, new NullProgressMonitor());
+				for(IFileStore file : children){
+					IFileInfo info = file.fetchInfo();
+					if (info.isDirectory() && file.getName().endsWith("sdk-linux")){
+						String name = file.getName();
+						String[] subPath = name.split("-");
+						arch = subPath[0];
+					} else
+						continue;
+				}
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+
+			return arch;
+		}
 }

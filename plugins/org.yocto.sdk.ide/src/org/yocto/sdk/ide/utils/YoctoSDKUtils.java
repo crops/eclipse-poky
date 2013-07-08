@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import java.util.StringTokenizer;
 import java.net.URI;
 
 import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.cdt.core.CCorePlugin;
 import org.eclipse.cdt.core.ConsoleOutputStream;
@@ -42,6 +45,7 @@ import org.eclipse.cdt.debug.core.ICDTLaunchConfigurationConstants;
 import org.eclipse.cdt.debug.mi.core.IMILaunchConfigurationConstants;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -53,6 +57,10 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.service.prefs.BackingStoreException;
+import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.core.IRemoteServices;
+import org.eclipse.ptp.remote.ui.RemoteUIServices;
+import org.yocto.remote.utils.RemoteHelper;
 import org.yocto.sdk.ide.YoctoGeneralException;
 import org.yocto.sdk.ide.YoctoProfileElement;
 import org.yocto.sdk.ide.YoctoSDKMessages;
@@ -185,6 +193,7 @@ public class YoctoSDKUtils {
 			else if (sKey.matches("PKG_CONFIG_SYSROOT_DIR"))
 				env.addVariable(sKey, elem.getStrSysrootLoc()+"/"+elem.getStrTarget(), IEnvironmentVariable.ENVVAR_REPLACE, delimiter, ccdesc);
 			*/
+			System.out.println(sKey + " " + sValue);
 			env.addVariable(sKey, sValue, IEnvironmentVariable.ENVVAR_REPLACE, delimiter, ccdesc);
 		}
 		//add ACLOCAL OPTS for libtool 2.4 support
@@ -210,13 +219,13 @@ public class YoctoSDKUtils {
 		return envSetupFile;
 	}
 
-	private static HashMap<String, String> parseEnvScript(String sFileName) {
+	private static HashMap<String, String> parseEnvScript(YoctoUIElement elem, String sFileName) {
 		try {
 			HashMap<String, String> envMap = new HashMap<String, String>();
-			File file = new File(sFileName);
-
-			if (file.exists()) {
-				BufferedReader input = new BufferedReader(new FileReader(file));
+			IFileInfo fileInfo = RemoteHelper.getRemoteFileInfo(elem.getConnection(), sFileName,  new NullProgressMonitor());
+			if (fileInfo.exists()) {
+				InputStream is = RemoteHelper.getRemoteInputStream(elem.getConnection(), sFileName, new NullProgressMonitor());
+				BufferedReader input = new BufferedReader(new InputStreamReader(is));
 
 				try {
 					String line = null;
@@ -254,7 +263,7 @@ public class YoctoSDKUtils {
 		ICProjectDescription cpdesc = CoreModel.getDefault().getProjectDescription(project, true);
 
 		String sFileName = getEnvironmentSetupFileFullPath(elem);
-		HashMap<String, String> envMap = parseEnvScript(sFileName);
+		HashMap<String, String> envMap = parseEnvScript(elem, sFileName);
 
 		setEnvVars(cpdesc, elem, envMap);
 		try {
@@ -503,6 +512,12 @@ public class YoctoSDKUtils {
 		else
 			elem.setEnumDeviceMode(YoctoUIElement.DeviceMode.DEVICE_MODE);
 
+		IRemoteServices remoteServices = RemoteUIServices.getRemoteServices(store.getString(PreferenceConstants.REMOTE_SERVICE_PROVIDER), null);
+		if (remoteServices != null){
+			elem.setRemoteService(remoteServices);
+			IRemoteConnection connection = remoteServices.getConnectionManager().getConnection(store.getString(PreferenceConstants.CONNECTION_NAME));
+			elem.setConnection(connection);
+		}
 		return elem;
 	}
 
