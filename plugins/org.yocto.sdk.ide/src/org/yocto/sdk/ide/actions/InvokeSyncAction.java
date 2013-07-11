@@ -21,6 +21,7 @@ import org.eclipse.cdt.core.resources.IConsole;
 import org.eclipse.cdt.managedbuilder.core.IConfiguration;
 import org.eclipse.cdt.managedbuilder.core.IManagedBuildInfo;
 import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
+import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -29,7 +30,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.cdt.internal.autotools.core.AutotoolsNewMakeGenerator;
 import org.eclipse.cdt.internal.autotools.ui.actions.InvokeAction;
 import org.eclipse.cdt.internal.autotools.ui.actions.InvokeMessages;
-
 import org.yocto.sdk.ide.YoctoSDKPlugin;
 
 @SuppressWarnings("restriction")
@@ -86,7 +86,7 @@ public class InvokeSyncAction extends InvokeAction {
 		launcher.showCommand(true);
 		// Run the shell script via shell command.
 		Process proc = launcher.execute(new Path(strippedCommand), argumentList, env,
-					execDir, new NullProgressMonitor());
+					URIUtil.toURI(execDir), new NullProgressMonitor());
 
 		if (proc != null) {
 			// Close the input of the process since we will never write to it
