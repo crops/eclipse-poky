@@ -29,6 +29,7 @@ public class SystemtapModel extends BaseModel {
 
 	protected MessageConsole sessionConsole;
 	private String metadata_location;
+	private String builddir_location;
 	private String remote_host;
 	private String user_id;
 	private String systemtap_script;
@@ -36,9 +37,10 @@ public class SystemtapModel extends BaseModel {
 
 	Display display;
 	
-	public SystemtapModel(String metadata_location, String remote_host, String user_id, String systemtap_script, String systemtap_args, Display display) {
+	public SystemtapModel(String metadata_location, String builddir_location, String remote_host, String user_id, String systemtap_script, String systemtap_args, Display display) {
 		super(null, TASK_NAME, "", "");
 		this.metadata_location = metadata_location;
+		this.builddir_location = builddir_location;
 		this.remote_host = remote_host;
 		this.user_id = user_id;
 		this.systemtap_script = systemtap_script;
@@ -70,7 +72,7 @@ public class SystemtapModel extends BaseModel {
 			throws InvocationTargetException, InterruptedException {
 		try {
 			ShellSession shell = new ShellSession(ShellSession.SHELL_TYPE_BASH, 
-												new File(this.metadata_location),
+												new File(this.metadata_location), new File(this.builddir_location),
 												DEFAULT_INIT_SCRIPT, sessionConsole.newOutputStream());
 			boolean acceptedKey = shell.ensureKnownHostKey(user_id, remote_host);
 			if (acceptedKey) {

@@ -37,18 +37,21 @@ public class SystemtapSettingDialog extends Dialog {
 	static protected String TITLE="Systemtap Crosstap";
 	protected String title;
 	protected String metadata_location;
+	protected String builddir_location;
 	protected String systemtap_script;
 	protected String user_id;
 	protected String remote_host;
 	protected String systemtap_args;
 	protected boolean okPressed;
 	protected Button metadataLocationBtn;
+	protected Button builddirLocationBtn;
 	protected Button systemtapScriptBtn;
 	protected Text userIDText;
 	protected Text remoteHostText;
 	protected Text systemtapArgsText;
 	protected Text systemtapScriptText;
 	protected Text metadataLocationText;
+	protected Text builddirLocationText;
 	
 	protected SystemtapSettingDialog(Shell parentShell, String title) {
 		super(parentShell);
@@ -75,6 +78,10 @@ public class SystemtapSettingDialog extends Dialog {
 		return metadata_location;
 	}
 	
+	public String getBuilddirLocation() {
+		return builddir_location;
+	}
+
 	public String getRemoteHost() {
 		return remote_host;
 	}
@@ -118,6 +125,14 @@ public class SystemtapSettingDialog extends Dialog {
 		metadataLocationText = (Text)addTextControl(textContainer, metadata_location);
 		metadataLocationBtn = addDirSelectButton(textContainer, metadataLocationText);
 		
+		label = new Label(projComp, SWT.NONE);
+		label.setText(Messages.Builddir_Location);
+		textContainer = new Composite(projComp, SWT.NONE);
+		textContainer.setLayout(new GridLayout(2, false));
+		textContainer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		builddirLocationText = (Text)addTextControl(textContainer, builddir_location);
+		builddirLocationBtn = addDirSelectButton(textContainer, builddirLocationText);
+
 		label = new Label(projComp, SWT.NONE);
 		label.setText(Messages.User_ID);
 		userIDText = new Text(projComp, SWT.SINGLE | SWT.BORDER);
@@ -217,6 +232,19 @@ public class SystemtapSettingDialog extends Dialog {
 		}
 		if (!metadata_dir.isDirectory()) {
 			CommonHelper.showErrorDialog("SystemTap Error", null, "The specified metadata location is not a directory!");
+			return;
+		}
+		builddir_location = builddirLocationText.getText();
+		if ( (builddir_location == null) || builddir_location.isEmpty()) {
+			CommonHelper.showErrorDialog("SystemTap Error", null, "Please specify your builddir location!");
+			return;
+		}
+		File builddir_dir = new File(builddir_location);
+		if (!builddir_dir.exists()) {
+			CommonHelper.showErrorDialog("SystemTap Error", null, "The specified builddir location does not exist!");
+		}
+		if (!metadata_dir.isDirectory()) {
+			CommonHelper.showErrorDialog("SystemTap Error", null, "The specified builddir location is not a directory!");
 			return;
 		}
 		user_id = userIDText.getText();
