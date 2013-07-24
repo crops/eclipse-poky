@@ -1,6 +1,9 @@
 package org.yocto.remote.sdk.core;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -24,7 +27,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
@@ -34,7 +36,7 @@ import org.yocto.remote.utils.RemoteHelper;
 public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 	
 	@Override
-	protected int runScript(URI commandPath, URI runPath, String[] args,
+	protected int runScript(String commandPath, URI runPath, String[] args,
 			String jobDescription, String errMsg, IConsole console,
 			ArrayList<String> additionalEnvs, 
 			boolean consoleStart) throws BuildException, CoreException,
@@ -55,8 +57,7 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 			configTargets = new String[args.length+1];
 			System.arraycopy(args, 0, configTargets, 1, args.length);
 		}
-        configTargets[0] = getPathString(commandPath.getPath());
-
+        configTargets[0] = getPathString(commandPath);
         // Fix for bug #343879
         if (Platform.getOS().equals(Platform.OS_WIN32)
                 || Platform.getOS().equals(Platform.OS_MACOSX))
@@ -66,7 +67,8 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
         // Always use sh -c for executing autotool scripts which should
         // work on all Linux POSIX compliant shells including bash, dash, as
         // well as Windows and Mac OSX.
-        String command = null;
+		URI prjLoc = project.getLocationURI();
+        String command = "cd " + prjLoc.getPath() +"; ";
         for (String arg : configTargets) {
         	// TODO check for spaces in args
         	if (command == null)
@@ -74,7 +76,7 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
         	else
         		command += " " + arg;
         }
-        configTargets = new String[] { "-c", command };
+        configTargets = new String[] { "-c \"", command };
         
         for (int i = 0; i < configTargets.length; ++i) {
 			// try to resolve the build macros in any argument
@@ -103,7 +105,7 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 
 
 		ConsoleOutputStream consoleOutStream = null;
-		ErrorParserManager epm = null;
+//		ErrorParserManager epm = null;
 		StringBuffer buf = new StringBuffer();
 
 		// Launch command - main invocation
@@ -140,7 +142,7 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 			consoleOutStream.flush();
 
 			// Get a launcher for the config command
-			CommandLauncher launcher = new CommandLauncher();
+//			CommandLauncher launcher = new CommandLauncher();
 			// Set the environment
 			IEnvironmentVariable variables[] = 
 					CCorePlugin.getDefault().getBuildEnvironmentManager().getVariables(cdesc, true);
@@ -172,28 +174,28 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 			}
 
 			// Hook up an error parser manager
-			epm = new ErrorParserManager(project, runPath, this, new String[] {ErrorParser.ID});
-			epm.setOutputStream(consoleOutStream);
-			epm.addErrorParser(ErrorParser.ID, new ErrorParser(getSourcePath(), getBuildPath()));
+//			epm = new ErrorParserManager(project, runPath, this, new String[] {ErrorParser.ID});
+//			epm.setOutputStream(consoleOutStream);
+//			epm.addErrorParser(ErrorParser.ID, new ErrorParser(getSourcePath(), getBuildPath()));
 
-			OutputStream stdout = epm.getOutputStream();
-			OutputStream stderr = stdout;
+//			OutputStream stdout = epm.getOutputStream();
+//			OutputStream stderr = stdout;
 
-			launcher.showCommand(true);
+			//launcher.showCommand(true);
 			// Run the shell script via shell command.
 //			RSEHelper.remoteShellExec();
-			URI prjLoc = project.getLocationURI();
+			prjLoc = project.getLocationURI();
 			IRemoteConnection remConn = RemoteHelper.getConnectionByURI(prjLoc);
 			//FIXME: this should not be exclusively on RSE
 			IHost host = RemoteHelper.getRemoteConnectionByName(remConn.getName());
-			
+
 			String configTargetsStr = "";
 			for(String target: configTargets) {
 				configTargetsStr += target + " ";
 			}
+
 			Process proc = RemoteHelper.remoteShellExec(host, "", "/bin/sh", configTargetsStr, env, new NullProgressMonitor());
 			
-//			Process proc = launcher.execute(new Path(SHELL_COMMAND), configTargets, env, runPath, new NullProgressMonitor());
 			if (proc != null) {
 				try {
 					// Close the input of the process since we will never write to
@@ -202,10 +204,10 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 				} catch (IOException e) {
 				}
 
-				if (launcher.waitAndRead(stdout, stderr, new SubProgressMonitor(
-						monitor, IProgressMonitor.UNKNOWN)) != CommandLauncher.OK) {
-					errMsg = launcher.getErrorMessage();
-				}
+//				if (launcher.waitAndRead(stdout, stderr, new SubProgressMonitor(
+//						monitor, IProgressMonitor.UNKNOWN)) != CommandLauncher.OK) {
+//					errMsg = launcher.getErrorMessage();
+//				}
 
 				// Force a resync of the projects without allowing the user to
 				// cancel.
@@ -222,9 +224,25 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 							.getResourceString("MakeGenerator.refresh.error")); //$NON-NLS-1$
 				}
 			} else {
-				errMsg = launcher.getErrorMessage();
+//				errMsg = launcher.getErrorMessage();
 			}
-
+			InputStream is = proc.getInputStream();
+			try {
+				if (is.available() != 0) {
+					BufferedReader in = new BufferedReader(new InputStreamReader(is));
+					String line;
+					buf = new StringBuffer();
+					while ((line = in.readLine()) != null) {
+						buf.append(line);
+						buf.append(System.getProperty("line.separator", "\n")); //$NON-NLS-1$//$NON-NLS-2$
+						consoleOutStream.write(buf.toString().getBytes());
+						consoleOutStream.flush();
+						buf.delete(0, buf.length());
+					}
+				}
+			 }catch(IOException e1) {
+				 //do nothing
+			 }
 			// Report either the success or failure of our mission
 			buf = new StringBuffer();
 			if (errMsg != null && errMsg.length() > 0) {
@@ -236,7 +254,7 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 				buf.append("(").append(errMsg).append(")"); //$NON-NLS-1$ //$NON-NLS-2$
 				rc = IStatus.ERROR;
 			} else {
-				int exitValue = 1000;
+				int exitValue = Integer.MIN_VALUE;
 				while (true) {
 					try {
 						exitValue = proc.exitValue();
@@ -246,7 +264,6 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 					}
 				}
 				if (exitValue >= 1 || exitValue < 0) {
-			
 					// We have an invalid return code from configuration.
 					String[] errArg = new String[2];
 					errArg[0] = Integer.toString(proc.exitValue());
@@ -281,8 +298,8 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 		} finally {
 			if (consoleOutStream != null)
 				consoleOutStream.close();
-			if (epm != null)
-				epm.close();
+//			if (epm != null)
+//				epm.close();
 		}
 		
 		// If we have an error and no specific error markers, use the default error marker.
