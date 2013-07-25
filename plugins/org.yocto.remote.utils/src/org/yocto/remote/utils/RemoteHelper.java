@@ -206,6 +206,7 @@ public class RemoteHelper {
 			if (proxy.getScheme().equalsIgnoreCase(uri.getScheme())) {
 				System.out.println(proxy);
 				IRemoteServices services = proxy.getServices();
+				services.initialize(new NullProgressMonitor());
 				IRemoteConnectionManager connMgr = services.getConnectionManager();
 				return connMgr.getConnection(uri);
 			}
