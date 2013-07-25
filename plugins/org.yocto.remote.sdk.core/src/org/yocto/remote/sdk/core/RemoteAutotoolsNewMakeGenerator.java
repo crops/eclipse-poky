@@ -68,7 +68,7 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
         // work on all Linux POSIX compliant shells including bash, dash, as
         // well as Windows and Mac OSX.
 		URI prjLoc = project.getLocationURI();
-        String command = "cd " + prjLoc.getPath() +"; ";
+        String command = null;
         for (String arg : configTargets) {
         	// TODO check for spaces in args
         	if (command == null)
@@ -76,7 +76,7 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
         	else
         		command += " " + arg;
         }
-        configTargets = new String[] { "-c \"", command };
+        configTargets = new String[] { "-c ", command };
         
         for (int i = 0; i < configTargets.length; ++i) {
 			// try to resolve the build macros in any argument
@@ -194,7 +194,8 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 				configTargetsStr += target + " ";
 			}
 
-			Process proc = RemoteHelper.remoteShellExec(host, "", "/bin/sh", configTargetsStr, env, new NullProgressMonitor());
+			configTargetsStr += "";
+			Process proc = RemoteHelper.remoteShellExec(host, prjLoc.getPath(), "", "/bin/sh", configTargetsStr, env, new NullProgressMonitor());
 			
 			if (proc != null) {
 				try {

@@ -391,6 +391,7 @@ public class RemoteHelper {
 	}
 
 	public static Process remoteShellExec(IHost connection,
+			String workingDirectory,
 			String prelaunchCmd, String remoteCommandPath, String arguments, String[] env,
 			IProgressMonitor monitor) throws CoreException {
 
@@ -417,7 +418,7 @@ public class RemoteHelper {
 			// command right now.
 			try {
 				IHostShell hostShell = shellService.launchShell(
-						"", env, new SubProgressMonitor(monitor, 3)); //$NON-NLS-1$
+						workingDirectory, env, new SubProgressMonitor(monitor, 3)); //$NON-NLS-1$
 				hostShell.writeToShell(remoteCommand);
 				p = new HostShellProcessAdapter(hostShell);
 			} catch (Exception e) {
