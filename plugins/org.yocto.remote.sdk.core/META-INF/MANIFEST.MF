@@ -23,5 +23,7 @@ Import-Package: org.eclipse.cdt.autotools.core,
  org.eclipse.ptp.remote.core,
  org.eclipse.rse.core.model,
  org.yocto.remote.utils,
- org.yocto.sdk.ide.natures
+ org.yocto.sdk.ide,
+ org.yocto.sdk.ide.natures,
+ org.yocto.sdk.ide.preferences
 Export-Package: org.yocto.remote.sdk.core

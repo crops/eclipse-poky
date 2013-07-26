@@ -102,7 +102,7 @@ public class YoctoSDKChecker {
 		}
 	};
 
-	public static void checkIfGloballySelectedYoctoProfileIsValid() throws YoctoGeneralException {
+	public static YoctoUIElement checkIfGloballySelectedYoctoProfileIsValid() throws YoctoGeneralException {
 		YoctoProfileElement profileElement = YoctoSDKUtils.getProfilesFromDefaultStore();
 		IPreferenceStore selectedProfileStore = YoctoSDKPlugin.getProfilePreferenceStore(profileElement.getSelectedProfile());
 		YoctoUIElement elem = YoctoSDKUtils.getElemFromStore(selectedProfileStore);
@@ -112,6 +112,7 @@ public class YoctoSDKChecker {
 			String strErrorMsg =  getErrorMessage(result, SDKCheckRequestFrom.Wizard);
 			throw new YoctoGeneralException(strErrorMsg);
 		}
+		return elem;
 	}
 
 	public static SDKCheckResults checkYoctoSDK(YoctoUIElement elem) {

@@ -4,19 +4,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 
 import org.eclipse.cdt.autotools.core.AutotoolsPlugin;
 import org.eclipse.cdt.core.CCorePlugin;
-import org.eclipse.cdt.core.CommandLauncher;
 import org.eclipse.cdt.core.ConsoleOutputStream;
 import org.eclipse.cdt.core.envvar.IEnvironmentVariable;
 import org.eclipse.cdt.core.resources.IConsole;
 import org.eclipse.cdt.internal.autotools.core.AutotoolsNewMakeGenerator;
-import org.eclipse.cdt.internal.autotools.core.ErrorParser;
-import org.eclipse.cdt.internal.autotools.core.ErrorParserManager;
 import org.eclipse.cdt.managedbuilder.core.BuildException;
 import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
 import org.eclipse.cdt.managedbuilder.macros.BuildMacroException;
@@ -24,17 +20,22 @@ import org.eclipse.cdt.managedbuilder.macros.IBuildMacroProvider;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
+import org.eclipse.ptp.remote.core.RemoteServices;
 import org.eclipse.rse.core.model.IHost;
 import org.yocto.remote.utils.RemoteHelper;
+import org.yocto.sdk.ide.YoctoGeneralException;
+import org.yocto.sdk.ide.YoctoSDKChecker;
+import org.yocto.sdk.ide.YoctoSDKPlugin;
+import org.yocto.sdk.ide.YoctoUIElement;
+import org.yocto.sdk.ide.preferences.PreferenceConstants;
 
 public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
-	
+
 	@Override
 	protected int runScript(String commandPath, URI runPath, String[] args,
 			String jobDescription, String errMsg, IConsole console,
@@ -68,14 +69,23 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
         // work on all Linux POSIX compliant shells including bash, dash, as
         // well as Windows and Mac OSX.
 		URI prjLoc = project.getLocationURI();
+		YoctoUIElement elem = null;
+		try {
+			elem = YoctoSDKChecker.checkIfGloballySelectedYoctoProfileIsValid();
+		} catch (YoctoGeneralException e2) {
+			e2.printStackTrace();
+		}
+		String strTarget = elem != null ? elem.getStrTarget() : "";
+		String sysrootLoc = elem != null ? elem.getStrToolChainRoot() : "";
         String command = null;
         for (String arg : configTargets) {
         	// TODO check for spaces in args
-        	if (command == null)
-        		command = arg;
-        	else
-        		command += " " + arg;
+			if (command == null)
+				command = "\" . " + sysrootLoc + "/" + "environment-setup-" + strTarget + " ; " + arg;
+			else
+				command += " " + arg;
         }
+        command += "\"";
         configTargets = new String[] { "-c ", command };
         
         for (int i = 0; i < configTargets.length; ++i) {
@@ -195,8 +205,8 @@ public class RemoteAutotoolsNewMakeGenerator extends AutotoolsNewMakeGenerator {
 			}
 
 			configTargetsStr += "";
+
 			Process proc = RemoteHelper.remoteShellExec(host, prjLoc.getPath(), "", "/bin/sh", configTargetsStr, env, new NullProgressMonitor());
-			
 			if (proc != null) {
 				try {
 					// Close the input of the process since we will never write to

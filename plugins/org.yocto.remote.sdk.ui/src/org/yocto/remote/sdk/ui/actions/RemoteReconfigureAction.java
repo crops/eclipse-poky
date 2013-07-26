@@ -17,6 +17,10 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.yocto.remote.sdk.core.RemoteAutotoolsNewMakeGenerator;
+import org.yocto.sdk.ide.YoctoSDKPlugin;
+import org.yocto.sdk.ide.YoctoUIElement;
+import org.yocto.sdk.ide.preferences.PreferenceConstants;
+import org.yocto.sdk.ide.utils.YoctoSDKUtils;
 
 public class RemoteReconfigureAction extends InvokeAction {
 

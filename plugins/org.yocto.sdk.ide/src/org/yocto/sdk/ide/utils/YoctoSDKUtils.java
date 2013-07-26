@@ -14,19 +14,19 @@ package org.yocto.sdk.ide.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
+
 import java.net.URI;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;
@@ -40,11 +40,15 @@ import org.eclipse.cdt.core.settings.model.ICConfigurationDescription;
 import org.eclipse.cdt.core.settings.model.ICProjectDescription;
 import org.eclipse.cdt.debug.core.ICDTLaunchConfigurationConstants;
 import org.eclipse.cdt.debug.mi.core.IMILaunchConfigurationConstants;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileInfo;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IProject;
+
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -55,6 +59,8 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.eclipse.ptp.remote.core.IRemoteConnection;
 import org.eclipse.ptp.remote.core.IRemoteServices;
 import org.eclipse.ptp.remote.ui.RemoteUIServices;
+import org.yocto.remote.utils.RemoteHelper;
+import org.eclipse.ptp.remote.core.RemoteServices;
 import org.yocto.remote.utils.RemoteHelper;
 import org.yocto.sdk.ide.YoctoGeneralException;
 import org.yocto.sdk.ide.YoctoProfileElement;
@@ -424,7 +430,7 @@ public class YoctoSDKUtils {
 		else
 			elem.setEnumDeviceMode(YoctoUIElement.DeviceMode.DEVICE_MODE);
 
-		IRemoteServices remoteServices = RemoteUIServices.getRemoteServices(store.getString(PreferenceConstants.REMOTE_SERVICE_PROVIDER), null);
+		IRemoteServices remoteServices = RemoteServices.getRemoteServices(store.getString(PreferenceConstants.REMOTE_SERVICE_PROVIDER), new NullProgressMonitor());
 		if (remoteServices != null){
 			elem.setRemoteService(remoteServices);
 			IRemoteConnection connection = remoteServices.getConnectionManager().getConnection(store.getString(PreferenceConstants.CONNECTION_NAME));
