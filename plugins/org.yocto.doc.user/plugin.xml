@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<extension
+		point="org.eclipse.help.toc">
+		<toc
+			file="toc.xml"
+			primary="true">
+		</toc>
+		<toc
+			file="html/adt-manual-toc.xml"
+			primary="false">
+		</toc>
+		<toc
+			file="html/yocto-project-qs-toc.xml"
+			primary="false">
+		</toc>
+		<toc
+			file="html/dev-manual-toc.xml"
+			primary="false">
+		</toc>
+		<toc
+			file="html/ref-manual-toc.xml"
+			primary="false">
+		</toc>
+		<toc
+			file="html/bsp-guide-toc.xml"
+			primary="false">
+		</toc>
+		<toc
+			file="html/kernel-dev-toc.xml"
+			primary="false">
+		</toc>
+  <toc
+        file="html/profile-manual-toc.xml"
+        primary="false">
+  </toc>
+	</extension>
+</plugin>

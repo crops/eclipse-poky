@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="Yocto Project update site" url="http://yoctoproject.org/downloads/eclipse-plugin/">
+      Yocto Project update site
+   </description>
+   <feature url="features/org.yocto.sdk_@ADTGenVersion@.jar" id="org.yocto.sdk" version="@ADTGenVersion@">
+      <category name="Yocto Project ADT"/>
+   </feature>
+   <category-def name="Yocto Project ADT" label="Yocto Project ADT plug-in"/>
+   <feature url="features/org.yocto.bc_@bcGenVersion@.jar" id="org.yocto.bc" version="@bcGenVersion@">
+      <category name="Yocto Project Bitbake Commander"/>
+   </feature>
+   <category-def name="Yocto Project Bitbake Commander" label="Yocto Project Bitbake Commander plug-in"/>
+   <feature url="features/org.yocto.doc_@docGenVersion@.jar" id="org.yocto.doc" version="@docGenVersion@">
+      <category name="Yocto Project Documentation"/>
+   </feature>
+   <category-def name="Yocto Project Documentation" label="Yocto Project Documentation plug-in"/>
+   <feature url="features/org.yocto.utils_@utilsGenVersion@.jar" id="org.yocto.utils" version="@utilsGenVersion@">
+      <category name="Yocto Project Utils"/>
+   </feature>
+   <category-def name="Yocto Project Utils" label="Yocto Project Utils plug-in"/>
+</site>
