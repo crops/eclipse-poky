@@ -45,6 +45,10 @@ abstract public class TerminalHandler extends AbstractHandler {
 	abstract protected String getConnnectionName();
 	abstract protected String getDialogTitle();
 
+	protected String changeTerm() {
+		return changeTerm;
+	}
+
 	protected ITerminalShell getTerminalShellFromTab(CTabItem item) {
         ITerminalShell terminalShell = null;
         ITerminalViewControl terminalViewControl = (ITerminalViewControl) item
@@ -97,7 +101,7 @@ abstract public class TerminalHandler extends AbstractHandler {
 			TerminalViewer viewer = terminalsUI.activateTerminalsView();
 			if (preProcess(terminalSubSystem)) {
 				CTabItem tab = viewer.getTabFolder().createTabItem(
-						terminalSubSystem.getHost(), changeTerm + getInitCmd());
+						terminalSubSystem.getHost(), changeTerm() + getInitCmd());
 				//since RSETerminalConnector not exit the shell during the diconnection,
 				//we have manually exit it here
 				try {
