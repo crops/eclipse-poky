@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
-#setup eclipse building environment for Indigo.
-#comment out the following line if you want to using your own http proxy setting for eclipse update site
+#setup Yocto Eclipse plug-in build environment for Kepler
+#comment out the following line if you wish to use your own http proxy settings
 PROXY=http://proxy.jf.intel.com:911
 
 err_exit() 
@@ -10,10 +10,9 @@ err_exit()
   exit $1
 }
 
-curdir=`pwd`
-
 uname_s=`uname -s`
 uname_m=`uname -m`
+
 case ${uname_s}${uname_m} in
   Linuxppc*) ep_arch=linux-gtk-ppc
              cdt_arch=linux.ppc
@@ -29,6 +28,10 @@ case ${uname_s}${uname_m} in
     exit 1
     ;;
 esac
+
+#make sure that the utilities we need exist
+command -v wget > /dev/null 2>&1 || { echo >&2 "wget not found. Aborting installation."; exit 1; }
+command -v tar > /dev/null 2>&1 || { echo >&2 "tar not found. Aborting installation."; exit 1; }
 
 #parsing proxy URLS
 url=${PROXY}
@@ -51,10 +54,9 @@ fi
 ep_rel="R-"
 ep_ver="4.3"
 ep_date="-201306052000"
-P2_disabled=false
-P2_no_dropins=false
+
 if [ ! -f eclipse/plugins/3.102.0.v20130605-1539.jar ]; then
-  curdir2=`pwd`
+  pushd .
   if [ ! -d eclipse -o -h eclipse ]; then
     if [ -d eclipse-${ep_ver}-${ep_arch} ]; then
       rm -rf eclipse-${ep_ver}-${ep_arch}
@@ -64,14 +66,23 @@ if [ ! -f eclipse/plugins/3.102.0.v20130605-1539.jar ]; then
   else
     rm -rf eclipse
   fi
-  # Eclipse SDK: Need the SDK so we can link into docs
-  echo "Getting Eclipse SDK..."
-  #wget "http://download.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
-  #The eclipse site has moments where it is overloaded. Maintaining our own mirror solves this.
-  wget "http://downloads.yoctoproject.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
+
+  echo -e "\nPlease wait. Downloading Eclipse SDK ${ep_rel}${ep_ver}${ep_date} \n"
+
+  if [[ "$1" = "--upstream" ]]
+  then
+        wget "http://archive.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
+  else
+	wget "http://downloads.yoctoproject.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
+  fi
+
+  echo -e "Please wait. Extracting Eclipse SDK: eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz\n"
+
   tar xfz eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz || err_exit $? "extracting Eclipse SDK failed"
+
   rm eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz
-  cd "${curdir2}"
+  popd
+
   if [ ! -d eclipse -o -h eclipse ]; then
     if [ -e eclipse ]; then 
       rm eclipse
@@ -79,8 +90,9 @@ if [ ! -f eclipse/plugins/3.102.0.v20130605-1539.jar ]; then
     ln -s eclipse-${ep_ver}-${ep_arch}/eclipse eclipse
   fi
 fi
+
 if [ ! -f eclipse/startup.jar ]; then
-  curdir2=`pwd`
+  pushd .
   cd eclipse/plugins
   if [ -h ../startup.jar ]; then
     rm ../startup.jar
@@ -92,20 +104,20 @@ if [ ! -f eclipse/startup.jar ]; then
   else
     echo "Eclipse: NO startup.jar LAUNCHER FOUND!"
   fi
-  cd ${curdir2}
+  popd
 fi
 
 LAUNCHER="eclipse/startup.jar"
 
-get_version()
-{
 #$1: repository_url
 #$2: featureId
 #$3: 'all' or 'max' or 'min', 'max' if not specified
+get_version()
+{
   local remote_vers="`java ${PROXY_PARAM} \
     -jar ${LAUNCHER} \
     -application org.eclipse.equinox.p2.director \
-    -destination ${curdir}/eclipse \
+    -destination ./eclipse \
     -profile SDKProfile \
     -repository $1 \
     -list $2\
@@ -132,11 +144,12 @@ get_version()
   echo ${remote_ver}
 }
 
-check_local_version()
-{
 # $1 unitId
 # $2 min version
 # $3 max version (optional)
+check_local_version()
+{
+  curdir=`pwd`
   version="`get_version file:///${curdir}/eclipse/p2/org.eclipse.equinox.p2.engine/profileRegistry/SDKProfile.profile $1`"
   [ "$version" \< "$2" ] && return 1
   if [ "x$3" != "x" ]; then
@@ -145,15 +158,16 @@ check_local_version()
   return 0
 }
 
-update_feature_remote()
-{
-# install a feature of with version requirement [min, max)
+
+# install a feature with version requirement [min, max)
 #$1: reporsitory url
 #$2: featureId
 #$3: min version
 #$4: max version(optional)
+update_feature_remote()
+{
   [ $# -lt 3 ] && err_exit 1 "update_feature_remote: invalid parameters, $*"
-  check_local_version $2 $3 $4 && echo "skip installed feature $2" && return 0
+  check_local_version $2 $3 $4 && echo "Feature $2 is already installed" && return 0
   local installIU=""
   if [ "x$4" != "x" ]; then
       #has max version requirement
@@ -170,7 +184,6 @@ update_feature_remote()
 
   [ "x$installIU" = "x" ] && err_exit 1 "Can NOT find candidates of $2 version($3, $4) at $1!"
   installIU="$2/$installIU"
-  echo "try to install $installIU ..."
   java ${PROXY_PARAM} -jar ${LAUNCHER} \
     -application org.eclipse.equinox.p2.director \
     -destination ${curdir}/eclipse \
@@ -179,50 +192,48 @@ update_feature_remote()
     -installIU ${installIU} || err_exit $? "installing ${installIU} failed"
 }
 
-#Eclipse Update Site
-MAIN_UPDATE_SITE="http://download.eclipse.org/releases/kepler"
-# The main eclipse download site is unreliable at times. For now, we're going to
-# maintain a mirror of just what we need.
-#MAIN_UPDATE_SITE="http://downloads.yoctoproject.org/eclipse/juno/ftp.osuosl.org/pub/eclipse/releases/juno"
+#Main Site
+if [[ "$1" = "--upstream" ]]
+then
+        MAIN_SITE="http://download.eclipse.org/releases/kepler"
+else
+        MAIN_SITE="http://downloads.yoctoproject.org/eclipse/kepler/ftp.osuosl.org/pub/eclipse/releases/kepler"
+fi
 
-UPDATE_SITE="${MAIN_UPDATE_SITE}"
+CDTFEAT="8.3.0"
+echo -e "\nPlease wait. Installing CDT.SDK.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.feature.group ${CDTFEAT}
 
-#CDT related
-CDTFEAT="8.2.0"
-echo "Installing CDT..."
-update_feature_remote ${UPDATE_SITE} org.eclipse.cdt.feature.group ${CDTFEAT}
+
 CDTREMOTEVER="6.2.0"
-update_feature_remote ${UPDATE_SITE} org.eclipse.cdt.launch.remote.feature.group ${CDTREMOTEVER}
+echo -e "\nPlease wait. Installing CDT.LAUNCH.REMOTE.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group ${CDTREMOTEVER}
 
-#RSE SDK
 RSEVER="3.5.0"
-#TCFVER="1.0.0"
+echo -e "\nPlease wait. Installing RSE.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.rse.feature.group ${RSEVER}
+
 TMVER="3.3.1"
-echo "Installing RSE/TCF/TM related component..."
-update_feature_remote ${UPDATE_SITE} org.eclipse.rse.feature.group ${RSEVER}
-#update_feature_remote ${UPDATE_SITE} org.eclipse.tcf.rse.feature.feature.group ${TCFVER}
-update_feature_remote ${UPDATE_SITE} org.eclipse.tm.terminal.sdk.feature.group ${TMVER}
+echo -e "\nPlease wait. Installing TM.TERMINAL.SDK.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.sdk.feature.group ${TMVER}
 
-#AUTOTOOL
 ATVER="3.2.0"
-echo "Install AutoTool..."
-update_feature_remote ${UPDATE_SITE} org.eclipse.cdt.autotools.feature.group ${ATVER}
+echo -e "\nPlease wait. Installing CDT.AUTOTOOLS.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group ${ATVER}
 
-#Lttng2 
 LTTNGREL="2.0.0"
-echo "Install Lttng..."
-update_feature_remote ${UPDATE_SITE} org.eclipse.linuxtools.lttng2.feature.group ${LTTNGREL}
+echo -e "\nPlease wait. Installing LINUXTOOLS.LTTNG2.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.linuxtools.lttng2.feature.group ${LTTNGREL}
 
-#PTP RDT
 PTPVER="7.0.0"
+echo -e "\nPlease wait. Installing PTP.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.ptp.feature.group ${PTPVER}
+
 RDTVER="7.0.0"
+echo -e "\nPlease wait. Installing PTP.RDT.FEATURE.GROUP"
+update_feature_remote ${MAIN_SITE} org.eclipse.ptp.rdt.feature.group ${RDTVER}
 
-update_feature_remote ${UPDATE_SITE} org.eclipse.ptp.feature.group ${PTPVER}
-update_feature_remote ${UPDATE_SITE} org.eclipse.ptp.rdt.feature.group ${RDTVER}
-
-echo ""
-echo "Your build environment is successfully created."
-echo "Run ECLIPSE_HOME=${curdir}/eclipse `dirname $0`/build.sh <branch name> <release name> to build"
-echo ""
+echo -e "\nYour build environment is successfully created."
+echo -e "\nRun ECLIPSE_HOME=`pwd`/eclipse `dirname $0`/build.sh <plugin branch or tag name> <documentation branch or tag name> <release name> to build the plugin and its documentation\n"
 
 exit 0
