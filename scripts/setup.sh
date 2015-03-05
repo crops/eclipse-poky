@@ -2,7 +2,26 @@
 
 #setup Yocto Eclipse plug-in build environment for Kepler
 #comment out the following line if you wish to use your own http proxy settings
-PROXY=http://proxy.jf.intel.com:911
+#export http_proxy=http://proxy.yourproxyinfo.com:8080
+
+help ()
+{
+  echo -e "\nThis script sets up the Yocto Project Eclipse plugins build environment"
+  echo -e "All files are downloaded from the Yocto Project mirror by default\n"
+  echo -e "Usage: $0 [--upstream]\n";
+  echo "Options:"
+  echo -e "--upstream - download from the upstream Eclipse repository\n"
+  echo -e "Example: $0 --upstream\n";
+  exit 1;
+}
+
+while getopts ":h" opt; do
+  case $opt in
+    h)
+      help
+      ;;
+  esac
+done
 
 err_exit() 
 {
@@ -34,7 +53,7 @@ command -v wget > /dev/null 2>&1 || { echo >&2 "wget not found. Aborting install
 command -v tar > /dev/null 2>&1 || { echo >&2 "tar not found. Aborting installation."; exit 1; }
 
 #parsing proxy URLS
-url=${PROXY}
+url=${http_proxy}
 if [ "x$url" != "x" ]; then
     proto=`echo $url | grep :// | sed -e 's,^\(.*://\).*,\1,g'`
     url=`echo $url | sed s,$proto,,g`
