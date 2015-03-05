@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#setup eclipse building environment for Indigo.
-#comment out the following line if you want to using your own http proxy setting for eclipse update site
-PROXY=http://proxy.jf.intel.com:911
+#setup Yocto Eclipse plug-in build environment for Juno
+#comment out the following line if you wish to use your own http proxy settings
+#export http_proxy=http://proxy.yourproxyinfo.com:8080
 
 help ()
 {
@@ -54,7 +54,7 @@ command -v wget > /dev/null 2>&1 || { echo >&2 "wget not found. Aborting install
 command -v tar > /dev/null 2>&1 || { echo >&2 "tar not found. Aborting installation."; exit 1; }
 
 #parsing proxy URLS
-url=${PROXY}
+url=${http_proxy}
 if [ "x$url" != "x" ]; then
     proto=`echo $url | grep :// | sed -e 's,^\(.*://\).*,\1,g'`
     url=`echo $url | sed s,$proto,,g`
