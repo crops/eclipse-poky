@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 
 import org.eclipse.cdt.core.CCorePlugin;
 import org.eclipse.cdt.core.envvar.IContributedEnvironment;
@@ -219,7 +220,14 @@ public class YoctoSDKUtils {
 							if (sValue.lastIndexOf("$PATH") >= 0)
 								sValue = sValue.substring(0, sValue.lastIndexOf("$PATH")) + System.getenv("PATH");
 						}
-						envMap.put(sKey, sValue);
+
+						if(sValue.toUpperCase().contains("$SDKTARGETSYSROOT")) {
+							String rValue = sValue.replaceAll(Matcher.quoteReplacement("$SDKTARGETSYSROOT"), envMap.get("SDKTARGETSYSROOT"));
+							envMap.put(sKey, rValue) ;
+						} else {
+							envMap.put(sKey, sValue);
+						}
+
 						System.out.printf("get env key %s value %s\n", sKey, sValue);
 					}
 				} finally {
