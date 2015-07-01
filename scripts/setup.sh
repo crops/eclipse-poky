@@ -69,8 +69,8 @@ fi
 
 # prepare the base Eclipse installation in folder "eclipse"
 ep_rel="R-"
-ep_ver="4.4.1"
-ep_date="-201409250400"
+ep_ver="4.4.2"
+ep_date="-201502041700"
 P2_disabled=false
 P2_no_dropins=false
 
@@ -93,7 +93,7 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.103.1.v20140903-1938.jar ]; then
 
   if [[ "$1" = "--upstream" ]]
   then
-        wget "http://download.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
+        wget "http://archive.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   else
         wget "http://downloads.yoctoproject.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   fi
