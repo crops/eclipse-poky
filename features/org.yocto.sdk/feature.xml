@@ -60,8 +60,6 @@
       <import plugin="org.eclipse.rse.files.ui" version="3.1.1" match="greaterOrEqual"/>
       <import plugin="org.eclipse.rse.subsystems.shells.core" version="3.1.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.cdt.launch.remote" version="2.2.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.tm.terminal" version="3.0.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.rse.terminals.ui" version="1.0.100" match="greaterOrEqual"/>
       <import plugin="org.eclipse.debug.ui"/>
       <import plugin="org.eclipse.ui.forms"/>
       <import plugin="org.eclipse.jface.text"/>
@@ -73,34 +71,6 @@
 
    <plugin
          id="org.yocto.sdk.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.yocto.remote.utils"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.yocto.sdk.remotetools"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.yocto.sdk.ide.doc.user"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.yocto.cmake.managedbuilder"
          download-size="0"
          install-size="0"
          version="0.0.0"

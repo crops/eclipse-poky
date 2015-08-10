@@ -24,6 +24,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.yocto.sdk.ide.YoctoSDKChecker;
 import org.yocto.sdk.ide.YoctoSDKMessages;
 import org.yocto.sdk.ide.natures.YoctoSDKAutotoolsProjectNature;
 
@@ -39,43 +40,45 @@ public class NewYoctoAutotoolsProjectPostProcess extends ProcessRunner {
 		String projectName = args[0].getSimpleValue();
 
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-		try {
-			if (!project.exists()) {
-				throw new ProcessFailureException(Messages.getString("NewManagedProject.4") + projectName); //$NON-NLS-1$
-			} else if (!project.hasNature(YoctoSDKAutotoolsProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID)) {
-				throw new ProcessFailureException(Messages.getString("NewManagedProject.3") + //$NON-NLS-1$
-						YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.WrongProjectNature", //$NON-NLS-1$
-								projectName));
-			} else {
-				IPath path = project.getLocation();
-				String path_str = path.toString();
-				String autogen_cmd = CHMOD_COMMAND + path_str + File.separator + AUTOGEN_SCRIPT_NAME;
-				try {
-					Runtime rt = Runtime.getRuntime();
-					Process proc = rt.exec(autogen_cmd);
-					InputStream stdin = proc.getInputStream();
-					InputStreamReader isr = new InputStreamReader(stdin);
-					BufferedReader br = new BufferedReader(isr);
-					String line = null;
-					String error_message = ""; //$NON-NLS-1$
+		if (YoctoSDKChecker.isLinux()) {
+			try {
+				if (!project.exists()) {
+					throw new ProcessFailureException(Messages.getString("NewManagedProject.4") + projectName); //$NON-NLS-1$
+//					else if (!project.hasNature(YoctoSDKAutotoolsProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID)) {
+//					throw new ProcessFailureException(Messages.getString("NewManagedProject.3") + //$NON-NLS-1$
+//							YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.WrongProjectNature", //$NON-NLS-1$
+//									projectName));
+				} else {
+					IPath path = project.getLocation();
+					String path_str = path.toString();
+					String autogen_cmd = CHMOD_COMMAND + path_str + File.separator + AUTOGEN_SCRIPT_NAME;
+					try {
+						Runtime rt = Runtime.getRuntime();
+						Process proc = rt.exec(autogen_cmd);
+						InputStream stdin = proc.getInputStream();
+						InputStreamReader isr = new InputStreamReader(stdin);
+						BufferedReader br = new BufferedReader(isr);
+						String line = null;
+						String error_message = ""; //$NON-NLS-1$
 
-					while ( (line = br.readLine()) != null) {
-						error_message = error_message + line;
+						while ( (line = br.readLine()) != null) {
+							error_message = error_message + line;
+						}
+
+						int exitVal = proc.waitFor();
+						if (exitVal != 0) {
+							throw new ProcessFailureException(
+									YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.ChmodFailure", //$NON-NLS-1$
+											projectName));
+						}
+					} catch (Throwable t) {
+						t.printStackTrace();
+
 					}
-
-					int exitVal = proc.waitFor();
-					if (exitVal != 0) {
-						throw new ProcessFailureException(
-								YoctoSDKMessages.getFormattedString("AutotoolsProjectPostProcess.ChmodFailure", //$NON-NLS-1$
-										projectName));
-					}
-				} catch (Throwable t) {
-					t.printStackTrace();
-
 				}
+			} catch (Exception e) {
+				throw new ProcessFailureException(Messages.getString("NewManagedProject.3") + e.getMessage(), e); //$NON-NLS-1$
 			}
-		} catch (Exception e) {
-			throw new ProcessFailureException(Messages.getString("NewManagedProject.3") + e.getMessage(), e); //$NON-NLS-1$
 		}
 	}
 }

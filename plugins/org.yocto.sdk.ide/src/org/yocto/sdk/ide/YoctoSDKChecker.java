@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2010 Intel Corporation.
  * Copyright (c) 2013 BMW Car IT GmbH.
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,21 +15,19 @@ package org.yocto.sdk.ide;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.yocto.sdk.ide.natures.YoctoSDKProjectNature;
 import org.yocto.sdk.ide.utils.YoctoSDKUtils;
-import org.yocto.sdk.ide.utils.YoctoSDKUtilsConstants;
 
 public class YoctoSDKChecker {
 	private static final String[] saInvalidVer = {"1.0", "0.9", "0.9+"};
 	private static final String SYSROOTS_DIR = "sysroots";
 	private static final String SDK_VERSION = "OECORE_SDK_VERSION";
+	private static String platform = System.getProperty("os.name").toLowerCase();
+	private static String arch = System.getProperty("os.arch").toLowerCase();
 
 	public static enum SDKCheckResults {
 		SDK_PASS("", false),
@@ -84,6 +82,22 @@ public class YoctoSDKChecker {
 		}
 	};
 
+	public static boolean isWin() {
+		return (platform.indexOf("win") >=0 );
+	}
+
+	public static boolean isLinux(){
+		return (platform.indexOf("linux") >=0 );
+	}
+
+	public static boolean isMac(){
+		return (platform.indexOf("mac") >=0 );
+	}
+
+	public static boolean is64bit(){
+		return (arch.indexOf("amd64") >=0 );
+	}
+
 	public static enum SDKCheckRequestFrom {
 		Wizard("Poky.SDK.Error.Origin.Wizard"),
 		Menu("Poky.SDK.Error.Origin.Menu"),
@@ -114,7 +128,7 @@ public class YoctoSDKChecker {
 	}
 
 	public static SDKCheckResults checkYoctoSDK(YoctoUIElement elem) {
-		if (elem.getStrToolChainRoot().isEmpty())
+/*		if (elem.getStrToolChainRoot().isEmpty())
 			return SDKCheckResults.TOOLCHAIN_LOCATION_EMPTY;
 		else {
 			File fToolChain = new File(elem.getStrToolChainRoot());
@@ -145,7 +159,6 @@ public class YoctoSDKChecker {
 			} catch(NullPointerException e) {
 				return SDKCheckResults.TOOLCHAIN_NO_SYSROOT;
 			}
-
 			if (!toolchain_host_arch.equalsIgnoreCase(platform)) {
 				if (!platform.matches("i\\d86") || !toolchain_host_arch.matches("i\\d86"))
 					return SDKCheckResults.TOOLCHAIN_HOST_MISMATCH;
@@ -227,7 +240,7 @@ public class YoctoSDKChecker {
 					return SDKCheckResults.QEMU_KERNEL_NONEXIST;
 			}
 		}
-
+*/
 		return SDKCheckResults.SDK_PASS;
 	}
 
@@ -242,22 +255,31 @@ public class YoctoSDKChecker {
 
 	private static String getPlatformArch() {
 		String value = null;
-		try
-		{
-			Runtime rt = Runtime.getRuntime();
-			Process proc = rt.exec("uname -m");
-			InputStream stdin = proc.getInputStream();
-			InputStreamReader isr = new InputStreamReader(stdin);
-			BufferedReader br = new BufferedReader(isr);
-			String line = null;
-
-			while ( (line = br.readLine()) != null) {
-				value = line;
+		if (isLinux()) {
+			try {
+				Runtime rt = Runtime.getRuntime();
+				Process proc = rt.exec("uname -m");
+				InputStream stdin = proc.getInputStream();
+				InputStreamReader isr = new InputStreamReader(stdin);
+				BufferedReader br = new BufferedReader(isr);
+				String line = null;
+				while ( (line = br.readLine()) != null) {
+					value = line;
+				}
+				proc.waitFor();
+			} catch (Throwable t) {
+				t.printStackTrace();
 			}
-			proc.waitFor();
+		}else if (isWin()) {
+			if(is64bit()){
+				value = "x86_64";
+			}else {
+				value = "x86";
+			}
+		}else if (isMac()) {
 
-		} catch (Throwable t) {
-			t.printStackTrace();
+		} else {
+
 		}
 		return value;
 	}
