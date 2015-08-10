@@ -2,14 +2,6 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
-            class="org.yocto.sdk.ide.preferences.YoctoSDKPreferencePage"
-            id="org.yocto.sdk.ide.preferences.YoctoSDKPreferencePage"
-            name="%page.name.0">
-      </page>
-   </extension>
-   <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
             class="org.yocto.sdk.ide.preferences.PreferenceInitializer">
@@ -92,36 +84,6 @@
             class="org.yocto.sdk.ide.actions.ReconfigYoctoHandler"
             commandId="org.yocto.sdk.ide.command.reconfigYocto">
       </handler>
-   </extension>
-   <extension
-         point="org.eclipse.ui.menus">
-      <menuContribution
-            locationURI="menu:project">
-         <command
-               commandId="org.yocto.sdk.ide.command.reconfigYocto"
-               id="reconfigure"
-               label="%command.label.0"
-               mnemonic="%command.mnemonic"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <and>
-                  <count
-                        value="1">
-                  </count>
-                  <iterate>
-                     <adapt
-                           type="org.eclipse.core.resources.IResource">
-                        <test
-                              property="org.eclipse.core.resources.projectNature"
-                              value="org.yocto.sdk.ide.YoctoSDKAutotoolsNature">
-                        </test>
-                     </adapt>
-                  </iterate>
-               </and>
-            </visibleWhen>
-         </command>
-      </menuContribution>
    </extension>
    <extension
          point="org.eclipse.cdt.core.templates">
@@ -228,100 +190,5 @@
                value="org.yocto.sdk.ide.YoctoSDKNature">
          </filter>
       </page>
-   </extension>
-   <extension
-         point="org.eclipse.ui.commands">
-      <command
-            defaultHandler="org.yocto.sdk.ide.actions.ProfileSwitchHandler"
-            description="%command.targetProfileSwitch.description"
-            id="org.yocto.sdk.ide.targetProfile.switch"
-            name="%command.targetProfileSwitch.name">
-         <commandParameter
-               id="org.eclipse.ui.commands.radioStateParameter"
-               name="%command.targetProfileSwitch.parameter.name"
-               optional="false">
-         </commandParameter>
-         <state
-               class="org.eclipse.ui.handlers.RadioState:project-specific"
-               id="org.eclipse.ui.commands.radioState">
-         </state>
-      </command>
-   </extension>
-   <extension
-         point="org.eclipse.ui.menus">
-      <menuContribution
-            allPopups="true"
-            locationURI="menu:project">
-         <menu
-               id="org.yocto.sdk.ide.profiles.menu"
-               label="%command.targetProfileSwitch.label"
-               tooltip="%command.targetProfileSwitch.description">
-         </menu>
-      </menuContribution>
-      <menuContribution
-            allPopups="true"
-            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
-         <toolbar
-               id="org.yocto.sdk.ide.profiles.toolbar">
-            <command
-                  commandId="org.yocto.sdk.ide.command.reconfigYocto"
-                  id="org.yocto.sdk.ide.profiles.toolbar.dropdown"
-                  label="%command.targetProfileSwitch.label"
-                  mode="FORCE_TEXT"
-                  style="pulldown"
-                  tooltip="%command.targetProfileSwitch.description">
-               <visibleWhen
-                     checkEnabled="false">
-                  <and>
-	                  <count
-	                        value="1">
-	                  </count>
-	                  <iterate
-	                        operator="and">
-	                     <adapt
-	                           type="org.eclipse.core.resources.IResource">
-	                        <test
-	                              property="org.eclipse.core.resources.projectNature"
-	                              value="org.yocto.sdk.ide.YoctoSDKNature">
-	                        </test>
-	                     </adapt>
-	                  </iterate>
-	               </and>
-               </visibleWhen>
-            </command>
-         </toolbar>
-      </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="menu:org.yocto.sdk.ide.profiles.menu">
-         <dynamic
-               class="org.yocto.sdk.ide.ProjectSpecificContributionItem"
-               id="org.yocto.sdk.ide.dynamic.projectSpecific.targetProfile">
-         </dynamic>
-         <separator
-               name="org.yocto.sdk.ide.profiles.separator"
-               visible="true">
-         </separator>
-         <dynamic
-               class="org.yocto.sdk.ide.TargetProfileContributionItem"
-               id="org.yocto.sdk.ide.dynamic.targetProfile">
-         </dynamic>
-      </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="menu:org.yocto.sdk.ide.profiles.toolbar.dropdown">
-         <dynamic
-               class="org.yocto.sdk.ide.ProjectSpecificContributionItem"
-               id="org.yocto.sdk.ide.dynamic.projectSpecific.targetProfile">
-         </dynamic>
-         <separator
-               name="org.yocto.sdk.ide.profiles.separator"
-               visible="true">
-         </separator>
-         <dynamic
-               class="org.yocto.sdk.ide.TargetProfileContributionItem"
-               id="org.yocto.sdk.ide.dynamic.targetProfile">
-         </dynamic>
-      </menuContribution>
    </extension>
 </plugin>

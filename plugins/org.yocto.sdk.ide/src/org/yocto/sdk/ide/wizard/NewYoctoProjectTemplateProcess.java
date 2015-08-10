@@ -24,12 +24,14 @@ import org.eclipse.cdt.core.templateengine.process.ProcessFailureException;
 import org.eclipse.cdt.core.templateengine.process.ProcessRunner;
 import org.eclipse.cdt.core.templateengine.process.processes.Messages;
 import org.eclipse.cdt.internal.autotools.core.configure.AutotoolsConfigurationManager;
+import org.eclipse.cdt.make.core.IMakeBuilderInfo;
 import org.eclipse.cdt.make.core.MakeCorePlugin;
 import org.eclipse.cdt.make.core.scannerconfig.IDiscoveredPathManager;
 import org.eclipse.cdt.make.core.scannerconfig.IDiscoveredPathManager.IDiscoveredPathInfo;
 import org.eclipse.cdt.make.core.scannerconfig.IDiscoveredPathManager.IPerProjectDiscoveredPathInfo;
 import org.eclipse.cdt.make.internal.core.scannerconfig.util.SymbolEntry;
 import org.eclipse.cdt.managedbuilder.core.BuildException;
+import org.eclipse.cdt.managedbuilder.core.IBuilder;
 import org.eclipse.cdt.managedbuilder.core.IConfiguration;
 import org.eclipse.cdt.managedbuilder.core.IManagedBuildInfo;
 import org.eclipse.cdt.managedbuilder.core.IOption;
@@ -201,40 +203,55 @@ public class NewYoctoProjectTemplateProcess extends ProcessRunner {
 
 	private void addNatures(IProject project, boolean projectExists, IProgressMonitor monitor)
 			throws CoreException, YoctoGeneralException {
-		YoctoSDKNatureUtils.addNature(project, YoctoSDKProjectNature.YoctoSDK_NATURE_ID, monitor);
+//		YoctoSDKNatureUtils.addNature(project, YoctoSDKProjectNature.YoctoSDK_NATURE_ID, monitor);
 
-		YoctoSDKChecker.checkIfGloballySelectedYoctoProfileIsValid();
-
-		YoctoProfileElement profileElement = YoctoSDKUtils.getProfilesFromDefaultStore();
-		ProjectPreferenceUtils.saveProfiles(profileElement, project);
-
-		IPreferenceStore selecteProfileStore = YoctoSDKPlugin.getProfilePreferenceStore(profileElement.getSelectedProfile());
-		YoctoUIElement elem = YoctoSDKUtils.getElemFromStore(selecteProfileStore);
-		YoctoSDKUtils.setEnvironmentVariables(project, elem);
+//		YoctoSDKChecker.checkIfGloballySelectedYoctoProfileIsValid();
+//
+//		YoctoProfileElement profileElement = YoctoSDKUtils.getProfilesFromDefaultStore();
+//		ProjectPreferenceUtils.saveProfiles(profileElement, project);
+//
+//		IPreferenceStore selecteProfileStore = YoctoSDKPlugin.getProfilePreferenceStore(profileElement.getSelectedProfile());
+//		YoctoUIElement elem = YoctoSDKUtils.getElemFromStore(selecteProfileStore);
+//		YoctoSDKUtils.setEnvironmentVariables(project, elem);
 
 		if (isEmptyProject) {
 			YoctoSDKNatureUtils.addNature(project, YoctoSDKEmptyProjectNature.YoctoSDK_EMPTY_NATURE_ID, monitor);
 		}
 
 		if (isAutotoolsProject) {
-			AutotoolsNewProjectNature.addAutotoolsNature(project, monitor);
+			String prj_name = project.getName() ;
+			IManagedBuildInfo info = ManagedBuildManager.getBuildInfo(project);
+			IConfiguration icfg = info.getDefaultConfiguration();
+			IBuilder builder = icfg.getEditableBuilder();
 
-			if (!projectExists) {
-				// For each IConfiguration, create a corresponding Autotools Configuration
-				for (IConfiguration cfg : pca.getConfigs()) {
-					AutotoolsConfigurationManager.getInstance().getConfiguration(project, cfg.getName(), true);
-				}
-				AutotoolsConfigurationManager.getInstance().saveConfigs(project);
+			builder.setBuildAttribute(IMakeBuilderInfo.BUILD_COMMAND, "${workspace_loc}/ceed");
+			if(YoctoSDKChecker.isLinux()) {
+				builder.setBuildAttribute(IMakeBuilderInfo.BUILD_ARGUMENTS, "-p " + prj_name + " -i 127.0.0.1 -t");
+			} else {
+				builder.setBuildAttribute(IMakeBuilderInfo.BUILD_ARGUMENTS, "-p " + prj_name + " -i 192.168.99.100 -t");
 			}
+			builder.setBuildAttribute(IMakeBuilderInfo.BUILD_TARGET_AUTO, "-b");
+			builder.setBuildAttribute(IMakeBuilderInfo.BUILD_TARGET_INCREMENTAL, "-b");
+			builder.setBuildAttribute(IMakeBuilderInfo.BUILD_TARGET_CLEAN, "-c");
 
-			YoctoSDKNatureUtils.addNature(project, YoctoSDKAutotoolsProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID, monitor);
-			YoctoSDKAutotoolsProjectNature.configureAutotoolsOptions(project);
+//			AutotoolsNewProjectNature.addAutotoolsNature(project, monitor);
+//
+//			if (!projectExists) {
+//				// For each IConfiguration, create a corresponding Autotools Configuration
+//				for (IConfiguration cfg : pca.getConfigs()) {
+//					AutotoolsConfigurationManager.getInstance().getConfiguration(project, cfg.getName(), true);
+//				}
+//				AutotoolsConfigurationManager.getInstance().saveConfigs(project);
+//			}
+//
+//			YoctoSDKNatureUtils.addNature(project, YoctoSDKAutotoolsProjectNature.YoctoSDK_AUTOTOOLS_NATURE_ID, monitor);
+//			YoctoSDKAutotoolsProjectNature.configureAutotoolsOptions(project);
 		} else if (isCMakeProject) {
 			YoctoSDKNatureUtils.addNature(project, YoctoSDKCMakeProjectNature.YoctoSDK_CMAKE_NATURE_ID, monitor);
 			YoctoSDKCMakeProjectNature.extendProjectEnvironmentForCMake(project);
 		}
 
-		YoctoSDKUtils.createRemoteDebugAndQemuLaunchers(project, elem);
+//		YoctoSDKUtils.createRemoteDebugAndQemuLaunchers(project, elem);
 	}
 
 	protected final void turnOffAutoBuild(IWorkspace workspace) throws CoreException {

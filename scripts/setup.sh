@@ -246,10 +246,6 @@ echo -e "\nPlease wait. Installing RSE.FEATURE.GROUP"
 RSEVER="3.7.0"
 update_feature_remote ${MAIN_SITE} org.eclipse.rse.feature.group ${RSEVER}
 
-#echo -e "\nPlease wait. Installing RSE.TERMINALS.FEATURE.GROUP"
-TMVER="1.2.0"
-update_feature_remote ${DEPRECATED_SITE} org.eclipse.rse.terminals.feature.group ${TMVER}
-
 #AUTOTOOLS
 echo -e "\nPlease wait. Installing AUTOTOOLS.FEATURE.GROUP"
 ATVER="8.7.0"

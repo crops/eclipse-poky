@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <description name="Yocto Project update site" url="http://yoctoproject.org/downloads/eclipse-plugin/">
+   <description name="CROPS update site" url="http://yoctoproject.org/downloads/eclipse-plugin/">
       Yocto Project update site
    </description>
    <feature url="features/org.yocto.sdk_@ADTGenVersion@.jar" id="org.yocto.sdk" version="@ADTGenVersion@">
-      <category name="Yocto Project ADT"/>
+      <category name="CROssPlatformS"/>
    </feature>
-   <category-def name="Yocto Project ADT" label="Yocto Project ADT plug-in"/>
+   <category-def name="CROssPlatformS" label="CROPS plug-in"/>
    <feature url="features/org.yocto.bc_@bcGenVersion@.jar" id="org.yocto.bc" version="@bcGenVersion@">
       <category name="Yocto Project Bitbake Commander"/>
    </feature>

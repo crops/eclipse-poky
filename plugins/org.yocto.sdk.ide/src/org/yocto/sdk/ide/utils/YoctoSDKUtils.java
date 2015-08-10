@@ -255,7 +255,7 @@ public class YoctoSDKUtils {
 		String sFileName = getEnvironmentSetupFileFullPath(elem);
 		HashMap<String, String> envMap = parseEnvScript(sFileName);
 
-		setEnvVars(cpdesc, elem, envMap);
+		//setEnvVars(cpdesc, elem, envMap);
 		try {
 			CoreModel.getDefault().setProjectDescription(project,cpdesc);
 		} catch (CoreException e) {
