@@ -22,6 +22,15 @@ fail ()
   exit ${retval}
 }
 
+safe_sed()
+{
+  if [ "$1" ] && [ "$2" ]; then
+     sed -e "$1" $2 > $2.tmp && mv $2.tmp $2 || fail $? "safe_sed $1 $2"
+  else
+     fail 1 "usage: safe_sed \"s/from/to/\" /path/to/file"
+  fi
+}
+
 CHECKOUT_TAG=0
 while getopts ":h" opt; do
 	case $opt in
@@ -53,10 +62,24 @@ cd ${DOC_DIR}
 git checkout $1 || fail $? "git checkout $1"
 COMMIT_ID=`git rev-parse HEAD`
 
-# build and copy
-DOCS="yocto-project-qs adt-manual kernel-dev \
-      bsp-guide ref-manual dev-manual profile-manual"
+# check yocto-docs branch/tag and build sdk-manual or adt-manual accordingly
+# [YOCTO #9622]
+ADT_REMOVAL_COMMIT=84abe03de1cff7952b5d0428e7433f094dde2b02
+if [ "$(git merge-base ${ADT_REMOVAL_COMMIT} $1)" = "${ADT_REMOVAL_COMMIT}" ]; then
+  DOCS="yocto-project-qs sdk-manual kernel-dev \
+        bsp-guide ref-manual dev-manual profile-manual"
+else
+  DOCS="yocto-project-qs adt-manual kernel-dev \
+        bsp-guide ref-manual dev-manual profile-manual"
+  safe_sed "s/sdk-manual/adt-manual/" ${DOC_PLUGIN_DIR}/plugin.xml
+  safe_sed "s/sdk-manual/adt-manual/" ${DOC_PLUGIN_DIR}/about.html.in
+  safe_sed "s/Software Development Kit (SDK)/Application/" ${DOC_PLUGIN_DIR}/about.html.in
+  safe_sed "s/(SDK)/(ADT)/" ${DOC_PLUGIN_DIR}/about.html.in
+  safe_sed "s/sdk-manual/adt-manual/" ${DOC_PLUGIN_DIR}/toc.xml
+  safe_sed "s/Software Development Kit (SDK)/Application/" ${DOC_PLUGIN_DIR}/toc.xml
+fi
 
+# build and copy
 cd documentation
 for DOC in ${DOCS}; do
 	make DOC=${DOC} eclipse
