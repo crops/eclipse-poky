@@ -23,7 +23,7 @@ while getopts ":h" opt; do
   esac
 done
 
-err_exit() 
+err_exit()
 {
   echo "[FAILED $1]$2"
   exit $1
@@ -35,7 +35,7 @@ case ${uname_s}${uname_m} in
   Linuxppc*) ep_arch=linux-gtk-ppc
              cdt_arch=linux.ppc
              ;;
-  Linuxx86_64*) ep_arch=linux-gtk-x86_64 
+  Linuxx86_64*) ep_arch=linux-gtk-x86_64
                 cdt_arch=linux.x86_64
                 ;;
   Linuxi*86) ep_arch=linux-gtk
@@ -92,12 +92,12 @@ fi
 
 # prepare the base Eclipse installation in folder "eclipse"
 ep_rel="R-"
-ep_ver="4.6.2"
-ep_date="-201611241400"
+ep_ver="4.6.3"
+ep_date="-201703010400"
 P2_disabled=false
 P2_no_dropins=false
 
-if [ ! -f eclipse/plugins/org.eclipse.swt_3.105.2.v20161122-0613.jar ]; then
+if [ ! -f eclipse/plugins/org.eclipse.swt_3.105.3.v20170228-0512.jar ]; then
 
   pushd .
 
@@ -130,7 +130,7 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.105.2.v20161122-0613.jar ]; then
   popd
 
   if [ ! -d eclipse -o -h eclipse ]; then
-    if [ -e eclipse ]; then 
+    if [ -e eclipse ]; then
       rm eclipse
     fi
     ln -s eclipse-${ep_ver}-${ep_arch}/eclipse eclipse
@@ -150,7 +150,7 @@ if [ ! -f eclipse/startup.jar ]; then
   LAUNCHER="`ls org.eclipse.equinox.launcher_*.jar | sort | tail -1`"
 
   if [ "x${LAUNCHER}" != "x" ]; then
-    echo "eclipse LAUNCHER=${LAUNCHER}" 
+    echo "eclipse LAUNCHER=${LAUNCHER}"
     ln -s plugins/${LAUNCHER} ../startup.jar
   else
     echo "Eclipse: NO startup.jar LAUNCHER FOUND!"
@@ -261,24 +261,24 @@ UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.6"
 
 #CDT related
 echo -e "\nPlease wait. Installing CDT.SDK.FEATURE.GROUP"
-CDTFEAT="9.2.0"
+CDTFEAT="9.2.1"
 update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group ${CDTFEAT}
 
 echo -e "\nPlease wait. Installing CDT.LAUNCH.REMOTE.FEATURE.GROUP"
-CDTREMOTEVER="9.2.0"
+CDTREMOTEVER="9.2.1"
 update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group ${CDTREMOTEVER}
 
 #TM Terminal (was RSE) related
 echo -e "\nPlease wait. Installing TM.TERMINAL.FEATURE.FEATURE.GROUP"
-TMTERMVER="4.1.0"
-update_feature_remote ${TM_TERMINAL_SITE} org.eclipse.tm.terminal.feature.feature.group ${TMTERMVER}
+TMTERMVER="4.2.0"
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.feature.feature.group ${TMTERMVER}
 
 echo -e "\nPlease wait. Installing TM.TERMINAL.VIEW.RSE.FEATURE.GROUP"
-TMTERMVIEWRSEVER="4.1.0"
-update_feature_remote ${TM_TERMINAL_SITE} org.eclipse.tm.terminal.view.rse.feature.feature.group ${TMTERMVIEWRSEVER}
+TMTERMVIEWRSEVER="4.2.0"
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.view.rse.feature.feature.group ${TMTERMVIEWRSEVER}
 
 echo -e "\nPlease wait. Installing TM.TERMINAL.CONTROL.FEATURE.GROUP"
-TMCONTROLVER="4.1.0"
+TMCONTROLVER="4.2.0"
 update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.control.feature.feature.group ${TMCONTROLVER}
 
 #RSE_SDK
@@ -293,11 +293,11 @@ update_feature_remote ${TM_SITE} org.eclipse.rse.terminals.feature.group ${RSETE
 
 #AUTOTOOLS
 echo -e "\nPlease wait. Installing AUTOTOOLS.FEATURE.GROUP"
-ATVER="9.2.0"
+ATVER="9.2.1"
 update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group ${ATVER}
 
 #Lttng2
-TMF_CTF_REL="2.2.0"
+TMF_CTF_REL="2.3.0"
 echo -e "\nPlease wait. Installing TRACECOMPASS.LTTNG2.UST.FEATURE.GROUP"
 update_feature_remote ${MAIN_SITE} org.eclipse.tracecompass.lttng2.ust.feature.group ${TMF_CTF_REL}
 
