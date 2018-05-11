@@ -17,6 +17,9 @@ import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.eclipse.cdt.utils.PathUtil;
+import org.eclipse.core.runtime.IPath;
+
 public class SystemProcess {
 
 	private LinkedList<String> command = new LinkedList<String>();
@@ -37,6 +40,18 @@ public class SystemProcess {
 	public SystemProcess(LinkedList<String> command, File directory, Map<String, String> additionalEnvironmentVariables) {
 		super();
 		this.command = command;
+
+		// ProcessBuilder does not use the new PATH environment value for resolving
+		// the executable's path, so here we need to manually resolve the absolute
+		// path to executable.
+		if (additionalEnvironmentVariables.keySet().contains("PATH")) {
+			String executable = this.command.get(0);
+			IPath programLocation = PathUtil.findProgramLocation(executable, additionalEnvironmentVariables.get("PATH"));
+			if (programLocation != null) {
+				this.command.set(0, programLocation.toOSString());
+			}
+		}
+		
 		if (directory != null) {
 			this.workingDirectory = directory;
 		}
