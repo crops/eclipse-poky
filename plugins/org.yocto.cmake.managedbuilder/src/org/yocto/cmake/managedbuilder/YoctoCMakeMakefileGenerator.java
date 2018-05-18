@@ -228,8 +228,7 @@ public class YoctoCMakeMakefileGenerator implements IManagedBuilderMakefileGener
 		toolchainCMakeFileContentAsString += "# only search in the paths provided so cmake doesnt pick\n"; //$NON-NLS-1$
 		toolchainCMakeFileContentAsString += "# up libraries and tools from the native build machine\n"; //$NON-NLS-1$
 
-		List<String> findRootPathValues = Arrays.asList("OECORE_NATIVE_SYSROOT", //$NON-NLS-1$
-														"OECORE_TARGET_SYSROOT", //$NON-NLS-1$
+		List<String> findRootPathValues = Arrays.asList("OECORE_TARGET_SYSROOT", //$NON-NLS-1$
 														"STAGING_DIR_HOST", //$NON-NLS-1$
 														"STAGING_DIR_NATIVE", //$NON-NLS-1$
 														"CROSS_DIR", //$NON-NLS-1$
@@ -238,7 +237,7 @@ public class YoctoCMakeMakefileGenerator implements IManagedBuilderMakefileGener
 														"EXTERNAL_TOOLCHAIN"); //$NON-NLS-1$
 		toolchainCMakeFileContentAsString += createCMakeSetStatement("CMAKE_FIND_ROOT_PATH", getFindRootPath(findRootPathValues), null); //$NON-NLS-1$
 
-		toolchainCMakeFileContentAsString += createCMakeSetStatement("CMAKE_FIND_ROOT_PATH_MODE_PROGRAM", "ONLY", null); //$NON-NLS-1$ //$NON-NLS-2$
+		toolchainCMakeFileContentAsString += createCMakeSetStatement("CMAKE_FIND_ROOT_PATH_MODE_PROGRAM", "NEVER", null); //$NON-NLS-1$ //$NON-NLS-2$
 		toolchainCMakeFileContentAsString += createCMakeSetStatement("CMAKE_FIND_ROOT_PATH_MODE_LIBRARY", "ONLY", null); //$NON-NLS-1$ //$NON-NLS-2$
 		toolchainCMakeFileContentAsString += createCMakeSetStatement("CMAKE_FIND_ROOT_PATH_MODE_INCLUDE", "ONLY", null); //$NON-NLS-1$ //$NON-NLS-2$
 		toolchainCMakeFileContentAsString += "\n"; //$NON-NLS-1$
