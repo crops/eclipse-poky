@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: org.yocto.ui
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.yocto.ui.internal.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: org.yocto.ui
+Bundle-ActivationPolicy: lazy
+Export-Package: org.yocto.ui.editors
