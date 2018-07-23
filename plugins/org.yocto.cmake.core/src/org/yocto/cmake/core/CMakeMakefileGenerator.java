@@ -8,7 +8,7 @@
  * Contributors:
  *    Intel Corporation - initial API and implementation
  *******************************************************************************/
-package org.yocto.cmake.core.internal;
+package org.yocto.cmake.core;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +42,7 @@ import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
-import org.yocto.cmake.core.Messages;
+import org.yocto.cmake.core.internal.Activator;
 
 public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2 {
 

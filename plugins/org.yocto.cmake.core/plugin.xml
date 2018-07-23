@@ -124,7 +124,7 @@
         <builder
             id="org.yocto.cmake.core.builder"
             name="%builder.name"
-            buildfileGenerator="org.yocto.cmake.core.internal.CMakeMakefileGenerator"
+            buildfileGenerator="org.yocto.cmake.core.CMakeMakefileGenerator"
             cleanBuildTarget="clean"
             command="make"
             isVariableCaseSensitive="false"
