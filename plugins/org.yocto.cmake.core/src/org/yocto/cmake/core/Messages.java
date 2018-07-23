@@ -8,7 +8,7 @@
  * Contributors:
  *    Intel Corporation - initial API and implementation
  *******************************************************************************/
-package org.yocto.cmake.core.internal;
+package org.yocto.cmake.core;
 
 import org.eclipse.osgi.util.NLS;
 

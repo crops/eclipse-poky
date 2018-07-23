@@ -42,6 +42,7 @@ import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.yocto.cmake.core.Messages;
 
 public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2 {
 
