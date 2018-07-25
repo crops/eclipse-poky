@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: org.yocto.docker.ui
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.yocto.docker.ui.internal.Activator
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.jface;bundle-version="3.14.0",
+ org.yocto.ui;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: org.yocto.docker.ui
+Bundle-ActivationPolicy: lazy
+Export-Package: org.yocto.docker.ui.dialogs,
+ org.yocto.docker.ui.editors
