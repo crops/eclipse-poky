@@ -55,6 +55,19 @@
 		<module>features/org.yocto.sdk</module>
 		<module>features/org.yocto.utils</module>
 		<module>features/org.yocto.doc</module>
+
+
+		<module>plugins/org.yocto.cmake.core</module>
+		<module>plugins/org.yocto.cmake.ui</module>
+		<module>plugins/org.yocto.ui</module>
+		<module>plugins/org.yocto.docker.launcher</module>
+		<module>plugins/org.yocto.docker.ui</module>
+		<module>plugins/org.yocto.sdk.core</module>
+		<module>plugins/org.yocto.sdk.autotools.core</module>
+		<module>plugins/org.yocto.sdk.cmake.core</module>
+		<module>plugins/org.yocto.sdk.ui</module>
+		<module>plugins/org.yocto.sdk.docker.launcher</module>
+		<module>plugins/org.yocto.sdk.docker.ui</module>
 <!--
 		<module>releng/org.yocto.sdk.target.ui.tests</module>
 -->
