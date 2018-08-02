@@ -22,13 +22,19 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.yocto.sdk.core.YoctoProjectNature;
 
 public class EnableNatureAction implements IObjectActionDelegate, IExecutableExtension {
+
+	static final String YOCTO_PROJECT_PROPERTY_PAGE_ID = "org.yocto.sdk.docker.ui.YoctoProjectPropertyPage"; //$NON-NLS-1$
 
 	private ISelection selection;
 
@@ -39,22 +45,22 @@ public class EnableNatureAction implements IObjectActionDelegate, IExecutableExt
 	@Override
 	public void run(IAction action) {
 
-		if(selection instanceof IStructuredSelection) {
+		if (selection instanceof IStructuredSelection) {
 
 			IStructuredSelection structuredSelection = (IStructuredSelection) selection;
 
-			for(Iterator<?> it = structuredSelection.iterator(); it.hasNext();) {
+			for (Iterator<?> it = structuredSelection.iterator(); it.hasNext();) {
 
 				Object element = it.next();
 				IProject project = null;
 
-				if(element instanceof IProject) {
+				if (element instanceof IProject) {
 					project = (IProject) element;
-				} else if(element instanceof IAdaptable) {
+				} else if (element instanceof IAdaptable) {
 					project = ((IAdaptable) element).getAdapter(IProject.class);
 				}
 
-				if(project != null) {
+				if (project != null) {
 					try {
 						IProjectDescription description = project.getDescription();
 						Set<String> updatedNatureIds = new HashSet<String>();
@@ -64,12 +70,21 @@ public class EnableNatureAction implements IObjectActionDelegate, IExecutableExt
 						}
 
 						updatedNatureIds.add(YoctoProjectNature.NATURE_ID);
-						description.setNatureIds(updatedNatureIds.toArray(new String[]{}));
+						description.setNatureIds(updatedNatureIds.toArray(new String[] {}));
 						project.setDescription(description, new NullProgressMonitor());
 
 					} catch (CoreException e) {
-						throw new RuntimeException(String.format(Messages.EnableNatureAction_EnableNatureFailed, YoctoProjectNature.NATURE_ID), e);
+						throw new RuntimeException(String.format(Messages.EnableNatureAction_EnableNatureFailed,
+								YoctoProjectNature.NATURE_ID), e);
 					}
+
+					Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+					PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(shell, project,
+							YOCTO_PROJECT_PROPERTY_PAGE_ID, new String[] { YOCTO_PROJECT_PROPERTY_PAGE_ID }, null);
+
+					dialog.open();
+
+					// TODO: validate to make sure the profile preference is valid
 				}
 			}
 		}
@@ -84,7 +99,7 @@ public class EnableNatureAction implements IObjectActionDelegate, IExecutableExt
 	public void setInitializationData(IConfigurationElement config, String propertyName, Object data)
 			throws CoreException {
 		// TODO: convert/switch to Yocto toolchain or builder? This may require
-		//		per-project type EnableNatureAction
+		// per-project type EnableNatureAction
 
 		// TODO: Initialize project preference to select default profile
 
