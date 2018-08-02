@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: org.yocto.docker.launcher
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.4.1.qualifier
 Bundle-Activator: org.yocto.docker.launcher.internal.Activator
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources;bundle-version="3.13.0",
