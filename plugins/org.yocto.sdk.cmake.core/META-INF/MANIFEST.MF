@@ -6,9 +6,11 @@ Bundle-Version: 1.4.1.qualifier
 Bundle-Activator: org.yocto.sdk.cmake.core.internal.Activator
 Bundle-Vendor: %Bundle-Vendor
 Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.resources;bundle-version="3.13.0",
  org.eclipse.cdt.managedbuilder.core;bundle-version="8.6.0",
  org.yocto.cmake.core;bundle-version="1.0.0",
  org.yocto.sdk.core;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.yocto.sdk.cmake.core
 Bundle-ActivationPolicy: lazy
+Export-Package: org.yocto.sdk.cmake.core

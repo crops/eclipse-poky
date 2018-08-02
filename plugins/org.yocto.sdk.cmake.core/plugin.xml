@@ -4,7 +4,7 @@
     <extension
           point="org.eclipse.cdt.managedbuilder.core.buildDefinitions">
         <builder
-              buildfileGenerator="org.yocto.cmake.core.CMakeMakefileGenerator"
+              buildfileGenerator="org.yocto.sdk.cmake.core.YoctoProjectCMakeMakefileGenerator"
               cleanBuildTarget="clean"
               command="make"
               id="org.yocto.cmake.core.builder.yocto"
