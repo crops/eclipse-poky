@@ -169,6 +169,10 @@ public class ComboFieldEditor2 extends FieldEditor {
 	 * Given the name (label) of an entry, return the corresponding value.
 	 */
 	private String getValueForName(String name) {
+
+		if (fEntryNamesAndValues.length == 0)
+			return null;
+
 		for (String[] entry : fEntryNamesAndValues) {
 			if (name.equals(entry[0])) {
 				return entry[1];
