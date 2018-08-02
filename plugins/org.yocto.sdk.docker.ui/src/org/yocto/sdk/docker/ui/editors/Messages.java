@@ -13,7 +13,7 @@ package org.yocto.sdk.docker.ui.editors;
 import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
-	private static final String BUNDLE_NAME = "org.yocto.sdk.ui.editors.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.yocto.sdk.docker.ui.editors.messages"; //$NON-NLS-1$
 	public static String YoctoProjectProfileComboFieldEditor_CreateNewProfile;
 	public static String YoctoProjectProfileComboFieldEditor_EnterNewProfileName;
 	public static String YoctoProjectProfileComboFieldEditor_EnterProfileNameForRenaming;
