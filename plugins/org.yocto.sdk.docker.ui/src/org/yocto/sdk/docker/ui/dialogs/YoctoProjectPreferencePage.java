@@ -46,6 +46,8 @@ import org.yocto.sdk.ui.decorators.YoctoProjectProfileDecorator;
  */
 public class YoctoProjectPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
+	public static final String ID = "org.yocto.sdk.docker.ui.YoctoProjectPreferencePage"; //$NON-NLS-1$
+
 	IPersistentPreferenceStore profilePreferenceStore = null;
 	YoctoProjectProfileComposedEditor composedEditor;
 

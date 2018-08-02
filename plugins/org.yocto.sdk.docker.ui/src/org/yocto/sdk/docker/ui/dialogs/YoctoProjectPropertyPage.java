@@ -13,19 +13,25 @@ package org.yocto.sdk.docker.ui.dialogs;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.yocto.sdk.core.preference.YoctoProjectProfilePreferences;
 import org.yocto.sdk.core.preference.YoctoProjectProjectPreferences;
@@ -48,6 +54,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 	Composite profileComboComposite;
 
 	ComboFieldEditor2 profileComboFieldEditor;
+	Button manageProfilesButton;
 
 	YoctoProjectProfileComposedEditor composedEditor;
 
@@ -90,7 +97,10 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 			comboProfiles = new String[][] {};
 		}
 
-		profileComboComposite = createGridComposite(composite, 2);
+		Composite profileComboSelectionComposite = createGridComposite(composite, 2);
+
+		profileComboComposite = createGridComposite(profileComboSelectionComposite, 2);
+		profileComboComposite.setLayoutData(GridDataFactory.fillDefaults().grab(false, false).create());
 		profileComboFieldEditor = new ComboFieldEditor2(YoctoProjectProjectPreferences.PROJECT_PROFILE,
 				Messages.YoctoProjectPropertyPage_CrossDevelopmentProfile, comboProfiles, profileComboComposite);
 		profileComboFieldEditor.setPage(this);
@@ -105,6 +115,26 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 							.createPreferenceStore(profileComboFieldEditor.getValue());
 					composedEditor.load(readOnlyProfilePreferenceStore, false);
 				}
+			}
+		});
+
+		manageProfilesButton = new Button(profileComboSelectionComposite, SWT.NONE);
+		manageProfilesButton.setText(Messages.YoctoProjectPropertyPage_ManageProfiles);
+		manageProfilesButton.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(getShell(),
+						YoctoProjectPreferencePage.ID, new String[] { YoctoProjectPreferencePage.ID }, null);
+				dialog.open();
+
+				// TODO: reload profile combo box so that the latest profiles are display.
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+
 			}
 		});
 
@@ -144,7 +174,8 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		gridComposite.setLayout(layout);
-//		gridComposite.setBackground(new Color(Display.getDefault(), (int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255)));
+//		gridComposite.setBackground(new Color(Display.getDefault(), (int) (Math.random() * 255),
+//				(int) (Math.random() * 255), (int) (Math.random() * 255)));
 		gridComposite.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		return gridComposite;
 	}
@@ -156,6 +187,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 		IPreferenceStore projectPreferenceStore = getPreferenceStore();
 
 		profileComboFieldEditor.setEnabled(!useProjectSpecificSettings, profileComboComposite);
+		manageProfilesButton.setEnabled(!useProjectSpecificSettings);
 
 		if (useProjectSpecificSettings) {
 			composedEditor.reset();

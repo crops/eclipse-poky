@@ -18,6 +18,7 @@ public class Messages extends NLS {
 	public static String YoctoProjectPreferencePage_NoProfilesFound;
 	public static String YoctoProjectPreferencePage_SavePreferenceStoreFailed;
 	public static String YoctoProjectPropertyPage_CrossDevelopmentProfile;
+	public static String YoctoProjectPropertyPage_ManageProfiles;
 	public static String YoctoProjectPropertyPage_NoProfileSelected;
 	public static String YoctoProjectPropertyPage_NoProfilesFound;
 	public static String YoctoProjectPropertyPage_UseProjectSpecificSettings;

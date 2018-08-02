@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.ui,
  org.yocto.ui;bundle-version="1.0.0",
  org.yocto.sdk.core;bundle-version="1.0.0",
  org.yocto.sdk.ui;bundle-version="1.0.0",
- org.yocto.docker.ui;bundle-version="1.0.0"
+ org.yocto.docker.ui;bundle-version="1.0.0",
+ org.eclipse.jface
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.yocto.sdk.docker.ui
 Bundle-ActivationPolicy: lazy
