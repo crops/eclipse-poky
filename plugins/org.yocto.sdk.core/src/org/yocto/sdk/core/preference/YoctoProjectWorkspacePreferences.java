@@ -16,7 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
@@ -25,6 +27,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.yocto.sdk.core.YoctoProjectQemubootConf;
 import org.yocto.sdk.core.YoctoProjectSDKVersion;
 import org.yocto.sdk.core.internal.Activator;
 
@@ -77,57 +80,179 @@ public class YoctoProjectWorkspacePreferences {
 
 			// Only auto-detect when there are no profiles defined
 
-			// TODO: change to always detect when auto-detected profiles can be
-			// managed separately from manually configured profiles
+			// TODO: always detect the toolchain until there is a way to detect this
+			// workspace is new and no auto-detection has been attempted?
+
+			// TODO: alternatively, consider permanently enable auto-detection when
+			// auto-detected profiles can be managed separately (as read-only) from manually
+			// configured profiles
 
 			if (true || getWorkspaceProfiles().length == 0 && OS_LINUX) {
 
-				try {
-					List<Path> environmentSetupScriptPaths = Files.find(Paths.get("/opt"), 4, //$NON-NLS-1$
-							(filePath, fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString()
-									.startsWith(YoctoProjectProfilePreferences.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
-							.collect(Collectors.toList());
+				List<String> detectedProfiles = new ArrayList<String>();
 
-					ArrayList<String> profileNames = new ArrayList<String>();
+				detectedProfiles.addAll(detectWorkspaceSdkProfiles());
+				detectedProfiles.addAll(detectWorkspaceBuildDirProfiles());
 
-					for (Path environmentSetupScriptPath : environmentSetupScriptPaths) {
+				setWorkspaceProfiles(detectedProfiles.toArray(new String[] {}));
 
-						String sdkPath = environmentSetupScriptPath.getParent().toString();
-
-						YoctoProjectSDKVersion sdkVersion = YoctoProjectSDKVersion.create(new File(sdkPath));
-
-						String profileName = "SDK - " + (sdkVersion == null ? sdkPath //$NON-NLS-1$
-								: sdkVersion.getTargetPrefix() + " " + sdkVersion.toString()); //$NON-NLS-1$
-
-						profileNames.add(profileName);
-
-						YoctoProjectProfilePreferences profilePreference = new YoctoProjectProfilePreferences(
-								profileName);
-						IPersistentPreferenceStore store = profilePreference.getPreferenceStore();
-
-						store.setValue(YoctoProjectProfilePreferences.TOOLCHAIN,
-								YoctoProjectProfilePreferences.TOOLCHAIN_SDK_INSTALLATION);
-						store.setValue(YoctoProjectProfilePreferences.SDK_INSTALLATION, sdkPath);
-
-						String sysrootLocation = YoctoProjectProfilePreferences
-								.getEnvironmentVariables(environmentSetupScriptPath.toFile())
-								.get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
-
-						store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
-						store.setValue(YoctoProjectProfilePreferences.TARGET,
-								YoctoProjectProfilePreferences.TARGET_EXTERNAL_HARDWARE);
-						store.save();
-					}
-
-					setWorkspaceProfiles(profileNames.toArray(new String[] {}));
-
-				} catch (IOException e) {
-					// Ignore any errors during detection
-				}
 			}
 
 			detectedWorkspaceProfiles = true;
 		}
+	}
+
+	static List<String> detectWorkspaceSdkProfiles() {
+
+		ArrayList<String> profileNames = new ArrayList<String>();
+
+		try {
+			List<Path> environmentSetupScriptPaths = Files.find(Paths.get("/opt"), 4, //$NON-NLS-1$
+					(filePath,
+							fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString()
+									.startsWith(YoctoProjectProfilePreferences.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
+					.collect(Collectors.toList());
+
+			for (Path environmentSetupScriptPath : environmentSetupScriptPaths) {
+
+				String sdkPath = environmentSetupScriptPath.getParent().toString();
+
+				YoctoProjectSDKVersion sdkVersion = YoctoProjectSDKVersion.create(new File(sdkPath));
+
+				String profileName = "SDK - " + (sdkVersion == null ? sdkPath //$NON-NLS-1$
+						: sdkVersion.getTargetPrefix() + " (" + sdkVersion.toString() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+
+				profileNames.add(profileName);
+
+				YoctoProjectProfilePreferences profilePreference = new YoctoProjectProfilePreferences(profileName);
+				IPersistentPreferenceStore store = profilePreference.getPreferenceStore();
+
+				store.setValue(YoctoProjectProfilePreferences.TOOLCHAIN,
+						YoctoProjectProfilePreferences.TOOLCHAIN_SDK_INSTALLATION);
+				store.setValue(YoctoProjectProfilePreferences.SDK_INSTALLATION, sdkPath);
+
+				String sysrootLocation = YoctoProjectProfilePreferences
+						.getEnvironmentVariables(environmentSetupScriptPath.toFile()).get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
+
+				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
+				store.setValue(YoctoProjectProfilePreferences.TARGET,
+						YoctoProjectProfilePreferences.TARGET_EXTERNAL_HARDWARE);
+				store.save();
+			}
+
+		} catch (IOException e) {
+			// Ignore any errors during detection
+		}
+
+		return profileNames;
+	}
+
+	static List<String> detectWorkspaceBuildDirProfiles() {
+
+		ArrayList<String> profileNames = new ArrayList<String>();
+
+		File userGitDir = new File(System.getProperty("user.home"), "git"); //$NON-NLS-1$//$NON-NLS-2$
+
+		if (!userGitDir.exists())
+			return profileNames;
+
+		try {
+
+			Set<Path> buildDirEnvScriptPaths = new HashSet<Path>();
+
+			// Look for poky git repo with oe-init-build-env
+			List<Path> oeInitBuildEnvPaths = Files
+					.find(Paths.get(userGitDir.getAbsolutePath()), 2,
+							(filePath,
+									fileAttr) -> (fileAttr.isRegularFile()
+											&& filePath.getFileName().toString().equals("oe-init-build-env"))) //$NON-NLS-1$
+					.collect(Collectors.toList());
+
+			// look 3 levels down from git repo's parent for anything that looks
+			// like build/tmp/environment-setup-*
+
+			// TODO: apparently this doesn't quite work as it chokes when recursing into
+			// directories with permission issues.
+//			List<Path> outOfBuildDirEnvScriptPaths = Files
+//					.find(Paths.get(userGitDir.getParent()), 3,
+//							(filePath, fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString()
+//									.startsWith(YoctoProjectProfilePreferences.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
+//					.collect(Collectors.toList());
+//
+//			buildDirEnvScriptPaths.addAll(outOfBuildDirEnvScriptPaths);
+
+			for (Path oeInitBuildEnvPath : oeInitBuildEnvPaths) {
+
+				// look 3 levels down from git repo for anything that looks
+				// like build/tmp/environment-setup-*
+				List<Path> inBuildDirEnvScriptPaths = Files
+						.find(oeInitBuildEnvPath.getParent(), 3,
+								(filePath, fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString()
+										.startsWith(YoctoProjectProfilePreferences.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
+						.collect(Collectors.toList());
+
+				buildDirEnvScriptPaths.addAll(inBuildDirEnvScriptPaths);
+			}
+
+			for (Path buildDirEnvScriptPath : buildDirEnvScriptPaths) {
+
+				String buildDirPath = buildDirEnvScriptPath.getParent().toString();
+
+				String profileName = "Build - " + buildDirPath; //$NON-NLS-1$
+
+				profileNames.add(profileName);
+
+				YoctoProjectProfilePreferences profilePreference = new YoctoProjectProfilePreferences(profileName);
+				IPersistentPreferenceStore store = profilePreference.getPreferenceStore();
+
+				store.setValue(YoctoProjectProfilePreferences.TOOLCHAIN,
+						YoctoProjectProfilePreferences.TOOLCHAIN_BUILD_DIRECTORY);
+				store.setValue(YoctoProjectProfilePreferences.BUILD_DIRECTORY, buildDirPath);
+
+				String sysrootLocation = YoctoProjectProfilePreferences
+						.getEnvironmentVariables(buildDirEnvScriptPath.toFile()).get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
+
+				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
+
+				List<Path> qemubootConfPaths = Files
+						.find(buildDirEnvScriptPath.getParent(), 4,
+								(filePath,
+										fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString()
+												.endsWith(YoctoProjectQemubootConf.QEMUBOOT_CONF_SUFFIX)))
+						.collect(Collectors.toList());
+
+				if (qemubootConfPaths.size() == 1) {
+
+					YoctoProjectQemubootConf qemubootConf = YoctoProjectQemubootConf
+							.create(qemubootConfPaths.get(0).getParent().toFile());
+
+					if (qemubootConf != null && qemubootConf.getKernel() != null) {
+						store.setValue(YoctoProjectProfilePreferences.TARGET,
+								YoctoProjectProfilePreferences.TARGET_QEMU);
+
+						store.setValue(YoctoProjectProfilePreferences.QEMUBOOTCONF_FILE,
+								qemubootConf.toFile().getAbsolutePath());
+
+						store.setValue(YoctoProjectProfilePreferences.KERNEL_IMAGE,
+								qemubootConf.getKernel().getAbsolutePath());
+					} else {
+						store.setValue(YoctoProjectProfilePreferences.TARGET,
+								YoctoProjectProfilePreferences.TARGET_EXTERNAL_HARDWARE);
+					}
+
+				} else {
+					store.setValue(YoctoProjectProfilePreferences.TARGET,
+							YoctoProjectProfilePreferences.TARGET_EXTERNAL_HARDWARE);
+				}
+
+				store.save();
+			}
+
+		} catch (IOException e) {
+			// Ignore any errors during detection
+		}
+
+		return profileNames;
 	}
 
 	public static void setWorkspaceProfiles(String[] profiles) {
