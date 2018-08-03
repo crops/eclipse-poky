@@ -23,10 +23,10 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.yocto.sdk.core.internal.Activator;
 
 /**
- * The primary data class which encapsulates all configurable preferences
- * within a profile, and backed by a persistent preference store with
- * configurable scope (e.g. workspace profile preference, or project-specific
- * profile preference) .
+ * The primary data class which encapsulates all configurable preferences within
+ * a profile, and backed by a persistent preference store with configurable
+ * scope (e.g. workspace profile preference, or project-specific profile
+ * preference) .
  *
  * Convenient methods are provided to convert preferences read from the store
  * into their respective data types.
@@ -52,7 +52,7 @@ public class YoctoProjectProfilePreferences {
 	public static final String TARGET_EXTERNAL_HARDWARE = "externalHardware"; //$NON-NLS-1$
 	public static final String QEMUBOOTCONF_FILE = "qemubootconfFile"; //$NON-NLS-1$
 	public static final String KERNEL_IMAGE = "kernelImage"; //$NON-NLS-1$
-	public static final String RUNQEMU_ARGUMENTS = "runqemuArguments";	 //$NON-NLS-1$
+	public static final String RUNQEMU_ARGUMENTS = "runqemuArguments"; //$NON-NLS-1$
 
 	IPersistentPreferenceStore store;
 
@@ -125,7 +125,8 @@ public class YoctoProjectProfilePreferences {
 	static final String ENVIRONMENT_SETUP_SCRIPT_PREFIX = "environment-setup-"; //$NON-NLS-1$
 
 	/**
-	 * Convenient method for discovering environment setup script from a build directory
+	 * Convenient method for discovering environment setup script from a build
+	 * directory
 	 *
 	 * @param toolchainDir
 	 * @return environment setup script, or null if none found
@@ -180,7 +181,6 @@ public class YoctoProjectProfilePreferences {
 	 *
 	 * @return environment variables extracted from environment setup script
 	 */
-	@SuppressWarnings("nls")
 	public HashMap<String, String> getEnvironmentVariables() {
 
 		HashMap<String, String> envMap = new HashMap<String, String>();
@@ -189,6 +189,14 @@ public class YoctoProjectProfilePreferences {
 
 		if (environmentSetupScript == null || !environmentSetupScript.exists() || !environmentSetupScript.isFile())
 			return envMap;
+
+		return getEnvironmentVariables(environmentSetupScript);
+	}
+
+	@SuppressWarnings("nls")
+	public static HashMap<String, String> getEnvironmentVariables(File environmentSetupScript) {
+
+		HashMap<String, String> envMap = new HashMap<String, String>();
 
 		try {
 
@@ -214,9 +222,10 @@ public class YoctoProjectProfilePreferences {
 						}
 					}
 
-					if(sValue.toUpperCase().contains("$SDKTARGETSYSROOT")) {
-						String rValue = sValue.replaceAll(Matcher.quoteReplacement("$SDKTARGETSYSROOT"), envMap.get("SDKTARGETSYSROOT"));
-						envMap.put(sKey, rValue) ;
+					if (sValue.toUpperCase().contains("$SDKTARGETSYSROOT")) {
+						String rValue = sValue.replaceAll(Matcher.quoteReplacement("$SDKTARGETSYSROOT"),
+								envMap.get("SDKTARGETSYSROOT"));
+						envMap.put(sKey, rValue);
 					} else {
 						envMap.put(sKey, sValue);
 					}
@@ -228,7 +237,8 @@ public class YoctoProjectProfilePreferences {
 			}
 
 		} catch (IOException e) {
-			throw new RuntimeException("Unable to parse environment setup script: " + environmentSetupScript.getAbsolutePath(), e);
+			throw new RuntimeException(
+					"Unable to parse environment setup script: " + environmentSetupScript.getAbsolutePath(), e);
 		}
 
 		return envMap;
