@@ -15,9 +15,11 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.yocto.sdk.docker.ui.dialogs.messages"; //$NON-NLS-1$
 	public static String YoctoProjectPreferencePage_CrossDevelopmentProfile;
+	public static String YoctoProjectPreferencePage_Profile;
 	public static String YoctoProjectPreferencePage_NoProfilesFound;
 	public static String YoctoProjectPreferencePage_SavePreferenceStoreFailed;
 	public static String YoctoProjectPropertyPage_CrossDevelopmentProfile;
+	public static String YoctoProjectPropertyPage_Profile;
 	public static String YoctoProjectPropertyPage_ManageProfiles;
 	public static String YoctoProjectPropertyPage_NoProfileSelected;
 	public static String YoctoProjectPropertyPage_NoProfilesFound;

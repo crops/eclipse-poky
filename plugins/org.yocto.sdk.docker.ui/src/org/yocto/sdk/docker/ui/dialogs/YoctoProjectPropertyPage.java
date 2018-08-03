@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
@@ -97,12 +98,13 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 			comboProfiles = new String[][] {};
 		}
 
-		Composite profileComboSelectionComposite = createGridComposite(composite, 2);
+		Composite profileComboSelectionComposite = createGridGroup(composite,
+				Messages.YoctoProjectPropertyPage_CrossDevelopmentProfile, 2);
 
 		profileComboComposite = createGridComposite(profileComboSelectionComposite, 2);
 		profileComboComposite.setLayoutData(GridDataFactory.fillDefaults().grab(false, false).create());
 		profileComboFieldEditor = new ComboFieldEditor2(YoctoProjectProjectPreferences.PROJECT_PROFILE,
-				Messages.YoctoProjectPropertyPage_CrossDevelopmentProfile, comboProfiles, profileComboComposite);
+				Messages.YoctoProjectPropertyPage_Profile, comboProfiles, profileComboComposite);
 		profileComboFieldEditor.setPage(this);
 		profileComboFieldEditor.setPreferenceStore(getPreferenceStore());
 		profileComboFieldEditor.load();
@@ -155,24 +157,23 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 		return composite;
 	}
 
-//
-//	private Group createGridGroup(Composite parent, String label, int columns) {
-//		Group gridGroup = new Group(parent, SWT.NONE);
-//		gridGroup.setText(label);
-//		GridLayout layout = new GridLayout(columns, false);
+	private Group createGridGroup(Composite parent, String label, int columns) {
+		Group gridGroup = new Group(parent, SWT.NONE);
+		gridGroup.setText(label);
+		GridLayout layout = new GridLayout(columns, false);
 //		layout.marginHeight = 0;
 //		layout.marginWidth = 0;
-//		gridGroup.setLayout(layout);
-////		gridGroup.setBackground(new Color(Display.getDefault(), (int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255)));
-//		gridGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-//		return gridGroup;
-//	}
-//
+		gridGroup.setLayout(layout);
+//		gridGroup.setBackground(new Color(Display.getDefault(), (int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255)));
+		gridGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		return gridGroup;
+	}
+
 	private Composite createGridComposite(Composite parent, int columns) {
 		Composite gridComposite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout(columns, false);
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
+//		layout.marginHeight = 0;
+//		layout.marginWidth = 0;
 		gridComposite.setLayout(layout);
 //		gridComposite.setBackground(new Color(Display.getDefault(), (int) (Math.random() * 255),
 //				(int) (Math.random() * 255), (int) (Math.random() * 255)));

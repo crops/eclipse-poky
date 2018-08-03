@@ -23,6 +23,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
@@ -70,8 +71,8 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 		String[] profiles = YoctoProjectWorkspacePreferences.getWorkspaceProfiles();
 
 		profileComboFieldEditor = new YoctoProjectProfileComboFieldEditor(YoctoProjectWorkspacePreferences.PROFILE,
-				Messages.YoctoProjectPreferencePage_CrossDevelopmentProfile, profiles,
-				createGridComposite(composite, 5));
+				Messages.YoctoProjectPreferencePage_Profile, profiles,
+				createGridGroup(composite, Messages.YoctoProjectPreferencePage_CrossDevelopmentProfile, 5));
 		profileComboFieldEditor.setPreferenceStore(YoctoProjectWorkspacePreferences.getWorkspacePreferenceStore());
 		profileComboFieldEditor.setPage(this);
 		profileComboFieldEditor.setPropertyChangeListener(new IPropertyChangeListener() {
@@ -182,11 +183,23 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 		return composite;
 	}
 
+	private Group createGridGroup(Composite parent, String label, int columns) {
+		Group gridGroup = new Group(parent, SWT.NONE);
+		gridGroup.setText(label);
+		GridLayout layout = new GridLayout(columns, false);
+//		layout.marginHeight = 0;
+//		layout.marginWidth = 0;
+		gridGroup.setLayout(layout);
+//		gridGroup.setBackground(new Color(Display.getDefault(), (int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255)));
+		gridGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		return gridGroup;
+	}
+
 	private Composite createGridComposite(Composite parent, int columns) {
 		Composite gridComposite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout(columns, false);
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
+//		layout.marginHeight = 0;
+//		layout.marginWidth = 0;
 		gridComposite.setLayout(layout);
 //		gridComposite.setBackground(new Color(Display.getDefault(), (int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255)));
 		gridComposite.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
