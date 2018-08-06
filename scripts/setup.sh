@@ -118,7 +118,7 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180214-0345.jar ]; then
   then
         wget "http://download.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   else
-        wget "http://downloads.yoctoproject.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
+        wget "http://downloads.yoctoproject.org/eclipse-full/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   fi
 
   echo -e "Please wait. Extracting Eclipse SDK: eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz\n"
@@ -258,9 +258,9 @@ then
         TM_SITE="http://download.eclipse.org/tm/updates/4.0"
         TM_TERMINAL_SITE="http://download.eclipse.org/tm/terminal/marketplace"
 else
-        MAIN_SITE="http://downloads.yoctoproject.org/eclipse/oxygen/"
-        TM_SITE="http://downloads.yoctoproject.org/eclipse/tm/updates/4.0/"
-        TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse/tm/terminal/marketplace"
+        MAIN_SITE="http://downloads.yoctoproject.org/eclipse-full/releases/oxygen/"
+        TM_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/updates/4.0/"
+        TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/terminal/marketplace"
 fi
 
 #Update Site - always use updates from upstream
