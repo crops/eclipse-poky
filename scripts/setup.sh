@@ -217,6 +217,7 @@ check_local_version()
 update_feature_remote()
 {
   [ $# -lt 3 ] && err_exit 1 "update_feature_remote: invalid parameters, $*"
+  echo -e "\nPlease wait. Installing $2 $3 $4"
   check_local_version $2 $3 $4 && echo "Feature $2 is already installed" && return 0
   local installIU=""
   local all_versions=$(get_version $1 $2 'all')
@@ -265,53 +266,25 @@ fi
 #Update Site - always use updates from upstream
 UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
 
-#CDT related
-CDTFEAT="9.4.3"
-echo -e "\nPlease wait. Installing CDT.SDK.FEATURE.GROUP ${CDTFEAT}"
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group ${CDTFEAT}
+# CDT features from simrel
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group 9.4.3
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group 9.4.3
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group 9.4.3
 
-CDTREMOTEVER="9.4.3"
-echo -e "\nPlease wait. Installing CDT.LAUNCH.REMOTE.FEATURE.GROUP ${CDTREMOTEVER}"
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group ${CDTREMOTEVER}
+# TM Terminal features from simrel
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.feature.feature.group 4.3.0
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.view.rse.feature.feature.group 4.3.0
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.control.feature.feature.group 4.3.0
 
-#AUTOTOOLS
-ATVER="9.4.3"
-echo -e "\nPlease wait. Installing AUTOTOOLS.FEATURE.GROUP ${ATVER}"
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group ${ATVER}
+# Trace Compass features from simrel
+update_feature_remote ${MAIN_SITE} org.eclipse.tracecompass.lttng2.ust.feature.group 3.3.0
 
-#TM Terminal (was RSE) related
-TMTERMVER="4.3.0"
-echo -e "\nPlease wait. Installing TM.TERMINAL.FEATURE.FEATURE.GROUP ${TMTERMVER}"
-update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.feature.feature.group ${TMTERMVER}
+# Extra features from main update site
+update_feature_remote ${UPDATE_SITE} org.eclipse.osgi.compatibility.plugins.feature.feature.group 1.1.1
 
-TMTERMVIEWRSEVER="4.3.0"
-echo -e "\nPlease wait. Installing TM.TERMINAL.VIEW.RSE.FEATURE.GROUP ${TMTERMVIEWRSEVER}"
-update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.view.rse.feature.feature.group ${TMTERMVIEWRSEVER}
-
-TMCONTROLVER="4.3.0"
-echo -e "\nPlease wait. Installing TM.TERMINAL.CONTROL.FEATURE.GROUP ${TMCONTROLVER}"
-update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.control.feature.feature.group ${TMCONTROLVER}
-
-#RSE_SDK
-RSESDKVER="3.7.0"
-echo -e "\nPlease wait. Installing RSE.SDK.FEATURE.GROUP ${RSESDKVER}"
-update_feature_remote ${TM_SITE} org.eclipse.rse.sdk.feature.group ${RSESDKVER}
-#echo -e "\nSkipping RSE.SDK.FEATURE.GROUP"
-
-#RSE_TERMINALS
-RSETERMVER="3.8.0"
-echo -e "\nPlease wait. Installing RSE.TERMINALS.FEATURE.GROUP ${RSETERMVER}"
-update_feature_remote ${TM_SITE} org.eclipse.rse.terminals.feature.group ${RSETERMVER}
-#echo -e "\nSkipping RSE.TERMINALS.FEATURE.GROUP"
-
-#Lttng2
-TMF_CTF_REL="3.3.0"
-echo -e "\nPlease wait. Installing TRACECOMPASS.LTTNG2.UST.FEATURE.GROUP ${TMF_CTF_REL}"
-update_feature_remote ${MAIN_SITE} org.eclipse.tracecompass.lttng2.ust.feature.group ${TMF_CTF_REL}
-
-COMPAT_VER="1.1.1"
-echo -e "\nPlease wait. Installing OSGI.COMPATIBILITY.PLUGINS.FEATURE.FEATURE.GROUP ${COMPAT_VER}"
-update_feature_remote ${UPDATE_SITE} org.eclipse.osgi.compatibility.plugins.feature.feature.group ${COMPAT_VER}
+# RSE features from update site
+update_feature_remote ${TM_SITE} org.eclipse.rse.sdk.feature.group 3.7.0
+update_feature_remote ${TM_SITE} org.eclipse.rse.terminals.feature.group 3.8.0
 
 echo -e "\nYour build environment is successfully created."
 echo -e "\nPlease execute the following command to build the plugins and their documentation."
