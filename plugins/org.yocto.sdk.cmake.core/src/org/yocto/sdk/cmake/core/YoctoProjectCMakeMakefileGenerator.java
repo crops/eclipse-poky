@@ -52,14 +52,15 @@ public class YoctoProjectCMakeMakefileGenerator extends CMakeMakefileGenerator {
 				String[] workspaceProfiles = YoctoProjectWorkspacePreferences.getWorkspaceProfiles();
 
 				if (workspaceProfiles.length == 0) {
-					return Messages.YoctoProjectCMakeMakefileGenerator_NoWorkspaceProfilesToMatch;
+					return String.format(Messages.YoctoProjectCMakeMakefileGenerator_NoWorkspaceProfilesToMatch,
+							profile);
 				} else {
 					for (String workspaceProfile : workspaceProfiles) {
 						if (profile.equals(workspaceProfile))
 							return null;
 					}
 
-					return Messages.YoctoProjectCMakeMakefileGenerator_NoSuchSelectedProfile;
+					return String.format(Messages.YoctoProjectCMakeMakefileGenerator_NoSuchSelectedProfile, profile);
 				}
 			}
 		}
