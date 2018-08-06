@@ -266,16 +266,16 @@ fi
 UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
 
 #CDT related
-CDTFEAT="9.4.0"
+CDTFEAT="9.4.3"
 echo -e "\nPlease wait. Installing CDT.SDK.FEATURE.GROUP ${CDTFEAT}"
 update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group ${CDTFEAT}
 
-CDTREMOTEVER="9.4.0"
+CDTREMOTEVER="9.4.3"
 echo -e "\nPlease wait. Installing CDT.LAUNCH.REMOTE.FEATURE.GROUP ${CDTREMOTEVER}"
 update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group ${CDTREMOTEVER}
 
 #AUTOTOOLS
-ATVER="9.4.0"
+ATVER="9.4.3"
 echo -e "\nPlease wait. Installing AUTOTOOLS.FEATURE.GROUP ${ATVER}"
 update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group ${ATVER}
 
@@ -305,7 +305,7 @@ update_feature_remote ${TM_SITE} org.eclipse.rse.terminals.feature.group ${RSETE
 #echo -e "\nSkipping RSE.TERMINALS.FEATURE.GROUP"
 
 #Lttng2
-TMF_CTF_REL="3.2.0"
+TMF_CTF_REL="3.3.0"
 echo -e "\nPlease wait. Installing TRACECOMPASS.LTTNG2.UST.FEATURE.GROUP ${TMF_CTF_REL}"
 update_feature_remote ${MAIN_SITE} org.eclipse.tracecompass.lttng2.ust.feature.group ${TMF_CTF_REL}
 
