@@ -10,16 +10,13 @@
  *******************************************************************************/
 package org.yocto.sdk.core.preference;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.regex.Matcher;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.yocto.sdk.core.YoctoProjectEnvironmentSetupScript;
 import org.yocto.sdk.core.internal.Activator;
 
 /**
@@ -57,6 +54,8 @@ public class YoctoProjectProfilePreferences {
 	IPersistentPreferenceStore store;
 
 	String profile;
+
+	YoctoProjectEnvironmentSetupScript envSetupScript = null;
 
 	public static IPersistentPreferenceStore createPreferenceStore(String profile) {
 
@@ -150,17 +149,20 @@ public class YoctoProjectProfilePreferences {
 	 *
 	 * @return environment setup script
 	 */
-	public File getEnvironmentSetupScript() {
+	public YoctoProjectEnvironmentSetupScript getEnvironmentSetupScript() {
 
-		File toolchainDir;
+		if (envSetupScript == null) {
+			File toolchainDir;
 
-		if (TOOLCHAIN_SDK_INSTALLATION.equals(getToolchain())) {
-			toolchainDir = new File(getSdkInstallation());
-		} else {
-			toolchainDir = new File(getBuildDirectory());
+			if (TOOLCHAIN_SDK_INSTALLATION.equals(getToolchain())) {
+				toolchainDir = new File(getSdkInstallation());
+			} else {
+				toolchainDir = new File(getBuildDirectory());
+			}
+
+			envSetupScript = YoctoProjectEnvironmentSetupScript.create(toolchainDir);
 		}
-
-		return getEnvironmentSetupScript(toolchainDir);
+		return envSetupScript;
 	}
 
 	/**
@@ -168,13 +170,7 @@ public class YoctoProjectProfilePreferences {
 	 * @return target prefix extracted from environment setup script filename
 	 */
 	public String getTargetPrefix() {
-
-		File envScript = getEnvironmentSetupScript();
-
-		if (envScript != null)
-			return envScript.getName().replaceFirst(ENVIRONMENT_SETUP_SCRIPT_PREFIX, ""); //$NON-NLS-1$
-
-		return null;
+		return getEnvironmentSetupScript().getTargetPrefix();
 	}
 
 	/**
@@ -182,66 +178,7 @@ public class YoctoProjectProfilePreferences {
 	 * @return environment variables extracted from environment setup script
 	 */
 	public HashMap<String, String> getEnvironmentVariables() {
-
-		HashMap<String, String> envMap = new HashMap<String, String>();
-
-		File environmentSetupScript = getEnvironmentSetupScript();
-
-		if (environmentSetupScript == null || !environmentSetupScript.exists() || !environmentSetupScript.isFile())
-			return envMap;
-
-		return getEnvironmentVariables(environmentSetupScript);
+		return getEnvironmentSetupScript().getEnvironmentVariables();
 	}
 
-	@SuppressWarnings("nls")
-	public static HashMap<String, String> getEnvironmentVariables(File environmentSetupScript) {
-
-		HashMap<String, String> envMap = new HashMap<String, String>();
-
-		try {
-
-			BufferedReader input = new BufferedReader(new FileReader(environmentSetupScript));
-
-			try {
-				String line = null;
-
-				while ((line = input.readLine()) != null) {
-					if (!line.startsWith("export")) {
-						continue;
-					}
-					String sKey = line.substring("export".length() + 1, line.indexOf('='));
-					String sValue = line.substring(line.indexOf('=') + 1);
-					if (sValue.startsWith("\"") && sValue.endsWith("\""))
-						sValue = sValue.substring(sValue.indexOf('"') + 1, sValue.lastIndexOf('"'));
-					/* If PATH ending with $PATH, we need to join with current system path */
-					if (sKey.equalsIgnoreCase("PATH") && (sValue.lastIndexOf("$PATH") >= 0)) {
-						if (envMap.containsKey(sKey)) {
-							sValue = sValue.substring(0, sValue.lastIndexOf("$PATH")) + envMap.get(sKey);
-						} else {
-							sValue = sValue.substring(0, sValue.lastIndexOf("$PATH")) + System.getenv("PATH");
-						}
-					}
-
-					if (sValue.toUpperCase().contains("$SDKTARGETSYSROOT")) {
-						String rValue = sValue.replaceAll(Matcher.quoteReplacement("$SDKTARGETSYSROOT"),
-								envMap.get("SDKTARGETSYSROOT"));
-						envMap.put(sKey, rValue);
-					} else {
-						envMap.put(sKey, sValue);
-					}
-
-					// System.out.printf("get env key %s value %s\n", sKey, sValue);
-				}
-			} finally {
-				input.close();
-			}
-
-		} catch (IOException e) {
-			throw new RuntimeException(
-					"Unable to parse environment setup script: " + environmentSetupScript.getAbsolutePath(), e);
-		}
-
-		return envMap;
-
-	}
 }

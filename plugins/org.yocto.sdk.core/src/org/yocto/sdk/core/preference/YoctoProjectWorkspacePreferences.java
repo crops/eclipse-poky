@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.yocto.sdk.core.YoctoProjectEnvironmentSetupScript;
 import org.yocto.sdk.core.YoctoProjectQemubootConf;
 import org.yocto.sdk.core.YoctoProjectSDKVersion;
 import org.yocto.sdk.core.internal.Activator;
@@ -110,14 +111,19 @@ public class YoctoProjectWorkspacePreferences {
 			List<Path> environmentSetupScriptPaths = Files.find(Paths.get("/opt"), 4, //$NON-NLS-1$
 					(filePath,
 							fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString()
-									.startsWith(YoctoProjectProfilePreferences.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
+									.startsWith(YoctoProjectEnvironmentSetupScript.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
 					.collect(Collectors.toList());
 
 			for (Path environmentSetupScriptPath : environmentSetupScriptPaths) {
 
 				String sdkPath = environmentSetupScriptPath.getParent().toString();
 
+				YoctoProjectEnvironmentSetupScript envSetupScript = YoctoProjectEnvironmentSetupScript
+						.create(new File(sdkPath));
 				YoctoProjectSDKVersion sdkVersion = YoctoProjectSDKVersion.create(new File(sdkPath));
+
+				if (envSetupScript == null || sdkVersion == null)
+					continue;
 
 				String profileName = "SDK - " + (sdkVersion == null ? sdkPath //$NON-NLS-1$
 						: sdkVersion.getTargetPrefix() + " (" + sdkVersion.toString() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -131,8 +137,7 @@ public class YoctoProjectWorkspacePreferences {
 						YoctoProjectProfilePreferences.TOOLCHAIN_SDK_INSTALLATION);
 				store.setValue(YoctoProjectProfilePreferences.SDK_INSTALLATION, sdkPath);
 
-				String sysrootLocation = YoctoProjectProfilePreferences
-						.getEnvironmentVariables(environmentSetupScriptPath.toFile()).get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
+				String sysrootLocation = envSetupScript.getEnvironmentVariables().get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
 
 				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
 				store.setValue(YoctoProjectProfilePreferences.TARGET,
@@ -186,9 +191,9 @@ public class YoctoProjectWorkspacePreferences {
 				// look 3 levels down from git repo for anything that looks
 				// like build/tmp/environment-setup-*
 				List<Path> inBuildDirEnvScriptPaths = Files
-						.find(oeInitBuildEnvPath.getParent(), 3,
-								(filePath, fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString()
-										.startsWith(YoctoProjectProfilePreferences.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
+						.find(oeInitBuildEnvPath.getParent(), 3, (filePath,
+								fileAttr) -> (fileAttr.isRegularFile() && filePath.getFileName().toString().startsWith(
+										YoctoProjectEnvironmentSetupScript.ENVIRONMENT_SETUP_SCRIPT_PREFIX)))
 						.collect(Collectors.toList());
 
 				buildDirEnvScriptPaths.addAll(inBuildDirEnvScriptPaths);
@@ -198,7 +203,13 @@ public class YoctoProjectWorkspacePreferences {
 
 				String buildDirPath = buildDirEnvScriptPath.getParent().toString();
 
-				String profileName = "Build - " + buildDirPath; //$NON-NLS-1$
+				YoctoProjectEnvironmentSetupScript envSetupScript = YoctoProjectEnvironmentSetupScript
+						.create(new File(buildDirPath));
+
+				if (envSetupScript == null)
+					continue;
+
+				String profileName = "Build - " + envSetupScript.getTargetPrefix() + " " + buildDirPath; //$NON-NLS-1$ //$NON-NLS-2$
 
 				profileNames.add(profileName);
 
@@ -209,8 +220,7 @@ public class YoctoProjectWorkspacePreferences {
 						YoctoProjectProfilePreferences.TOOLCHAIN_BUILD_DIRECTORY);
 				store.setValue(YoctoProjectProfilePreferences.BUILD_DIRECTORY, buildDirPath);
 
-				String sysrootLocation = YoctoProjectProfilePreferences
-						.getEnvironmentVariables(buildDirEnvScriptPath.toFile()).get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
+				String sysrootLocation = envSetupScript.getEnvironmentVariables().get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
 
 				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
 
