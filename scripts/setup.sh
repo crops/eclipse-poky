@@ -254,12 +254,10 @@ update_feature_remote()
 if [[ "$1" = "--upstream" ]]
 then
         MAIN_SITE="http://download.eclipse.org/releases/oxygen"
-        DEPRECATED_SITE="http://download.eclipse.org/releases/neon"
         TM_SITE="http://download.eclipse.org/tm/updates/4.0"
         TM_TERMINAL_SITE="http://download.eclipse.org/tm/terminal/marketplace"
 else
         MAIN_SITE="http://downloads.yoctoproject.org/eclipse/oxygen/"
-        DEPRECATED_SITE="http://downloads.yoctoproject.org/eclipse/neon"
         TM_SITE="http://downloads.yoctoproject.org/eclipse/tm/updates/4.0/"
         TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse/tm/terminal/marketplace"
 fi
