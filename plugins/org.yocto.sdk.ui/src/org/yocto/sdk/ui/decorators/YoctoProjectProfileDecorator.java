@@ -15,7 +15,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
+import org.yocto.sdk.core.YoctoProjectEnvironmentSetupScript;
 import org.yocto.sdk.core.YoctoProjectNature;
+import org.yocto.sdk.core.preference.YoctoProjectProfilePreferences;
 import org.yocto.sdk.core.preference.YoctoProjectProjectPreferences;
 import org.yocto.sdk.ui.internal.Activator;
 
@@ -55,33 +57,43 @@ public class YoctoProjectProfileDecorator implements ILightweightLabelDecorator 
 
 	@Override
 	public void decorate(Object element, IDecoration decoration) {
+
 		if (element instanceof IProject) {
 			IProject project = (IProject) element;
 
 			try {
-				if (project.isOpen() && project.hasNature(YoctoProjectNature.NATURE_ID)) {
 
-					YoctoProjectProjectPreferences projectPreference =  YoctoProjectProjectPreferences.create(project);
+				if (!project.isOpen())
+					return;
 
-					if (projectPreference.getProfilePreferences() != null) {
+				if (!project.hasNature(YoctoProjectNature.NATURE_ID))
+					return;
 
-						boolean useProjectSpecificSettings = projectPreference.isUseProjectSpecificSettings();
-						String targetPrefix = projectPreference.getProfilePreferences().getTargetPrefix();
+				YoctoProjectProjectPreferences projectPreference = YoctoProjectProjectPreferences.create(project);
 
-						if (useProjectSpecificSettings) {
-							decoration.addSuffix(" [" + targetPrefix + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-						} else {
-							String profile = YoctoProjectProjectPreferences.create(project).getProfile();
-							decoration.addSuffix(" [" + targetPrefix + " " + profile +"]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						}
-					}
+				if (projectPreference == null)
+					return;
+
+				YoctoProjectProfilePreferences profilePreferences = projectPreference.getProfilePreferences();
+
+				if (profilePreferences == null)
+					return;
+
+				YoctoProjectEnvironmentSetupScript envSetupScript = profilePreferences.getEnvironmentSetupScript();
+
+				String targetPrefix = envSetupScript != null ? envSetupScript.getTargetPrefix() : "unknown"; //$NON-NLS-1$
+
+				if (projectPreference.isUseProjectSpecificSettings()) {
+					decoration.addSuffix(" [" + targetPrefix + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				} else {
+					String profile = YoctoProjectProjectPreferences.create(project).getProfile();
+					decoration.addSuffix(" [" + targetPrefix + " " + profile + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
+
 			} catch (CoreException e) {
 				// Do nothing if project does not exist or project is closed
 			}
 		}
 	}
-
-
 
 }

@@ -11,7 +11,6 @@
 package org.yocto.sdk.core.preference;
 
 import java.io.File;
-import java.util.HashMap;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
@@ -121,29 +120,6 @@ public class YoctoProjectProfilePreferences {
 		return getPreferenceStore().getString(RUNQEMU_ARGUMENTS);
 	}
 
-	static final String ENVIRONMENT_SETUP_SCRIPT_PREFIX = "environment-setup-"; //$NON-NLS-1$
-
-	/**
-	 * Convenient method for discovering environment setup script from a build
-	 * directory
-	 *
-	 * @param toolchainDir
-	 * @return environment setup script, or null if none found
-	 */
-	public static File getEnvironmentSetupScript(File toolchainDir) {
-
-		if (toolchainDir == null || !toolchainDir.exists() || !toolchainDir.isDirectory())
-			return null;
-
-		for (File file : toolchainDir.listFiles()) {
-			// Only return the first matching file
-			if (file.getName().startsWith(ENVIRONMENT_SETUP_SCRIPT_PREFIX)) {
-				return file;
-			}
-		}
-		return null;
-	}
-
 	/**
 	 * Get environment setup script based on choice of toolchain
 	 *
@@ -163,22 +139,6 @@ public class YoctoProjectProfilePreferences {
 			envSetupScript = YoctoProjectEnvironmentSetupScript.create(toolchainDir);
 		}
 		return envSetupScript;
-	}
-
-	/**
-	 *
-	 * @return target prefix extracted from environment setup script filename
-	 */
-	public String getTargetPrefix() {
-		return getEnvironmentSetupScript().getTargetPrefix();
-	}
-
-	/**
-	 *
-	 * @return environment variables extracted from environment setup script
-	 */
-	public HashMap<String, String> getEnvironmentVariables() {
-		return getEnvironmentSetupScript().getEnvironmentVariables();
 	}
 
 }

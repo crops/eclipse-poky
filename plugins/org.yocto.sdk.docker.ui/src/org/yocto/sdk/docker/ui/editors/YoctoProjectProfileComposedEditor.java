@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.yocto.docker.ui.editors.ContainerDirectoryFieldEditor;
 import org.yocto.docker.ui.editors.ContainerFileFieldEditor;
+import org.yocto.sdk.core.YoctoProjectEnvironmentSetupScript;
 import org.yocto.sdk.core.preference.YoctoProjectProfilePreferences;
 import org.yocto.ui.editors.BooleanFieldEditor2;
 import org.yocto.ui.editors.RadioFieldEditor;
@@ -298,7 +299,7 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 
 			File sdkInstallation = new File(sdkInstallationString);
 
-			if (YoctoProjectProfilePreferences.getEnvironmentSetupScript(sdkInstallation) == null)
+			if (YoctoProjectEnvironmentSetupScript.getEnvironmentSetupScript(sdkInstallation) == null)
 				return Messages.YoctoProjectProfileComposedEditor_SdkInstallationMissingEnvSetupScript;
 
 		} else if (YoctoProjectProfilePreferences.TOOLCHAIN_BUILD_DIRECTORY.equals(toolchain)) {
@@ -310,7 +311,7 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 
 			File buildDirectory = new File(buildDirectoryString);
 
-			if (YoctoProjectProfilePreferences.getEnvironmentSetupScript(buildDirectory) == null)
+			if (YoctoProjectEnvironmentSetupScript.getEnvironmentSetupScript(buildDirectory) == null)
 				return Messages.YoctoProjectProfileComposedEditor_BuildDirectoryMissingEnvSetupScript;
 		} else {
 			return Messages.YoctoProjectProfileComposedEditor_SelectToolchainMode;

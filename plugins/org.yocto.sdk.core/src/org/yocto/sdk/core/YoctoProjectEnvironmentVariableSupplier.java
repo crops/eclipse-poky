@@ -34,7 +34,6 @@ import org.yocto.sdk.core.preference.YoctoProjectProjectPreferences;
  */
 public class YoctoProjectEnvironmentVariableSupplier implements IConfigurationEnvironmentVariableSupplier {
 
-
 	public class BuildEnvironmentVariable extends EnvironmentVariable implements IBuildEnvironmentVariable {
 
 		public BuildEnvironmentVariable(String name, String value) {
@@ -69,7 +68,12 @@ public class YoctoProjectEnvironmentVariableSupplier implements IConfigurationEn
 			if (profilePreferences.isUseContainer()) {
 				// TODO: Do not load variables if we're building within containers?
 			} else {
-				envVars = profilePreferences.getEnvironmentVariables();
+
+				YoctoProjectEnvironmentSetupScript envSetupScript = profilePreferences.getEnvironmentSetupScript();
+
+				if (envSetupScript != null) {
+					envVars = envSetupScript.getEnvironmentVariables();
+				}
 			}
 
 			for (String envVarName : envVars.keySet()) {
@@ -77,6 +81,6 @@ public class YoctoProjectEnvironmentVariableSupplier implements IConfigurationEn
 			}
 		}
 
-		return variables.toArray(new IBuildEnvironmentVariable[]{});
+		return variables.toArray(new IBuildEnvironmentVariable[] {});
 	}
 }
