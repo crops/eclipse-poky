@@ -92,12 +92,12 @@ fi
 
 # prepare the base Eclipse installation in folder "eclipse"
 ep_rel="R-"
-ep_ver="4.7.3"
-ep_date="-201803010715"
+ep_ver="4.7.3a"
+ep_date="-201803300640"
 P2_disabled=false
 P2_no_dropins=false
 
-if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180214-0345.jar ]; then
+if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180329-0507.jar ]; then
 
   pushd .
 
