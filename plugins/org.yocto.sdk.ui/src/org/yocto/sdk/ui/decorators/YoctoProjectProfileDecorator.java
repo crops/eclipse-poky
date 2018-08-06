@@ -15,7 +15,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
-import org.yocto.sdk.core.YoctoProjectEnvironmentSetupScript;
 import org.yocto.sdk.core.YoctoProjectNature;
 import org.yocto.sdk.core.preference.YoctoProjectProfilePreferences;
 import org.yocto.sdk.core.preference.YoctoProjectProjectPreferences;
@@ -79,16 +78,8 @@ public class YoctoProjectProfileDecorator implements ILightweightLabelDecorator 
 				if (profilePreferences == null)
 					return;
 
-				YoctoProjectEnvironmentSetupScript envSetupScript = profilePreferences.getEnvironmentSetupScript();
-
-				String targetPrefix = envSetupScript != null ? envSetupScript.getTargetPrefix() : "unknown"; //$NON-NLS-1$
-
-				if (projectPreference.isUseProjectSpecificSettings()) {
-					decoration.addSuffix(" [" + targetPrefix + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-				} else {
-					String profile = YoctoProjectProjectPreferences.create(project).getProfile();
-					decoration.addSuffix(" [" + targetPrefix + " " + profile + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				}
+				String profile = YoctoProjectProjectPreferences.create(project).getProfile();
+				decoration.addSuffix(" [" + profile + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 
 			} catch (CoreException e) {
 				// Do nothing if project does not exist or project is closed
