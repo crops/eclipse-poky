@@ -288,6 +288,8 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 
 	public String getErrorMessage() {
 
+		boolean useContainer = useContainerFieldEditor.getBooleanValue();
+
 		String toolchain = (String) toolchainRadioFieldEditor.getData();
 
 		if (YoctoProjectProfilePreferences.TOOLCHAIN_SDK_INSTALLATION.equals(toolchain)) {
@@ -297,10 +299,13 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 			if (sdkInstallationString == null || sdkInstallationString.length() == 0)
 				return Messages.YoctoProjectProfileComposedEditor_NeedSdkInstallation;
 
-			File sdkInstallation = new File(sdkInstallationString);
+			if (!useContainer) {
 
-			if (YoctoProjectEnvironmentSetupScript.getEnvironmentSetupScript(sdkInstallation) == null)
-				return Messages.YoctoProjectProfileComposedEditor_SdkInstallationMissingEnvSetupScript;
+				File sdkInstallation = new File(sdkInstallationString);
+
+				if (YoctoProjectEnvironmentSetupScript.getEnvironmentSetupScript(sdkInstallation) == null)
+					return Messages.YoctoProjectProfileComposedEditor_SdkInstallationMissingEnvSetupScript;
+			}
 
 		} else if (YoctoProjectProfilePreferences.TOOLCHAIN_BUILD_DIRECTORY.equals(toolchain)) {
 
@@ -309,10 +314,14 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 			if (buildDirectoryString == null || buildDirectoryString.length() == 0)
 				return Messages.YoctoProjectProfileComposedEditor_NeedBuildDirectory;
 
-			File buildDirectory = new File(buildDirectoryString);
+			if (!useContainer) {
 
-			if (YoctoProjectEnvironmentSetupScript.getEnvironmentSetupScript(buildDirectory) == null)
-				return Messages.YoctoProjectProfileComposedEditor_BuildDirectoryMissingEnvSetupScript;
+				File buildDirectory = new File(buildDirectoryString);
+
+				if (YoctoProjectEnvironmentSetupScript.getEnvironmentSetupScript(buildDirectory) == null)
+					return Messages.YoctoProjectProfileComposedEditor_BuildDirectoryMissingEnvSetupScript;
+			}
+
 		} else {
 			return Messages.YoctoProjectProfileComposedEditor_SelectToolchainMode;
 		}
@@ -321,7 +330,9 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 
 		if (sysrootLocation == null || sysrootLocation.length() == 0) {
 			return Messages.YoctoProjectProfileComposedEditor_NeedSysroot;
-		} else {
+		}
+
+		if (!useContainer) {
 			File sysrootDir = new File(sysrootLocation);
 
 			if (!sysrootDir.exists())
@@ -339,7 +350,10 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 
 			if (qemubootconf == null || qemubootconf.length() == 0) {
 				return Messages.YoctoProjectProfileComposedEditor_NeedQemuconf;
-			} else {
+			}
+
+			if (!useContainer) {
+
 				File qemubootconfFile = new File(qemubootconf);
 
 				if (!qemubootconfFile.exists())
@@ -353,7 +367,10 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 
 			if (kernelImage == null || kernelImage.length() == 0) {
 				return Messages.YoctoProjectProfileComposedEditor_NeedKernelImage;
-			} else {
+			}
+
+			if (!useContainer) {
+
 				File kernelImageFile = new File(kernelImage);
 
 				if (!kernelImageFile.exists())
