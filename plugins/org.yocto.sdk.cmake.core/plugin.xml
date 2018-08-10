@@ -82,10 +82,11 @@
                         superClass="org.yocto.cmake.core.builder.yocto">
                     </builder>
                     <tool
-                        commandLinePattern="${COMMAND} ${FLAGS} "
-                        id="org.yocto.cmake.core.cmake.yocto.exe.debug"
-                        isAbstract="false"
-                        superClass="org.yocto.cmake.core.cmake.exe">
+                          commandLinePattern="${COMMAND} ${FLAGS} "
+                          id="org.yocto.cmake.core.cmake.yocto.exe.debug"
+                          isAbstract="false"
+                          name="Yocto Project CMake (alpha)"
+                          superClass="org.yocto.cmake.core.cmake.exe">
                     </tool>
                 </toolChain>
             </configuration>
