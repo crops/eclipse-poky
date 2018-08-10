@@ -95,7 +95,8 @@ public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2
 				cmakeFlags.add(cmakeFlag);
 			}
 		} catch (BuildException e1) {
-			return new MultiStatus(Activator.PLUGIN_ID, IStatus.ERROR, Messages.CMakeMakefileGenerator_GetCMakeToolCommandFlagsFailed, e1);
+			return new MultiStatus(Activator.PLUGIN_ID, IStatus.ERROR,
+					Messages.CMakeMakefileGenerator_GetCMakeToolCommandFlagsFailed, e1);
 		}
 
 		IFile toolchainFile = this.project.getFile("toolchain.cmake"); //$NON-NLS-1$
@@ -110,8 +111,8 @@ public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2
 
 			if (!buildDir.exists())
 				if (!buildDir.mkdirs())
-					throw new RuntimeException(String.format(Messages.CMakeMakefileGenerator_CreateDirectoryFailed, buildDir.toString()));
-
+					throw new RuntimeException(
+							String.format(Messages.CMakeMakefileGenerator_CreateDirectoryFailed, buildDir.toString()));
 
 			ICommandLauncher launcher = CommandLauncherManager.getInstance().getCommandLauncher(this.project);
 			launcher.setProject(project);
@@ -121,37 +122,45 @@ public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2
 			IEnvironmentVariableManager manager = CCorePlugin.getDefault().getBuildEnvironmentManager();
 
 			List<String> result = new ArrayList<String>();
-			for(IEnvironmentVariable var : manager.getVariables(ccdesc, true)) {
+			for (IEnvironmentVariable var : manager.getVariables(ccdesc, true)) {
 				result.add(var.getName() + "=" + var.getValue()); //$NON-NLS-1$
 			}
 
-			IPath cmakeCommandPath = getCommandAbsPath(cmakeCommand, manager.getVariable("PATH", ccdesc, true)); //$NON-NLS-1$
+			IPath cmakeCommandPath = new Path(cmakeCommand);
 
 			final String cmakeConsoleId = Activator.PLUGIN_ID + ".CMakeConsole"; //$NON-NLS-1$
 
 			IConsole cmakeConsole = CCorePlugin.getDefault().getConsole(cmakeConsoleId);
 			cmakeConsole.start(this.project);
-			cmakeConsole.getInfoStream().write(String.format(Messages.CMakeMakefileGenerator_GeneratingBuildFiles, this.project.getName() + System.lineSeparator()));
+			cmakeConsole.getInfoStream().write(String.format(Messages.CMakeMakefileGenerator_GeneratingBuildFiles,
+					this.project.getName() + System.lineSeparator()));
 
 			List<String> cmakeCommandAndFlags = new ArrayList<String>();
 			cmakeCommandAndFlags.add(cmakeCommand);
 			cmakeCommandAndFlags.addAll(cmakeFlags);
 			cmakeConsole.getOutputStream().write(String.join(" ", cmakeCommandAndFlags) + System.lineSeparator()); //$NON-NLS-1$
 
-			Process process = launcher.execute(cmakeCommandPath, cmakeFlags.toArray(new String[]{}), result.toArray(new String[]{}), new Path(buildDir.getAbsolutePath()), new NullProgressMonitor());
+			Process process = launcher.execute(cmakeCommandPath, cmakeFlags.toArray(new String[] {}),
+					result.toArray(new String[] {}), new Path(buildDir.getAbsolutePath()), new NullProgressMonitor());
 
 			if (process == null) {
-				throw new CoreException(new MultiStatus(Activator.PLUGIN_ID, IStatus.ERROR, String.format(Messages.CMakeMakefileGenerator_LauncherCreateProcessFailed, String.join(" ", cmakeFlags)), null)); //$NON-NLS-1$
+				throw new CoreException(new MultiStatus(Activator.PLUGIN_ID, IStatus.ERROR,
+						String.format(Messages.CMakeMakefileGenerator_LauncherCreateProcessFailed,
+								String.join(" ", cmakeFlags)), //$NON-NLS-1$
+						null));
 			}
 
-			int exitValue = launcher.waitAndRead(cmakeConsole.getOutputStream(), cmakeConsole.getErrorStream(), new NullProgressMonitor());
+			int exitValue = launcher.waitAndRead(cmakeConsole.getOutputStream(), cmakeConsole.getErrorStream(),
+					new NullProgressMonitor());
 
 			if (exitValue != 0) {
-				throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, String.format(Messages.CMakeMakefileGenerator_ProcessExitCodeNonZero, String.join(" ", cmakeFlags)), null)); //$NON-NLS-1$
+				throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, String.format(
+						Messages.CMakeMakefileGenerator_ProcessExitCodeNonZero, String.join(" ", cmakeFlags)), null)); //$NON-NLS-1$
 			}
 
 		} catch (IOException e) {
-			throw new CoreException(new MultiStatus(Activator.PLUGIN_ID, IStatus.ERROR, String.format(Messages.CMakeMakefileGenerator_CMakeConsoleWriteFailed, String.join(" ", cmakeFlags)), e));  //$NON-NLS-1$
+			throw new CoreException(new MultiStatus(Activator.PLUGIN_ID, IStatus.ERROR, String
+					.format(Messages.CMakeMakefileGenerator_CMakeConsoleWriteFailed, String.join(" ", cmakeFlags)), e)); //$NON-NLS-1$
 		}
 		return new MultiStatus(Activator.PLUGIN_ID, IStatus.OK, null, null);
 	}
