@@ -85,6 +85,14 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 
 				if (FieldEditor.VALUE.equals(event.getProperty())) {
 					refreshEditorMode();
+
+					// Reset the editors whenever container mode is toggled as
+					// there is no guarantee that the paths will still be valid
+					sdkInstallationPathFieldEditor.setValue(""); //$NON-NLS-1$
+					buildDirectoryPathFieldEditor.setValue(""); //$NON-NLS-1$
+					sysrootPathFieldEditor.setValue(""); //$NON-NLS-1$
+					qemubootconfFilePathFieldEditor.setValue(""); //$NON-NLS-1$
+					kernelImagePathFieldEditor.setValue(""); //$NON-NLS-1$
 				}
 			}
 		});
@@ -279,7 +287,6 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 		sysrootPathFieldEditor.setContainerMode(containerMode);
 		qemubootconfFilePathFieldEditor.setContainerMode(containerMode);
 		kernelImagePathFieldEditor.setContainerMode(containerMode);
-
 	}
 
 	public void addPropertyChangeListener(IPropertyChangeListener listener) {
