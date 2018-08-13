@@ -126,12 +126,7 @@ public abstract class AbstractContainerPathFieldEditor extends FieldEditor {
 	}
 
 	public void setContainerMode(boolean containerMode) {
-		if (this.containerMode != containerMode) {
-			this.containerMode = containerMode;
-			// Reset path values if container mode changes as the existing
-			// value might not be applicable
-			setValue(""); //$NON-NLS-1$
-		}
+		this.containerMode = containerMode;
 	}
 
 }
