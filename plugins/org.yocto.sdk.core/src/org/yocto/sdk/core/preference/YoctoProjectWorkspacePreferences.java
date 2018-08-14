@@ -125,8 +125,7 @@ public class YoctoProjectWorkspacePreferences {
 				if (envSetupScript == null || sdkVersion == null)
 					continue;
 
-				String profileName = "SDK - " + (sdkVersion == null ? sdkPath //$NON-NLS-1$
-						: sdkVersion.getTargetPrefix() + " (" + sdkVersion.toString() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+				String profileName = String.format("SDK %s %s", sdkVersion.getTargetPrefix(), sdkPath); //$NON-NLS-1$
 
 				profileNames.add(profileName);
 
@@ -209,7 +208,7 @@ public class YoctoProjectWorkspacePreferences {
 				if (envSetupScript == null)
 					continue;
 
-				String profileName = "Build - " + envSetupScript.getTargetPrefix() + " " + buildDirPath; //$NON-NLS-1$ //$NON-NLS-2$
+				String profileName = String.format("Build %s %s", envSetupScript.getTargetPrefix(), buildDirPath); //$NON-NLS-1$
 
 				profileNames.add(profileName);
 
