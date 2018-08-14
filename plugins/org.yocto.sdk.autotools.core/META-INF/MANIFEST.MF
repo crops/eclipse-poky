@@ -7,7 +7,9 @@ Bundle-Activator: org.yocto.sdk.autotools.core.internal.Activator
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.cdt.managedbuilder.core,
  org.yocto.sdk.core,
- org.eclipse.cdt.core;bundle-version="6.5.0"
+ org.eclipse.cdt.core;bundle-version="6.5.0",
+ org.eclipse.cdt.autotools.core;bundle-version="2.0.0",
+ org.eclipse.cdt.autotools.ui;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.yocto.sdk.autotools.core
 Bundle-ActivationPolicy: lazy
