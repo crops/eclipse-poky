@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<psf version="2.0">
+<provider id="org.eclipse.egit.core.GitProvider">
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.cmake.core"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.cmake.ui"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.docker.launcher"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.docker.ui"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.autotools.core"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.cmake.core"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.core"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.docker.launcher"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.docker.ui"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,releng/org.yocto.sdk.releng"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.ui"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.ui"/>
+</provider>
+<workingSets editPageId="org.eclipse.jdt.ui.JavaWorkingSetPage" id="1531448816674_5" label="eclipse-yocto-alpha" name="eclipse-yocto-alpha">
+<item elementID="=org.yocto.sdk.core" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.docker.launcher" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.cmake.core" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.docker.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.cmake.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.docker.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.docker.launcher" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.autotools.core" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.cmake.core" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.releng" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+</workingSets>
+</psf>
