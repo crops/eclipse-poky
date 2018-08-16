@@ -56,7 +56,7 @@ and consult your local network admin for the appropriate proxy info.
 
 2) Install Eclipse
 
-a) Download Eclipse Oxygen.2 or more recent release.   For eclipse-yocto plugin development
+a) Download Eclipse Photon or more recent release.   For eclipse-yocto plugin development
 three  components are required:   i) Eclipse Java SDK, ii) Eclipse PDE;
 iii) Maven 2 Eclipse (m2e).   All three of these components are present in
 the package named 'Eclipse IDE for Eclipse Committers'.  All of the packages
@@ -65,7 +65,7 @@ are listed here:
 https://www.eclipse.org/downloads/packages
 
 Download the 'Eclipse IDE for Eclipse Committers' and expand into a new directory
-(e.g. ~/eclipse.oxygen.2) on your local disk.
+(e.g. ~/eclipse.photon) on your local disk.
 
 3) Clone the eclipse-yocto git repo
 
@@ -82,7 +82,7 @@ $ git checkout timo/maven
 
 4) Import Project Set into Eclipse workspace
 
-Open a terminal, navigate to ~/eclipse.oxygen.2 and type:
+Open a terminal, navigate to ~/eclipse.photon and type:
 
 $ ./eclipse
 
