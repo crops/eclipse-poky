@@ -34,7 +34,7 @@ public class YoctoProjectCMakeMakefileGenerator extends CMakeMakefileGenerator {
 	}
 
 	String computeErrorMessage() {
-		YoctoProjectProjectPreferences projectPreference = YoctoProjectProjectPreferences.create(getProject());
+		YoctoProjectProjectPreferences projectPreference = YoctoProjectProjectPreferences.getProjectPreferences(getProject());
 
 		if (projectPreference.isUseProjectSpecificSettings()) {
 			// TODO: validate project specific settings

@@ -58,7 +58,7 @@ public class YoctoProjectEnvironmentVariableSupplier implements IConfigurationEn
 		List<BuildEnvironmentVariable> variables = new ArrayList<BuildEnvironmentVariable>();
 
 		IProject project = (IProject) configuration.getOwner();
-		YoctoProjectProjectPreferences projectPreferences = YoctoProjectProjectPreferences.create(project);
+		YoctoProjectProjectPreferences projectPreferences = YoctoProjectProjectPreferences.getProjectPreferences(project);
 		YoctoProjectProfilePreferences profilePreferences = projectPreferences.getProfilePreferences();
 
 		// Don't load environment variables unless the profile preferences are valid

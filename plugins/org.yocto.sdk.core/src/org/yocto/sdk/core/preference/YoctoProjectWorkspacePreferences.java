@@ -16,7 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,7 +27,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.yocto.sdk.core.YoctoProjectEnvironmentSetupScript;
 import org.yocto.sdk.core.YoctoProjectQemubootConf;
@@ -57,7 +58,7 @@ public class YoctoProjectWorkspacePreferences {
 		return new YoctoProjectWorkspacePreferences();
 	}
 
-	public static IPreferenceStore getWorkspacePreferenceStore() {
+	public static IPersistentPreferenceStore getWorkspacePreferenceStore() {
 		return new ScopedPreferenceStore(InstanceScope.INSTANCE, Activator.PLUGIN_ID);
 	}
 
@@ -88,14 +89,22 @@ public class YoctoProjectWorkspacePreferences {
 			// auto-detected profiles can be managed separately (as read-only) from manually
 			// configured profiles
 
-			if (true || getWorkspaceProfiles().length == 0 && OS_LINUX) {
+			if (true || OS_LINUX) {
 
 				List<String> detectedProfiles = new ArrayList<String>();
 
 				detectedProfiles.addAll(detectWorkspaceSdkProfiles());
 				detectedProfiles.addAll(detectWorkspaceBuildDirProfiles());
 
-				setWorkspaceProfiles(detectedProfiles.toArray(new String[] {}));
+				Set<String> allProfiles = new LinkedHashSet<String>(Arrays.asList(getWorkspaceProfiles()));
+				allProfiles.addAll(detectedProfiles);
+				setWorkspaceProfiles(allProfiles.toArray(new String[] {}));
+
+				try {
+					getWorkspacePreferenceStore().save();
+				} catch (IOException e) {
+					throw new RuntimeException("Problem detecting workspace profiles", e);
+				}
 
 			}
 
@@ -129,8 +138,7 @@ public class YoctoProjectWorkspacePreferences {
 
 				profileNames.add(profileName);
 
-				YoctoProjectProfilePreferences profilePreference = new YoctoProjectProfilePreferences(profileName);
-				IPersistentPreferenceStore store = profilePreference.getPreferenceStore();
+				IPersistentPreferenceStore store = YoctoProjectProfilePreferences.createPreferenceStore(profileName);
 
 				store.setValue(YoctoProjectProfilePreferences.TOOLCHAIN,
 						YoctoProjectProfilePreferences.TOOLCHAIN_SDK_INSTALLATION);
@@ -212,8 +220,7 @@ public class YoctoProjectWorkspacePreferences {
 
 				profileNames.add(profileName);
 
-				YoctoProjectProfilePreferences profilePreference = new YoctoProjectProfilePreferences(profileName);
-				IPersistentPreferenceStore store = profilePreference.getPreferenceStore();
+				IPersistentPreferenceStore store = YoctoProjectProfilePreferences.createPreferenceStore(profileName);
 
 				store.setValue(YoctoProjectProfilePreferences.TOOLCHAIN,
 						YoctoProjectProfilePreferences.TOOLCHAIN_BUILD_DIRECTORY);
@@ -287,7 +294,7 @@ public class YoctoProjectWorkspacePreferences {
 			return projects;
 
 		for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
-			if (profile.equals(YoctoProjectProjectPreferences.create(project).getProfile())) {
+			if (profile.equals(YoctoProjectProjectPreferences.getProjectPreferences(project).getProfile())) {
 				projects.add(project);
 			}
 		}

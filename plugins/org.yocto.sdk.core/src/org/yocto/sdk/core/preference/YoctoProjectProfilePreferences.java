@@ -56,19 +56,70 @@ public class YoctoProjectProfilePreferences {
 
 	YoctoProjectEnvironmentSetupScript envSetupScript = null;
 
-	public static IPersistentPreferenceStore createPreferenceStore(String profile) {
+	// TODO: reuse in project preference
+	public static void initializeDefaults(IPersistentPreferenceStore store) {
+		store.setDefault(USE_CONTAINER, false);
+		store.setDefault(TOOLCHAIN, ""); //$NON-NLS-1$
+		store.setDefault(SDK_INSTALLATION, ""); //$NON-NLS-1$
+		store.setDefault(BUILD_DIRECTORY, ""); //$NON-NLS-1$
+		store.setDefault(SYSROOT_LOCATION, ""); //$NON-NLS-1$
+		store.setDefault(TARGET, ""); //$NON-NLS-1$
+		store.setDefault(QEMUBOOTCONF_FILE, ""); //$NON-NLS-1$
+		store.setDefault(KERNEL_IMAGE, ""); //$NON-NLS-1$
+		store.setDefault(RUNQEMU_ARGUMENTS, ""); //$NON-NLS-1$
+	}
+
+	// TODO: reuse in project preference
+	public static void initializeValues(IPersistentPreferenceStore store) {
+		store.setValue(USE_CONTAINER, false);
+		store.setValue(TOOLCHAIN, TOOLCHAIN_SDK_INSTALLATION);
+		store.setValue(SDK_INSTALLATION, ""); //$NON-NLS-1$
+		store.setValue(BUILD_DIRECTORY, ""); //$NON-NLS-1$
+		store.setValue(SYSROOT_LOCATION, ""); //$NON-NLS-1$
+		store.setValue(TARGET, TARGET_EXTERNAL_HARDWARE);
+		store.setValue(QEMUBOOTCONF_FILE, ""); //$NON-NLS-1$
+		store.setValue(KERNEL_IMAGE, ""); //$NON-NLS-1$
+		store.setValue(RUNQEMU_ARGUMENTS, ""); //$NON-NLS-1$
+	}
+
+	/**
+	 * Return the matching preference store for the given profile name
+	 *
+	 * @param profile
+	 * @return
+	 */
+	public static IPersistentPreferenceStore getPreferenceStore(String profile) {
 
 		if (profile != null && profile.length() > 0) {
 			String qualifier = Activator.PLUGIN_ID + "." + profile.hashCode(); //$NON-NLS-1$
-			return new ScopedPreferenceStore(InstanceScope.INSTANCE, qualifier);
+			IPersistentPreferenceStore store = new ScopedPreferenceStore(InstanceScope.INSTANCE, qualifier);
+			initializeDefaults(store);
+			return store;
 		}
 
 		return null;
 	}
 
+	/**
+	 * Create a pristine preference store with defaults initialized
+	 *
+	 * @param profile
+	 * @return
+	 */
+	public static IPersistentPreferenceStore createPreferenceStore(String profile) {
+
+		IPersistentPreferenceStore store = getPreferenceStore(profile);
+
+		if (store != null) {
+			initializeValues(store);
+		}
+
+		return store;
+	}
+
 	public YoctoProjectProfilePreferences(String profile) {
 		this.profile = profile;
-		this.store = createPreferenceStore(profile);
+		this.store = getPreferenceStore(profile);
 	}
 
 	public YoctoProjectProfilePreferences(IPersistentPreferenceStore store) {

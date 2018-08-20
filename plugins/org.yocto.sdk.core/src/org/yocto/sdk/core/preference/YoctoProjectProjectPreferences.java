@@ -37,11 +37,49 @@ public class YoctoProjectProjectPreferences {
 
 	IPersistentPreferenceStore projectPreferenceStore = null;
 
-	public static YoctoProjectProjectPreferences create(IProject project) {
-		return new YoctoProjectProjectPreferences(project);
+	/**
+	 * Return project preferences for the given project, also ensures that the
+	 * defaults are properly initialized.
+	 *
+	 * @param project
+	 * @return
+	 */
+	public static YoctoProjectProjectPreferences getProjectPreferences(IProject project) {
+		YoctoProjectProjectPreferences projectPreference = new YoctoProjectProjectPreferences(project);
+		IPersistentPreferenceStore projectPreferenceStore = projectPreference.getPreferenceStore();
+
+		projectPreferenceStore.setDefault(USE_PROJECT_SPECIFIC_SETTINGS, false);
+		projectPreferenceStore.setDefault(PROJECT_PROFILE, ""); //$NON-NLS-1$
+
+		// Be sure to inherit profile preferences default values, as the project
+		// preference store also doubles as a optional profile preferences store.
+		YoctoProjectProfilePreferences.initializeDefaults(projectPreferenceStore);
+		return projectPreference;
 	}
 
-	public YoctoProjectProjectPreferences(IProject project) {
+	/**
+	 * Create project preferences and initial the values for the first time. Each
+	 * project should only need to be created once to setup the initial values of
+	 * the project preference store. Subsequent access to the project preferences
+	 * should be done via getProjectPreferences(IProject).
+	 *
+	 * @param project
+	 * @return
+	 */
+	public static YoctoProjectProjectPreferences createProjectPreferences(IProject project) {
+		YoctoProjectProjectPreferences projectPreference = getProjectPreferences(project);
+		IPersistentPreferenceStore projectPreferenceStore = projectPreference.getPreferenceStore();
+
+		projectPreferenceStore.setValue(USE_PROJECT_SPECIFIC_SETTINGS, false);
+		projectPreferenceStore.setValue(PROJECT_PROFILE, ""); //$NON-NLS-1$
+
+		// Be sure to inherit profile preferences initial values, as the project
+		// preference store also doubles as a optional profile preferences store.
+		YoctoProjectProfilePreferences.initializeValues(projectPreferenceStore);
+		return projectPreference;
+	}
+
+	YoctoProjectProjectPreferences(IProject project) {
 
 		if (project != null) {
 			String qualifier = Activator.PLUGIN_ID + "." + project.getName(); //$NON-NLS-1$

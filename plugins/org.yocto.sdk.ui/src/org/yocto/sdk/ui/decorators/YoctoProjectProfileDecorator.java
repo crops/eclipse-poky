@@ -68,7 +68,7 @@ public class YoctoProjectProfileDecorator implements ILightweightLabelDecorator 
 				if (!project.hasNature(YoctoProjectNature.NATURE_ID))
 					return;
 
-				YoctoProjectProjectPreferences projectPreference = YoctoProjectProjectPreferences.create(project);
+				YoctoProjectProjectPreferences projectPreference = YoctoProjectProjectPreferences.getProjectPreferences(project);
 
 				if (projectPreference == null)
 					return;
@@ -78,7 +78,7 @@ public class YoctoProjectProfileDecorator implements ILightweightLabelDecorator 
 				if (profilePreferences == null)
 					return;
 
-				String profile = YoctoProjectProjectPreferences.create(project).getProfile();
+				String profile = YoctoProjectProjectPreferences.getProjectPreferences(project).getProfile();
 				decoration.addSuffix(" [" + profile + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 
 			} catch (CoreException e) {

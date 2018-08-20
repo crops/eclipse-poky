@@ -86,9 +86,9 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 
 					// handle profile added
 					String newProfile = (String) event.getNewValue();
-					IPersistentPreferenceStore newProfilePreferenceStore = createProfilePreferenceStore(newProfile);
-					composedEditor.reset();
-					composedEditor.store(newProfilePreferenceStore);
+					IPersistentPreferenceStore newProfilePreferenceStore = YoctoProjectProfilePreferences
+							.createPreferenceStore(newProfile);
+					composedEditor.load(newProfilePreferenceStore, true);
 
 					setProfilePreferenceStore(newProfilePreferenceStore);
 
@@ -101,19 +101,14 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 					// however the reason the button is disabled might not
 					// be obvious ...
 
-					String removedProfile = (String) event.getOldValue();
-					IPersistentPreferenceStore removedProfilePreferenceStore = createProfilePreferenceStore(
-							removedProfile);
-					// First we reset field editors to default values and store to
-					// the profile, effectively erasing the preference store.
-					composedEditor.reset();
-					composedEditor.store(removedProfilePreferenceStore);
-
-					IPersistentPreferenceStore selectedProfilePreferenceStore = createProfilePreferenceStore(
-							YoctoProjectPreferencePage.this.profileComboFieldEditor.getSelectedProfile());
+					IPersistentPreferenceStore selectedProfilePreferenceStore = YoctoProjectProfilePreferences
+							.getPreferenceStore(
+									YoctoProjectPreferencePage.this.profileComboFieldEditor.getSelectedProfile());
 					composedEditor.load(selectedProfilePreferenceStore, true);
 
 					setProfilePreferenceStore(selectedProfilePreferenceStore);
+
+					// TODO: should we reset the old profile preference?
 
 					// TODO: update projects using removed profile?
 
@@ -128,23 +123,16 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 					// however the reason the button is disabled might not
 					// be obvious ...
 
-					String oldProfile = (String) event.getOldValue();
 					String newProfile = (String) event.getNewValue();
 
-					IPersistentPreferenceStore oldProfilePreferenceStore = createProfilePreferenceStore(oldProfile);
-					IPersistentPreferenceStore newProfilePreferenceStore = createProfilePreferenceStore(newProfile);
+					IPersistentPreferenceStore newProfilePreferenceStore = YoctoProjectProfilePreferences
+							.createPreferenceStore(newProfile);
 
-					// first we store field editors to new profile
+					// Just store the profile preferences loaded to field editors back to new
+					// profile preference
 					composedEditor.store(newProfilePreferenceStore);
 
-					// then we reset field editors to default values and store to
-					// the old profile, effectively erasing the preference store
-					composedEditor.reset();
-					composedEditor.store(oldProfilePreferenceStore);
-
-//					// finally reload the editor with the new profile
-//					this.profilePreferenceStore = addedProfilePreferenceStore;
-					composedEditor.load(newProfilePreferenceStore, true);
+					// TODO: should we reset the old profile preference?
 
 					setProfilePreferenceStore(newProfilePreferenceStore);
 
@@ -154,8 +142,9 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 
 				} else if (YoctoProjectProfileComboFieldEditor.SELECT.equals(event.getProperty())) {
 
-					IPersistentPreferenceStore selectedProfilePreferenceStore = createProfilePreferenceStore(
-							YoctoProjectPreferencePage.this.profileComboFieldEditor.getSelectedProfile());
+					IPersistentPreferenceStore selectedProfilePreferenceStore = YoctoProjectProfilePreferences
+							.getPreferenceStore(
+									YoctoProjectPreferencePage.this.profileComboFieldEditor.getSelectedProfile());
 					composedEditor.load(selectedProfilePreferenceStore, true);
 
 					setProfilePreferenceStore(selectedProfilePreferenceStore);
@@ -170,7 +159,8 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 
 		composedEditor.reset();
 		profileComboFieldEditor.load();
-		profilePreferenceStore = createProfilePreferenceStore(profileComboFieldEditor.getSelectedProfile());
+		profilePreferenceStore = YoctoProjectProfilePreferences
+				.getPreferenceStore(profileComboFieldEditor.getSelectedProfile());
 		composedEditor.load(profilePreferenceStore, true);
 		composedEditor.addPropertyChangeListener(new IPropertyChangeListener() {
 
@@ -226,6 +216,12 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 
 			this.profileComboFieldEditor.store();
 
+			try {
+				YoctoProjectWorkspacePreferences.getWorkspacePreferenceStore().save();
+			} catch (IOException e1) {
+				throw new RuntimeException("Problem saving workspace preferences", e1);
+			}
+
 			composedEditor.store(this.profilePreferenceStore);
 
 			if (this.profilePreferenceStore != null) {
@@ -249,10 +245,6 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 		super.performDefaults();
 		composedEditor.reset();
 		performApply();
-	}
-
-	IPersistentPreferenceStore createProfilePreferenceStore(String profile) {
-		return YoctoProjectProfilePreferences.createPreferenceStore(profile);
 	}
 
 	String computeErrorMessage() {

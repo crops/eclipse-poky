@@ -31,6 +31,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.yocto.sdk.core.YoctoProjectNature;
+import org.yocto.sdk.core.preference.YoctoProjectProjectPreferences;
 
 public class EnableNatureAction implements IObjectActionDelegate, IExecutableExtension {
 
@@ -77,6 +78,8 @@ public class EnableNatureAction implements IObjectActionDelegate, IExecutableExt
 						throw new RuntimeException(String.format(Messages.EnableNatureAction_EnableNatureFailed,
 								YoctoProjectNature.NATURE_ID), e);
 					}
+
+					YoctoProjectProjectPreferences.createProjectPreferences(project);
 
 					Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 					PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(shell, project,

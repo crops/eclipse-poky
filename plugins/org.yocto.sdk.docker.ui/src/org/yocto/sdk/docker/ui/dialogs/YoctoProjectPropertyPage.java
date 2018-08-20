@@ -114,7 +114,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 			public void propertyChange(PropertyChangeEvent event) {
 				if (FieldEditor.VALUE.equals(event.getProperty())) {
 					IPreferenceStore readOnlyProfilePreferenceStore = YoctoProjectProfilePreferences
-							.createPreferenceStore(profileComboFieldEditor.getValue());
+							.getPreferenceStore(profileComboFieldEditor.getValue());
 					composedEditor.load(readOnlyProfilePreferenceStore, false);
 				}
 			}
@@ -130,7 +130,9 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 						YoctoProjectPreferencePage.ID, new String[] { YoctoProjectPreferencePage.ID }, null);
 				dialog.open();
 
-				// TODO: reload profile combo box so that the latest profiles are display.
+				IPreferenceStore readOnlyProfilePreferenceStore = YoctoProjectProfilePreferences
+						.getPreferenceStore(profileComboFieldEditor.getValue());
+				composedEditor.load(readOnlyProfilePreferenceStore, false);
 			}
 
 			@Override
@@ -199,7 +201,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 			profileComboFieldEditor.setPreferenceStore(getPreferenceStore());
 
 			IPreferenceStore readOnlyProfilePreferenceStore = YoctoProjectProfilePreferences
-					.createPreferenceStore(profileComboFieldEditor.getValue());
+					.getPreferenceStore(profileComboFieldEditor.getValue());
 			composedEditor.reset();
 			composedEditor.load(readOnlyProfilePreferenceStore, false);
 		}
@@ -243,7 +245,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 		if (element != null) {
 			IProject project = element.getAdapter(IProject.class);
 			if (project != null) {
-				store = YoctoProjectProjectPreferences.create(project).getPreferenceStore();
+				store = YoctoProjectProjectPreferences.getProjectPreferences(project).getPreferenceStore();
 			}
 		}
 
