@@ -15,6 +15,7 @@ import org.eclipse.cdt.core.resources.IConsole;
 import org.eclipse.cdt.ui.CUIPlugin;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.yocto.cmake.ui.Messages;
 
 public class CMakeConsole implements IConsole {
 
