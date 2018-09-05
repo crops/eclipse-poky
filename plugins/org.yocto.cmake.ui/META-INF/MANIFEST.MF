@@ -8,7 +8,11 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.resources;bundle-version="3.13.0",
  org.eclipse.core.runtime,
  org.eclipse.cdt.core;bundle-version="6.5.0",
- org.eclipse.cdt.ui;bundle-version="6.3.1"
+ org.eclipse.cdt.ui;bundle-version="6.3.1",
+ org.eclipse.cdt.managedbuilder.ui;bundle-version="9.1.0",
+ org.eclipse.ui.ide;bundle-version="3.14.0",
+ org.eclipse.cdt.managedbuilder.core,
+ org.eclipse.core.filesystem
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.yocto.cmake.ui
 Bundle-ActivationPolicy: lazy

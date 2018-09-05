@@ -8,4 +8,13 @@
             id="org.yocto.cmake.ui.CMakeConsole">
       </CBuildConsole>
    </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <wizard
+            category="org.eclipse.cdt.ui.importWizardCategory"
+            class="org.yocto.cmake.ui.internal.CMakeImportWizard"
+            id="org.yocto.cmake.ui.wizard.importWizard"
+            name="Existing code as CMake project">
+      </wizard>
+   </extension>
 </plugin>
