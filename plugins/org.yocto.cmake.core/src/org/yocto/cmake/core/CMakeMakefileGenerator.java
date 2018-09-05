@@ -128,7 +128,7 @@ public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2
 
 			IPath cmakeCommandPath = new Path(cmakeCommand);
 
-			final String cmakeConsoleId = Activator.PLUGIN_ID + ".CMakeConsole"; //$NON-NLS-1$
+			final String cmakeConsoleId = "org.yocto.cmake.ui.CMakeConsole"; //$NON-NLS-1$
 
 			IConsole cmakeConsole = CCorePlugin.getDefault().getConsole(cmakeConsoleId);
 			cmakeConsole.start(this.project);
