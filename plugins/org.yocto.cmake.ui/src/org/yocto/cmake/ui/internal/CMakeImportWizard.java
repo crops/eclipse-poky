@@ -29,6 +29,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
+import org.yocto.cmake.core.CMakeNature;
 
 @SuppressWarnings("restriction")
 public class CMakeImportWizard extends NewMakeProjFromExisting {
@@ -86,6 +87,8 @@ public class CMakeImportWizard extends NewMakeProjFromExisting {
 				if (isCpp) {
 					CCProjectNature.addCCNature(project, monitor);
 				}
+
+				CMakeNature.addNature(project, monitor);
 
 				ICProjectDescriptionManager cProjectDescriptionManager = CoreModel.getDefault()
 						.getProjectDescriptionManager();
