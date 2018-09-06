@@ -14,6 +14,7 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.yocto.cmake.core.messages"; //$NON-NLS-1$
+	public static String CMakeMakefileGenerator_NotGeneratingBuildFiles;
 	public static String CMakeMakefileGenerator_CreateDirectoryFailed;
 	public static String CMakeMakefileGenerator_GeneratingBuildFiles;
 	public static String CMakeMakefileGenerator_GetCMakeToolCommandFlagsFailed;
