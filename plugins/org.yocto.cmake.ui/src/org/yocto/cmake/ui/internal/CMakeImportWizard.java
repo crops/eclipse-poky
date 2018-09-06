@@ -30,6 +30,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.yocto.cmake.core.CMakeNature;
+import org.yocto.cmake.ui.Messages;
 
 @SuppressWarnings("restriction")
 public class CMakeImportWizard extends NewMakeProjFromExisting {
@@ -38,7 +39,7 @@ public class CMakeImportWizard extends NewMakeProjFromExisting {
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		setWindowTitle("Import existing code as CMake project");
+		setWindowTitle(Messages.CMakeImportWizard_0);
 	}
 
 	@Override
