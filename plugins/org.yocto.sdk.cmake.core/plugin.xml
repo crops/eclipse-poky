@@ -71,9 +71,10 @@
                       superClass="org.yocto.cmake.core.toolchain.yocto.base"
                       supportsManagedBuild="true">
                     <targetPlatform
-                        id="org.yocto.cmake.core.target.platform.yocto.exe.debug"
-                        isAbstract="false"
-                        superClass="org.yocto.cmake.core.target.platform.base">
+                          binaryParser="org.eclipse.cdt.core.ELF"
+                          id="org.yocto.cmake.core.target.platform.yocto.exe.debug"
+                          isAbstract="false"
+                          superClass="org.yocto.cmake.core.target.platform.base">
                     </targetPlatform>
                     <builder
                         cleanBuildTarget="clean"
