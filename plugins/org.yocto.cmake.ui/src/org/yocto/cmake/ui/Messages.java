@@ -15,6 +15,8 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.yocto.cmake.ui.messages"; //$NON-NLS-1$
 	public static String CMakeConsole_Name;
+	public static String RegenerateHandler_ConfirmRegenerate;
+	public static String RegenerateHandler_ConfirmRegenerationDialogTitle;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

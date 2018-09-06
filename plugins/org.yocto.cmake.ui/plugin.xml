@@ -17,4 +17,73 @@
             name="Existing code as CMake project">
       </wizard>
    </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+         <separator
+               name="cmakeGroupSeparator"
+               visible="true">
+         </separator>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=cmakeGroupSeparator">
+         <command
+               commandId="org.yocto.cmake.ui.command.regenerate"
+               id="cmake"
+               label="Regenerate CMake build files"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         id="org.yocto.cmake.ui.commands"
+         name="CMake Commands"
+         point="org.eclipse.ui.commands">
+      <command
+            description="Regenerate all files (Makefile, CMakeCache.txt etc.) managed by the CMake build system"
+            id="org.yocto.cmake.ui.command.regenerate"
+            name="Regenerate CMake build files">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.yocto.cmake.ui.RegenerateHandler"
+            commandId="org.yocto.cmake.ui.command.regenerate">
+         <enabledWhen>
+            <reference
+                  definitionId="org.yocto.cmake.ui.handlerEnablement">
+            </reference>
+         </enabledWhen>
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="org.yocto.cmake.ui.handlerEnablement">
+            <with
+                  variable="selection">
+               <count
+                     value="1">
+               </count>
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
+                  <adapt
+                        type="org.eclipse.core.resources.IResource">
+                        <test
+                              property="org.eclipse.core.resources.projectNature"
+                              value="org.yocto.cmake.core.CMakeNature">
+                        </test>
+                  </adapt>
+               </iterate>
+            </with>
+      </definition>
+   </extension>
 </plugin>
