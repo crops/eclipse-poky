@@ -20,6 +20,7 @@ public class Messages extends NLS {
 	public static String CMakeMakefileGenerator_LauncherCreateProcessFailed;
 	public static String CMakeMakefileGenerator_ProcessExitCodeNonZero;
 	public static String CMakeMakefileGenerator_CMakeConsoleWriteFailed;
+	public static String NewCMakeProjectProcess_ProjectCreationFailed;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

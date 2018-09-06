@@ -24,16 +24,9 @@
 			pattern="([0-9]\.){2}[0-9]" hidden="false" mandatory="false" persist="true" />
 	</property-group>
 
-	<!--
-	<process type="org.yocto.sdk.ide.NewYoctoProject">
-		<simple name="name" value="$(projectName)" />
-		<simple name="artifactExtension" value="exe" />
-		<simple name="isCProject" value="true" />
-		<simple name="isEmptyProject" value="false" />
-		<simple name="isAutotoolsProject" value="false" />
-		<simple name="isCMakeProject" value="true" />
+	<process type="org.yocto.cmake.core.newCMakeProject">
+		<simple name="projectName" value="$(projectName)" />
 	</process>
-	 -->
 
 	<process type="org.eclipse.cdt.core.CreateSourceFolder">
 		<simple name="projectName" value="$(projectName)" />

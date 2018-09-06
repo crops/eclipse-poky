@@ -264,4 +264,32 @@
           </toolChain>
        </template>
     </extension>
+    <extension
+          id="CMakeNature"
+          name="CMake"
+          point="org.eclipse.core.resources.natures">
+       <runtime>
+          <run
+                class="org.yocto.cmake.core.CMakeNature">
+          </run>
+       </runtime>
+       <builder
+             id="org.yocto.cmake.core.builder">
+       </builder>
+    </extension>
+    <extension
+          point="org.eclipse.cdt.core.templateProcessTypes">
+       <processType
+             name="newCMakeProject"
+             processRunner="org.yocto.cmake.core.NewCMakeProjectProcess">
+          <simple
+                name="projectName">
+          </simple>
+          <simple
+                external="true"
+                name="projectLocation"
+                nullable="true">
+          </simple>
+       </processType>
+    </extension>
 </plugin>
