@@ -17,12 +17,13 @@
               id="org.yocto.cmake.core.toolchain.yocto.base"
               name="%toolChain.name"
               superClass="org.yocto.cmake.core.toolchain.base">
-           <!--<builder
+           <builder
                  id="org.yocto.cmake.core.builder.yocto.base"
                  isAbstract="false"
                  isVariableCaseSensitive="false"
-                 superClass="org.yocto.cmake.core.builder">
+                 superClass="org.yocto.cmake.core.builder.yocto">
            </builder>
+           <!--
            <tool
                  id="org.yocto.cmake.core.cmake.yocto.base"
                  isAbstract="false"
