@@ -33,7 +33,7 @@ public class YoctoProjectProjectPreferences {
 
 	public static final String USE_PROJECT_SPECIFIC_SETTINGS = "useProjectSpecificSettings"; //$NON-NLS-1$
 
-	public static final String PROJECT_PROFILE = "profile"; //$NON-NLS-1$
+	public static final String PROJECT_PROFILE = "selectedProfile"; //$NON-NLS-1$
 
 	IPersistentPreferenceStore projectPreferenceStore = null;
 
