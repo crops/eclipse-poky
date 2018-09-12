@@ -14,6 +14,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.eclipse.cdt.core.model.CoreModel;
+import org.eclipse.cdt.core.settings.model.ICConfigurationDescription;
+import org.eclipse.cdt.core.settings.model.ICProjectDescription;
+import org.eclipse.cdt.core.settings.model.ICProjectDescriptionManager;
+import org.eclipse.cdt.core.settings.model.extension.CConfigurationData;
+import org.eclipse.cdt.managedbuilder.core.IBuilder;
+import org.eclipse.cdt.managedbuilder.core.IToolChain;
+import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
+import org.eclipse.cdt.managedbuilder.internal.core.Configuration;
+import org.eclipse.cdt.managedbuilder.internal.core.ManagedBuildInfo;
+import org.eclipse.cdt.managedbuilder.internal.core.ManagedProject;
+import org.eclipse.cdt.managedbuilder.internal.core.ToolChain;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
@@ -33,14 +45,21 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.yocto.sdk.core.YoctoProjectNature;
 import org.yocto.sdk.core.preference.YoctoProjectProjectPreferences;
 
+@SuppressWarnings("restriction")
 public class EnableNatureAction implements IObjectActionDelegate, IExecutableExtension {
 
 	static final String YOCTO_PROJECT_PROPERTY_PAGE_ID = "org.yocto.sdk.docker.ui.YoctoProjectPropertyPage"; //$NON-NLS-1$
 
 	private ISelection selection;
 
+	private String toolchainId;
+
 	public EnableNatureAction() {
-		// Nothing to do
+		this(null);
+	}
+
+	public EnableNatureAction(String toolchainId) {
+		this.toolchainId = toolchainId;
 	}
 
 	@Override
@@ -63,17 +82,8 @@ public class EnableNatureAction implements IObjectActionDelegate, IExecutableExt
 
 				if (project != null) {
 					try {
-						IProjectDescription description = project.getDescription();
-						Set<String> updatedNatureIds = new HashSet<String>();
-
-						for (String existingNatureId : description.getNatureIds()) {
-							updatedNatureIds.add(existingNatureId);
-						}
-
-						updatedNatureIds.add(YoctoProjectNature.NATURE_ID);
-						description.setNatureIds(updatedNatureIds.toArray(new String[] {}));
-						project.setDescription(description, new NullProgressMonitor());
-
+						updateProjectDescription(project);
+						updateCProjectDescription(project);
 					} catch (CoreException e) {
 						throw new RuntimeException(String.format(Messages.EnableNatureAction_EnableNatureFailed,
 								YoctoProjectNature.NATURE_ID), e);
@@ -91,6 +101,67 @@ public class EnableNatureAction implements IObjectActionDelegate, IExecutableExt
 				}
 			}
 		}
+	}
+
+	protected void updateProjectDescription(IProject project) throws CoreException {
+		IProjectDescription description = project.getDescription();
+		Set<String> updatedNatureIds = new HashSet<String>();
+
+		for (String existingNatureId : description.getNatureIds()) {
+			updatedNatureIds.add(existingNatureId);
+		}
+
+		updatedNatureIds.add(YoctoProjectNature.NATURE_ID);
+		description.setNatureIds(updatedNatureIds.toArray(new String[] {}));
+		project.setDescription(description, new NullProgressMonitor());
+	}
+
+	protected IToolChain getToolChain() {
+		IToolChain[] toolChains = ManagedBuildManager.getRealToolChains();
+		for (IToolChain toolChain : toolChains) {
+			if (toolChain.isAbstract() || toolChain.isSystemObject())
+				continue;
+			if (toolChain.getId().equals(this.toolchainId))
+				return toolChain;
+		}
+
+		return null;
+	}
+
+	protected void updateCProjectDescription(IProject project) throws CoreException {
+
+		IToolChain toolchain = getToolChain();
+
+		if (toolchain == null) {
+			return;
+		}
+
+		ICProjectDescriptionManager cProjectDescriptionManager = CoreModel.getDefault().getProjectDescriptionManager();
+		ICProjectDescription cProjectDescription = cProjectDescriptionManager.createProjectDescription(project, true);
+		ManagedProject managedProject = new ManagedProject(cProjectDescription);
+
+		ManagedBuildInfo info = ManagedBuildManager.createBuildInfo(project);
+		info.setManagedProject(managedProject);
+
+		String toolchainId = (toolchain == null) ? "0" : toolchain.getId(); //$NON-NLS-1$
+
+		// Create new configuration with the desired toolchain
+		// TODO: ideally we want to be able to inherit/extend existing configuration if
+		// exists...
+		Configuration cfg = new Configuration(managedProject, (ToolChain) toolchain,
+				ManagedBuildManager.calculateChildId(toolchainId, null), "Yocto"); //$NON-NLS-1$
+		IBuilder builder = cfg.getEditableBuilder();
+
+		// Turn on C/C++ Build -> Makefile generation -> Generate Makefiles
+		// automatically. This is needed so that the cmake builder will be used to
+		// generate Makefiles
+		builder.setManagedBuildOn(true);
+
+		CConfigurationData cCfgData = cfg.getConfigurationData();
+		ICConfigurationDescription cCfgDescription = cProjectDescription
+				.createConfiguration(ManagedBuildManager.CFG_DATA_PROVIDER_ID, cCfgData);
+		cProjectDescription.setActiveConfiguration(cCfgDescription);
+		cProjectDescriptionManager.setProjectDescription(project, cProjectDescription);
 	}
 
 	@Override

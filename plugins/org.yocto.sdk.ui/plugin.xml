@@ -24,59 +24,6 @@
       </variable>
    </extension>
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="true"
-            id="org.yocto.sdk.ui.enableNatureAction"
-            objectClass="org.eclipse.core.resources.IProject">
-         <action
-               class="org.yocto.sdk.ui.actions.EnableNatureAction"
-               enablesFor="+"
-               id="org.yocto.sdk.ui.enableNatureAction"
-               label="%action.label"
-               menubarPath="org.eclipse.ui.projectConfigure/additions"
-               style="push">
-         </action>
-         <visibility>
-            <and>
-               <objectState
-                     name="open"
-                     value="true">
-               </objectState>
-               <not>
-                  <objectState
-                        name="nature"
-                        value="org.yocto.sdk.ui.YoctoProjectNature">
-                  </objectState>
-               </not>
-            </and>
-         </visibility>
-      </objectContribution>
-      <objectContribution
-            adaptable="true"
-            id="org.yocto.sdk.ui.disableNatureContribution"
-            objectClass="org.eclipse.core.resources.IProject">
-         <action
-               class="org.yocto.sdk.ui.actions.DisableNatureAction"
-               id="org.yocto.sdk.ui.disableNatureAction"
-               label="%action.label.0"
-               menubarPath="org.eclipse.ui.projectConfigure/additions">
-         </action>
-         <visibility>
-            <and>
-               <objectState
-                     name="open"
-                     value="true">
-               </objectState>
-               <objectState
-                     name="nature"
-                     value="org.yocto.sdk.ui.YoctoProjectNature">
-               </objectState>
-            </and>
-         </visibility>
-      </objectContribution>
-   </extension>
-   <extension
          point="org.eclipse.ui.ide.projectNatureImages">
       <image
             icon="icons/y.gif"
