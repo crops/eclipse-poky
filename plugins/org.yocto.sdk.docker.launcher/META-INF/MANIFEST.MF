@@ -7,6 +7,7 @@ Bundle-Activator: org.yocto.sdk.docker.launcher.internal.Activator
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources;bundle-version="3.13.0",
  org.eclipse.cdt.core;bundle-version="6.5.0",
+ org.eclipse.linuxtools.docker.core;bundle-version="4.0.0",
  org.eclipse.linuxtools.docker.ui;bundle-version="4.0.0",
  org.yocto.docker.launcher;bundle-version="1.0.0",
  org.yocto.sdk.core;bundle-version="1.0.0"
