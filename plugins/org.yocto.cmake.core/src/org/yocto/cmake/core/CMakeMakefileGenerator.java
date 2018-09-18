@@ -78,40 +78,18 @@ public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2
 		regenerateDependencies(false);
 	}
 
-	private IPath getCommandAbsPath(String command, IEnvironmentVariable var) {
-		// Try to resolve absolute path to executable
-
-		if (var != null && var.getValue() != null) {
-			for (String path : var.getValue().split(File.pathSeparator)) {
-				File cmakeCommandAbsPath = new File(path, command);
-				if (cmakeCommandAbsPath.exists()) {
-					// return only the first path which matched
-					return new Path(cmakeCommandAbsPath.getAbsolutePath());
-				}
-			}
-		}
-
-		return new Path(command);
-	}
-
-	@Override
-	public MultiStatus generateMakefiles(IResourceDelta delta) throws CoreException {
-
+	protected IConsole getConsole() {
 		final String cmakeConsoleId = "org.yocto.cmake.ui.CMakeConsole"; //$NON-NLS-1$
 
 		IConsole cmakeConsole = CCorePlugin.getDefault().getConsole(cmakeConsoleId);
 		cmakeConsole.start(this.project);
+		return cmakeConsole;
+	}
+
+	@Override
+	public MultiStatus regenerateMakefiles() throws CoreException {
 
 		try {
-
-			// Do not override generated Makefile if it already exists
-			if (isBuildSystemGenerated(this.project)) {
-				cmakeConsole.getInfoStream()
-						.write(String.format(Messages.CMakeMakefileGenerator_NotGeneratingBuildFiles,
-								this.project.getName() + System.lineSeparator()));
-
-				return new MultiStatus(Activator.PLUGIN_ID, IStatus.OK, null, null);
-			}
 
 			List<String> cmakeFlags = new ArrayList<String>();
 
@@ -167,6 +145,7 @@ public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2
 
 			IPath cmakeCommandPath = new Path(cmakeCommand);
 
+			IConsole cmakeConsole = getConsole();
 			cmakeConsole.getInfoStream().write(String.format(Messages.CMakeMakefileGenerator_GeneratingBuildFiles,
 					this.project.getName() + System.lineSeparator()));
 
@@ -233,8 +212,24 @@ public class CMakeMakefileGenerator implements IManagedBuilderMakefileGenerator2
 	}
 
 	@Override
-	public MultiStatus regenerateMakefiles() throws CoreException {
-		return generateMakefiles(null);
+	public MultiStatus generateMakefiles(IResourceDelta delta) throws CoreException {
+
+		// Do not override generated Makefile if it already exists
+		if (isBuildSystemGenerated(this.project)) {
+
+			try {
+				getConsole().getInfoStream()
+						.write(String.format(Messages.CMakeMakefileGenerator_NotGeneratingBuildFiles,
+								this.project.getName() + System.lineSeparator()));
+			} catch (IOException e) {
+				return new MultiStatus(Activator.PLUGIN_ID, IStatus.ERROR,
+						String.format(Messages.CMakeMakefileGenerator_CMakeConsoleWriteFailed, this.project), e);
+			}
+
+			return new MultiStatus(Activator.PLUGIN_ID, IStatus.OK, null, null);
+		}
+
+		return regenerateMakefiles();
 	}
 
 	@Override
