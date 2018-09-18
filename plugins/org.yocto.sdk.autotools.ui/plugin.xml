@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="org.yocto.sdk.autotools.ui.configureYoctoProjectAutotoolsProject"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="org.yocto.sdk.autotools.ui.ConfigureYoctoProjectAutotoolsProjectAction"
+               enablesFor="+"
+               id="org.yocto.sdk.autotools.ui.configureYoctoProjectAutotoolsProjectAction"
+               label="Configure as Yocto Project Autotools project (alpha)"
+               menubarPath="org.eclipse.ui.projectConfigure/additions"
+               style="push">
+         </action>
+         <visibility>
+            <and>
+               <objectState
+                     name="open"
+                     value="true">
+               </objectState>
+               <objectState
+                     name="nature"
+                     value="org.eclipse.cdt.autotools.core.autotoolsNatureV2">
+               </objectState>
+               <not>
+                  <objectState
+                        name="nature"
+                        value="org.yocto.sdk.core.YoctoProjectNature">
+                  </objectState>
+               </not>
+            </and>
+         </visibility>
+      </objectContribution>
+   </extension>
+
+</plugin>

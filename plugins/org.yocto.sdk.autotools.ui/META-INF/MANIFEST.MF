@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Autotools UI
+Bundle-SymbolicName: org.yocto.sdk.autotools.ui;singleton:=true
+Bundle-Version: 1.4.1.qualifier
+Bundle-Activator: org.yocto.sdk.autotools.ui.Activator
+Bundle-Vendor: Yocto Project
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources;bundle-version="3.13.0",
+ org.yocto.sdk.ui;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: org.yocto.sdk.autotools.ui
+Bundle-ActivationPolicy: lazy
+Export-Package: org.yocto.sdk.autotools.ui
