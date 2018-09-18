@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.yocto.sdk.docker.ui.dialogs;
 
+import org.eclipse.cdt.managedbuilder.buildproperties.IOptionalBuildProperties;
+import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
+import org.eclipse.cdt.ui.newui.AbstractPage;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.IMessageProvider;
@@ -33,7 +36,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
-import org.eclipse.ui.dialogs.PropertyPage;
+import org.yocto.docker.launcher.ContainerCommandLauncher;
 import org.yocto.sdk.core.preference.YoctoProjectProfilePreferences;
 import org.yocto.sdk.core.preference.YoctoProjectProjectPreferences;
 import org.yocto.sdk.core.preference.YoctoProjectWorkspacePreferences;
@@ -48,7 +51,7 @@ import org.yocto.ui.editors.ComboFieldEditor2;
  * @author Intel Corporation
  *
  */
-public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbenchPropertyPage {
+public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbenchPropertyPage {
 
 	Composite composite;
 	BooleanFieldEditor2 useProjectSpecificBooleanFieldEditor;
@@ -116,6 +119,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 					IPreferenceStore readOnlyProfilePreferenceStore = YoctoProjectProfilePreferences
 							.getPreferenceStore(profileComboFieldEditor.getValue());
 					composedEditor.load(readOnlyProfilePreferenceStore, false);
+					validate();
 				}
 			}
 		});
@@ -208,7 +212,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 	}
 
 	@Override
-	protected void performDefaults() {
+	public void performDefaults() {
 
 		super.performDefaults();
 
@@ -253,7 +257,7 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 	}
 
 	@Override
-	protected void performApply() {
+	public void performApply() {
 		super.performApply();
 
 		// Refresh label decorator just in case the information displayed needs to be
@@ -269,7 +273,28 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 
 	String computeErrorMessage() {
 
+		// final String RUN_IN_CONFIGURE_LAUNCHER =
+		// "org.eclipse.cdt.autotools.core.property.launchAutotoolsInContainer";
+		// //$NON-NLS-1$
+
+		IOptionalBuildProperties p = getOptionalBuildProperties();
+
+		boolean cProjectContainerBuildEnabled = Boolean
+				.valueOf(p.getProperty(ContainerCommandLauncher.CONTAINER_BUILD_ENABLED));
+
+		// boolean autotoolsProjectContainerBuild =
+		// Boolean.valueOf(p.getProperty(RUN_IN_CONFIGURE_LAUNCHER));
+
+		boolean profileContainerBuildEnabled = composedEditor.getUseContainerFieldEditor().getBooleanValue();
+
 		if (this.useProjectSpecificBooleanFieldEditor.getBooleanValue()) {
+
+			if (cProjectContainerBuildEnabled & !profileContainerBuildEnabled) {
+				return Messages.YoctoProjectPropertyPage_MustEnableProfileContainerBuild;
+			} else if (!cProjectContainerBuildEnabled & profileContainerBuildEnabled) {
+				return Messages.YoctoProjectPropertyPage_MustDisableProfileContainerBuild;
+			}
+
 			if (composedEditor.isValid()) {
 				return null;
 			} else {
@@ -287,6 +312,11 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 					return Messages.YoctoProjectPropertyPage_NoProfileSelected;
 				}
 			} else {
+				if (cProjectContainerBuildEnabled & !profileContainerBuildEnabled) {
+					return Messages.YoctoProjectPropertyPage_MustSelectProfileWithContainerBuild;
+				} else if (!cProjectContainerBuildEnabled & profileContainerBuildEnabled) {
+					return Messages.YoctoProjectPropertyPage_MustSelectProfileWithoutContainerBuild;
+				}
 				return null;
 			}
 		}
@@ -303,5 +333,15 @@ public class YoctoProjectPropertyPage extends PropertyPage implements IWorkbench
 			setValid(false);
 			setMessage(errorMessage, IMessageProvider.ERROR);
 		}
+	}
+
+	@Override
+	protected boolean isSingle() {
+		return true;
+	}
+
+	protected IOptionalBuildProperties getOptionalBuildProperties() {
+		return ManagedBuildManager.getConfigurationForDescription(getResDesc().getConfiguration())
+				.getOptionalBuildProperties();
 	}
 }

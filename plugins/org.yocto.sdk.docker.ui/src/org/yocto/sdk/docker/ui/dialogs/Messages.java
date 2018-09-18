@@ -21,6 +21,10 @@ public class Messages extends NLS {
 	public static String YoctoProjectPropertyPage_CrossDevelopmentProfile;
 	public static String YoctoProjectPropertyPage_Profile;
 	public static String YoctoProjectPropertyPage_ManageProfiles;
+	public static String YoctoProjectPropertyPage_MustDisableProfileContainerBuild;
+	public static String YoctoProjectPropertyPage_MustEnableProfileContainerBuild;
+	public static String YoctoProjectPropertyPage_MustSelectProfileWithContainerBuild;
+	public static String YoctoProjectPropertyPage_MustSelectProfileWithoutContainerBuild;
 	public static String YoctoProjectPropertyPage_NoProfileSelected;
 	public static String YoctoProjectPropertyPage_NoProfilesFound;
 	public static String YoctoProjectPropertyPage_UseProjectSpecificSettings;

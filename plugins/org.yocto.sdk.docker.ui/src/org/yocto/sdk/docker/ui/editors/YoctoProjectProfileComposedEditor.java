@@ -410,4 +410,8 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 			this.listener.propertyChange(event);
 		}
 	}
+
+	public BooleanFieldEditor2 getUseContainerFieldEditor() {
+		return useContainerFieldEditor;
+	}
 }
