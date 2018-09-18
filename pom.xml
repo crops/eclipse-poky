@@ -64,6 +64,7 @@
 		<module>plugins/org.yocto.docker.ui</module>
 		<module>plugins/org.yocto.sdk.core</module>
 		<module>plugins/org.yocto.sdk.autotools.core</module>
+		<module>plugins/org.yocto.sdk.autotools.ui</module>
 		<module>plugins/org.yocto.sdk.cmake.core</module>
 		<module>plugins/org.yocto.sdk.cmake.ui</module>
 		<module>plugins/org.yocto.sdk.ui</module>
