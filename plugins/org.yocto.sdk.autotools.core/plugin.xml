@@ -4,20 +4,20 @@
    <extension
          point="org.eclipse.cdt.managedbuilder.core.buildDefinitions">
       <projectType
-            id="org.yocto.sdk.autotools.core.projectType1"
+            id="org.yocto.sdk.autotools.core.projectType"
             isAbstract="false"
             superClass="org.eclipse.linuxtools.cdt.autotools.core.projectType">
          <configuration
-               id="org.yocto.sdk.autotools.core.configuration1"
+               id="org.yocto.sdk.autotools.core.configuration.build"
                parent="org.eclipse.linuxtools.cdt.autotools.core.configuration.build">
             <toolChain
                   configurationEnvironmentSupplier="org.yocto.sdk.autotools.core.internal.YoctoAutotoolsEnvironmentVariableSupplier"
-                  id="org.yocto.sdk.autotools.core.toolChain1"
+                  id="org.yocto.sdk.autotools.core.toolChain"
                   isAbstract="false"
                   name="Yocto Project GNU Autotools Toolchain (alpha)"
                   superClass="org.eclipse.linuxtools.cdt.autotools.core.toolChain">
                <tool
-                     id="org.yocto.sdk.autotools.core.tool1"
+                     id="org.yocto.sdk.autotools.core.gnu.toolchain.tool.configure"
                      isAbstract="false"
                      name="Yocto Project configure"
                      superClass="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure">
@@ -42,16 +42,16 @@
             </toolChain>
          </configuration>
          <configuration
-               id="org.yocto.sdk.autotools.core.configuration2"
+               id="org.yocto.sdk.autotools.core.configuration.build.debug"
                parent="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug">
             <toolChain
                   configurationEnvironmentSupplier="org.yocto.sdk.autotools.core.internal.YoctoAutotoolsEnvironmentVariableSupplier"
-                  id="org.yocto.sdk.autotools.core.toolChain3"
+                  id="org.yocto.sdk.autotools.core.toolChain.debug"
                   isAbstract="false"
                   name="Yocto Project GNU Autotools Toolchain (alpha)"
                   superClass="org.eclipse.linuxtools.cdt.autotools.core.toolChain.debug">
                <tool
-                     id="org.yocto.sdk.autotools.core.tool2"
+                     id="org.yocto.sdk.autotools.core.gnu.toolchain.tool.configure.debug"
                      isAbstract="false"
                      name="Yocto Project configure"
                      superClass="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure.debug">
