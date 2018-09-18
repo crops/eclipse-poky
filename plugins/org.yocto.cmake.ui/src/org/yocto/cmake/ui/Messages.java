@@ -21,6 +21,12 @@ public class Messages extends NLS {
 	public static String CMakeImportWizardPage_ToolchainForIndexer;
 	public static String RegenerateHandler_ConfirmRegenerate;
 	public static String RegenerateHandler_ConfirmRegenerationDialogTitle;
+	public static String RegenerateHandler_DeleteBuildDirFailed;
+	public static String RegenerateHandler_DeletingBuildDir;
+	public static String RegenerateHandler_RefreshBuildDirFailed;
+	public static String RegenerateHandler_RefreshingBuildDir;
+	public static String RegenerateHandler_RegenerateBuildDirFailed;
+	public static String RegenerateHandler_RegeneratingBuildDir;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
