@@ -6,7 +6,9 @@
 <project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.docker.launcher"/>
 <project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.docker.ui"/>
 <project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.autotools.core"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.autotools.ui"/>
 <project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.cmake.core"/>
+<project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.cmake.ui"/>
 <project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.core"/>
 <project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.docker.launcher"/>
 <project reference="1.0,ssh://git@git.yoctoproject.org/eclipse-yocto-contrib,cha/yoctoPluginsContainerBuild,plugins/org.yocto.sdk.docker.ui"/>
@@ -25,7 +27,9 @@
 <item elementID="=org.yocto.sdk.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.yocto.sdk.docker.launcher" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.yocto.sdk.autotools.core" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.autotools.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.yocto.sdk.cmake.core" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.yocto.sdk.cmake.ui" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.yocto.sdk.releng" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 </workingSets>
 </psf>
