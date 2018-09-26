@@ -170,6 +170,8 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 			}
 		});
 
+		validate();
+
 		return composite;
 	}
 
