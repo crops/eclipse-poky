@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.yocto.sdk.docker.ui.dialogs;
 
+import java.io.IOException;
+
 import org.eclipse.cdt.managedbuilder.buildproperties.IOptionalBuildProperties;
 import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
 import org.eclipse.cdt.ui.newui.AbstractPage;
@@ -62,8 +64,14 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 
 	YoctoProjectProfileComposedEditor composedEditor;
 
+	IPreferenceStore projectPreferenceStore;
+
 	public YoctoProjectPropertyPage() {
 
+	}
+
+	IPreferenceStore getProjectPreferenceStore() {
+		return this.projectPreferenceStore;
 	}
 
 	@Override
@@ -74,7 +82,7 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 		useProjectSpecificBooleanFieldEditor = new BooleanFieldEditor2(
 				YoctoProjectProjectPreferences.USE_PROJECT_SPECIFIC_SETTINGS,
 				Messages.YoctoProjectPropertyPage_UseProjectSpecificSettings, composite);
-		useProjectSpecificBooleanFieldEditor.setPreferenceStore(getPreferenceStore());
+		useProjectSpecificBooleanFieldEditor.setPreferenceStore(getProjectPreferenceStore());
 		useProjectSpecificBooleanFieldEditor.setPropertyChangeListener(new IPropertyChangeListener() {
 
 			@Override
@@ -109,7 +117,7 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 		profileComboFieldEditor = new ComboFieldEditor2(YoctoProjectProjectPreferences.PROJECT_PROFILE,
 				Messages.YoctoProjectPropertyPage_Profile, comboProfiles, profileComboComposite);
 		profileComboFieldEditor.setPage(this);
-		profileComboFieldEditor.setPreferenceStore(getPreferenceStore());
+		profileComboFieldEditor.setPreferenceStore(getProjectPreferenceStore());
 		profileComboFieldEditor.load();
 		profileComboFieldEditor.setPropertyChangeListener(new IPropertyChangeListener() {
 
@@ -191,7 +199,7 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 
 		boolean useProjectSpecificSettings = this.useProjectSpecificBooleanFieldEditor.getBooleanValue();
 
-		IPreferenceStore projectPreferenceStore = getPreferenceStore();
+		IPreferenceStore projectPreferenceStore = getProjectPreferenceStore();
 
 		profileComboFieldEditor.setEnabled(!useProjectSpecificSettings, profileComboComposite);
 		manageProfilesButton.setEnabled(!useProjectSpecificSettings);
@@ -202,7 +210,7 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 		} else {
 			profileComboFieldEditor.setPreferenceStore(YoctoProjectWorkspacePreferences.getWorkspacePreferenceStore());
 			profileComboFieldEditor.load();
-			profileComboFieldEditor.setPreferenceStore(getPreferenceStore());
+			profileComboFieldEditor.setPreferenceStore(getProjectPreferenceStore());
 
 			IPreferenceStore readOnlyProfilePreferenceStore = YoctoProjectProfilePreferences
 					.getPreferenceStore(profileComboFieldEditor.getValue());
@@ -225,10 +233,19 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 
 		boolean status = super.performOk();
 
+		if (this.projectPreferenceStore.needsSaving()) {
+			try {
+				((IPersistentPreferenceStore) this.projectPreferenceStore).save();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 		useProjectSpecificBooleanFieldEditor.store();
 
 		if (useProjectSpecificBooleanFieldEditor.getBooleanValue()) {
-			composedEditor.store((IPersistentPreferenceStore) getPreferenceStore());
+			composedEditor.store((IPersistentPreferenceStore) getProjectPreferenceStore());
 		} else {
 			profileComboFieldEditor.store();
 		}
@@ -244,16 +261,13 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 
 		super.setElement(element);
 
-		IPreferenceStore store = null;
-
 		if (element != null) {
 			IProject project = element.getAdapter(IProject.class);
 			if (project != null) {
-				store = YoctoProjectProjectPreferences.getProjectPreferences(project).getPreferenceStore();
+				this.projectPreferenceStore = YoctoProjectProjectPreferences.getProjectPreferences(project)
+						.getPreferenceStore();
 			}
 		}
-
-		setPreferenceStore(store);
 	}
 
 	@Override
