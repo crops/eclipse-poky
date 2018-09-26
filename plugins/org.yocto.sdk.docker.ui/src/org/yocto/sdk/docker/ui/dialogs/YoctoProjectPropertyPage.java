@@ -165,6 +165,7 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 		useProjectSpecificBooleanFieldEditor.load();
 		profileComboFieldEditor.load();
 		handleUseProjectSpecificSettingsButtonPressed();
+		validate();
 
 		return composite;
 	}
