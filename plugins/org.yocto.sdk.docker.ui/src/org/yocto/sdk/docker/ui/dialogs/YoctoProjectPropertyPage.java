@@ -64,13 +64,13 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 
 	YoctoProjectProfileComposedEditor composedEditor;
 
-	IPreferenceStore projectPreferenceStore;
+	IPersistentPreferenceStore projectPreferenceStore;
 
 	public YoctoProjectPropertyPage() {
 
 	}
 
-	IPreferenceStore getProjectPreferenceStore() {
+	IPersistentPreferenceStore getProjectPreferenceStore() {
 		return this.projectPreferenceStore;
 	}
 
@@ -118,7 +118,6 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 				Messages.YoctoProjectPropertyPage_Profile, comboProfiles, profileComboComposite);
 		profileComboFieldEditor.setPage(this);
 		profileComboFieldEditor.setPreferenceStore(getProjectPreferenceStore());
-		profileComboFieldEditor.load();
 		profileComboFieldEditor.setPropertyChangeListener(new IPropertyChangeListener() {
 
 			@Override
@@ -165,7 +164,6 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 
 		useProjectSpecificBooleanFieldEditor.load();
 		profileComboFieldEditor.load();
-
 		handleUseProjectSpecificSettingsButtonPressed();
 
 		return composite;
@@ -208,10 +206,6 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 			composedEditor.reset();
 			composedEditor.load(projectPreferenceStore, true);
 		} else {
-			profileComboFieldEditor.setPreferenceStore(YoctoProjectWorkspacePreferences.getWorkspacePreferenceStore());
-			profileComboFieldEditor.load();
-			profileComboFieldEditor.setPreferenceStore(getProjectPreferenceStore());
-
 			IPreferenceStore readOnlyProfilePreferenceStore = YoctoProjectProfilePreferences
 					.getPreferenceStore(profileComboFieldEditor.getValue());
 			composedEditor.reset();
@@ -233,21 +227,21 @@ public class YoctoProjectPropertyPage extends AbstractPage implements IWorkbench
 
 		boolean status = super.performOk();
 
+		useProjectSpecificBooleanFieldEditor.store();
+
+		if (useProjectSpecificBooleanFieldEditor.getBooleanValue()) {
+			composedEditor.store(this.projectPreferenceStore);
+		} else {
+			profileComboFieldEditor.store();
+		}
+
 		if (this.projectPreferenceStore.needsSaving()) {
 			try {
-				((IPersistentPreferenceStore) this.projectPreferenceStore).save();
+				this.projectPreferenceStore.save();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
-
-		useProjectSpecificBooleanFieldEditor.store();
-
-		if (useProjectSpecificBooleanFieldEditor.getBooleanValue()) {
-			composedEditor.store((IPersistentPreferenceStore) getProjectPreferenceStore());
-		} else {
-			profileComboFieldEditor.store();
 		}
 
 		return status;
