@@ -60,7 +60,7 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 	ContainerDirectoryFieldEditor sdkInstallationPathFieldEditor;
 	ContainerDirectoryFieldEditor buildDirectoryPathFieldEditor;
 
-	ContainerDirectoryFieldEditor sysrootPathFieldEditor;
+//	ContainerDirectoryFieldEditor sysrootPathFieldEditor;
 
 	RadioFieldEditor targetRadioFieldEditor;
 	ContainerFileFieldEditor qemubootconfFilePathFieldEditor;
@@ -90,7 +90,7 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 					// there is no guarantee that the paths will still be valid
 					sdkInstallationPathFieldEditor.setValue(""); //$NON-NLS-1$
 					buildDirectoryPathFieldEditor.setValue(""); //$NON-NLS-1$
-					sysrootPathFieldEditor.setValue(""); //$NON-NLS-1$
+//					sysrootPathFieldEditor.setValue(""); //$NON-NLS-1$
 					qemubootconfFilePathFieldEditor.setValue(""); //$NON-NLS-1$
 					kernelImagePathFieldEditor.setValue(""); //$NON-NLS-1$
 				}
@@ -133,11 +133,11 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 			}
 		});
 
-		Composite sysrootComposite = createGridComposite(composite, 3);
-		sysrootPathFieldEditor = new ContainerDirectoryFieldEditor(YoctoProjectProfilePreferences.SYSROOT_LOCATION,
-				Messages.YoctoProjectProfileComposedEditor_Sysroot, sysrootComposite);
-		initializeEditor(sysrootPathFieldEditor, page, sysrootComposite);
-		sysrootPathFieldEditor.setPropertyChangeListener(this);
+//		Composite sysrootComposite = createGridComposite(composite, 3);
+//		sysrootPathFieldEditor = new ContainerDirectoryFieldEditor(YoctoProjectProfilePreferences.SYSROOT_LOCATION,
+//				Messages.YoctoProjectProfileComposedEditor_Sysroot, sysrootComposite);
+//		initializeEditor(sysrootPathFieldEditor, page, sysrootComposite);
+//		sysrootPathFieldEditor.setPropertyChangeListener(this);
 
 		Composite qemuComposite = createGridComposite(composite, 1);
 		final int indent = 25;
@@ -240,7 +240,7 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 		toolchainRadioFieldEditor.setSelectionIndex(0);
 		sdkInstallationPathFieldEditor.setValue(""); //$NON-NLS-1$
 		buildDirectoryPathFieldEditor.setValue(""); //$NON-NLS-1$
-		sysrootPathFieldEditor.setValue(""); //$NON-NLS-1$
+//		sysrootPathFieldEditor.setValue(""); //$NON-NLS-1$
 		targetRadioFieldEditor.setSelectionIndex(0);
 		qemubootconfFilePathFieldEditor.setValue(""); //$NON-NLS-1$
 		kernelImagePathFieldEditor.setValue(""); //$NON-NLS-1$
@@ -284,7 +284,7 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 		boolean containerMode = useContainerFieldEditor.getBooleanValue();
 		sdkInstallationPathFieldEditor.setContainerMode(containerMode);
 		buildDirectoryPathFieldEditor.setContainerMode(containerMode);
-		sysrootPathFieldEditor.setContainerMode(containerMode);
+//		sysrootPathFieldEditor.setContainerMode(containerMode);
 		qemubootconfFilePathFieldEditor.setContainerMode(containerMode);
 		kernelImagePathFieldEditor.setContainerMode(containerMode);
 	}
@@ -333,21 +333,21 @@ public class YoctoProjectProfileComposedEditor implements IPropertyChangeListene
 			return Messages.YoctoProjectProfileComposedEditor_SelectToolchainMode;
 		}
 
-		String sysrootLocation = sysrootPathFieldEditor.getValue();
-
-		if (sysrootLocation == null || sysrootLocation.length() == 0) {
-			return Messages.YoctoProjectProfileComposedEditor_NeedSysroot;
-		}
-
-		if (!useContainer) {
-			File sysrootDir = new File(sysrootLocation);
-
-			if (!sysrootDir.exists())
-				return Messages.YoctoProjectProfileComposedEditor_NoSuchSysroot;
-
-			if (!sysrootDir.isDirectory())
-				return Messages.YoctoProjectProfileComposedEditor_SysrootNotDirectory;
-		}
+//		String sysrootLocation = sysrootPathFieldEditor.getValue();
+//
+//		if (sysrootLocation == null || sysrootLocation.length() == 0) {
+//			return Messages.YoctoProjectProfileComposedEditor_NeedSysroot;
+//		}
+//
+//		if (!useContainer) {
+//			File sysrootDir = new File(sysrootLocation);
+//
+//			if (!sysrootDir.exists())
+//				return Messages.YoctoProjectProfileComposedEditor_NoSuchSysroot;
+//
+//			if (!sysrootDir.isDirectory())
+//				return Messages.YoctoProjectProfileComposedEditor_SysrootNotDirectory;
+//		}
 
 		String target = (String) targetRadioFieldEditor.getData();
 

@@ -146,7 +146,7 @@ public class YoctoProjectWorkspacePreferences {
 
 				String sysrootLocation = envSetupScript.getEnvironmentVariables().get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
 
-				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
+//				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
 				store.setValue(YoctoProjectProfilePreferences.TARGET,
 						YoctoProjectProfilePreferences.TARGET_EXTERNAL_HARDWARE);
 				store.save();
@@ -228,7 +228,7 @@ public class YoctoProjectWorkspacePreferences {
 
 				String sysrootLocation = envSetupScript.getEnvironmentVariables().get("OECORE_NATIVE_SYSROOT"); //$NON-NLS-1$
 
-				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
+//				store.setValue(YoctoProjectProfilePreferences.SYSROOT_LOCATION, sysrootLocation);
 
 				List<Path> qemubootConfPaths = Files
 						.find(buildDirEnvScriptPath.getParent(), 4,

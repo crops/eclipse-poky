@@ -42,7 +42,7 @@ public class YoctoProjectProfilePreferences {
 	public static final String TOOLCHAIN_BUILD_DIRECTORY = "buildDirectory"; //$NON-NLS-1$
 	public static final String SDK_INSTALLATION = "sdkInstallation"; //$NON-NLS-1$
 	public static final String BUILD_DIRECTORY = "buildDirectory"; //$NON-NLS-1$
-	public static final String SYSROOT_LOCATION = "sysrootLocation"; //$NON-NLS-1$
+//	public static final String SYSROOT_LOCATION = "sysrootLocation"; //$NON-NLS-1$
 	public static final String TARGET = "targetRadio"; //$NON-NLS-1$
 	public static final String TARGET_QEMU = "qemu"; //$NON-NLS-1$
 	public static final String TARGET_EXTERNAL_HARDWARE = "externalHardware"; //$NON-NLS-1$
@@ -62,7 +62,7 @@ public class YoctoProjectProfilePreferences {
 		store.setDefault(TOOLCHAIN, ""); //$NON-NLS-1$
 		store.setDefault(SDK_INSTALLATION, ""); //$NON-NLS-1$
 		store.setDefault(BUILD_DIRECTORY, ""); //$NON-NLS-1$
-		store.setDefault(SYSROOT_LOCATION, ""); //$NON-NLS-1$
+//		store.setDefault(SYSROOT_LOCATION, ""); //$NON-NLS-1$
 		store.setDefault(TARGET, ""); //$NON-NLS-1$
 		store.setDefault(QEMUBOOTCONF_FILE, ""); //$NON-NLS-1$
 		store.setDefault(KERNEL_IMAGE, ""); //$NON-NLS-1$
@@ -75,7 +75,7 @@ public class YoctoProjectProfilePreferences {
 		store.setValue(TOOLCHAIN, TOOLCHAIN_SDK_INSTALLATION);
 		store.setValue(SDK_INSTALLATION, ""); //$NON-NLS-1$
 		store.setValue(BUILD_DIRECTORY, ""); //$NON-NLS-1$
-		store.setValue(SYSROOT_LOCATION, ""); //$NON-NLS-1$
+//		store.setValue(SYSROOT_LOCATION, ""); //$NON-NLS-1$
 		store.setValue(TARGET, TARGET_EXTERNAL_HARDWARE);
 		store.setValue(QEMUBOOTCONF_FILE, ""); //$NON-NLS-1$
 		store.setValue(KERNEL_IMAGE, ""); //$NON-NLS-1$
@@ -151,9 +151,9 @@ public class YoctoProjectProfilePreferences {
 		return getPreferenceStore().getString(BUILD_DIRECTORY);
 	}
 
-	public String getSysrootLocation() {
-		return getPreferenceStore().getString(SYSROOT_LOCATION);
-	}
+//	public String getSysrootLocation() {
+//		return getPreferenceStore().getString(SYSROOT_LOCATION);
+//	}
 
 	public String getTarget() {
 		return getPreferenceStore().getString(TARGET);
