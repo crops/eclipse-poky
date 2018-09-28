@@ -92,12 +92,12 @@ fi
 
 # prepare the base Eclipse installation in folder "eclipse"
 ep_rel="R-"
-ep_ver="4.7.3a"
-ep_date="-201803300640"
+ep_ver="4.8"
+ep_date="-201806110500"
 P2_disabled=false
 P2_no_dropins=false
 
-if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180329-0507.jar ]; then
+if [ ! -f eclipse/plugins/org.eclipse.swt_3.107.0.v20180611-0422.jar ]; then
 
   pushd .
 
@@ -254,37 +254,36 @@ update_feature_remote()
 #Main Site
 if [[ "$1" = "--upstream" ]]
 then
-        MAIN_SITE="http://download.eclipse.org/releases/oxygen"
-        TM_SITE="http://download.eclipse.org/tm/updates/4.0"
-        TM_TERMINAL_SITE="http://download.eclipse.org/tm/terminal/marketplace"
+        MAIN_SITE="http://download.eclipse.org/releases/photon"
+        TM_SITE="http://download.eclipse.org/tm/updates/3.7.100/repository/"
+        TM_TERMINAL_SITE="http://download.eclipse.org/tm/terminal/updates/4.4milestones/20180611/"
 else
-        MAIN_SITE="http://downloads.yoctoproject.org/eclipse-full/releases/oxygen/"
-        TM_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/updates/4.0/"
-        TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/terminal/marketplace"
+        MAIN_SITE="http://downloads.yoctoproject.org/eclipse-full/releases/photon/"
+        TM_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/updates/3.7.100/repository/"
+        TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/terminal/updates/4.4milestones/20180611/"
 fi
 
 #Update Site - always use updates from upstream
 UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
 
 # CDT features from simrel
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group 9.4.3
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group 9.4.3
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group 9.4.3
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group 9.5.0
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group 9.5.0
+update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group 9.5.0
 
 # TM Terminal features from simrel
-update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.feature.feature.group 4.3.0
-update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.view.rse.feature.feature.group 4.3.0
-update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.control.feature.feature.group 4.3.0
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.feature.feature.group 4.4.0
+update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.control.feature.feature.group 4.4.0
 
 # Trace Compass features from simrel
-update_feature_remote ${MAIN_SITE} org.eclipse.tracecompass.lttng2.ust.feature.group 3.3.0
-
-# Extra features from main update site
-update_feature_remote ${UPDATE_SITE} org.eclipse.osgi.compatibility.plugins.feature.feature.group 1.1.1
+update_feature_remote ${MAIN_SITE} org.eclipse.tracecompass.lttng2.ust.feature.group 4.0.0
 
 # RSE features from update site
-update_feature_remote ${TM_SITE} org.eclipse.rse.sdk.feature.group 3.7.0
+update_feature_remote ${TM_SITE} org.eclipse.rse.sdk.feature.group 3.7.3
 update_feature_remote ${TM_SITE} org.eclipse.rse.terminals.feature.group 3.8.0
+
+# TM Terminal features from update site
+update_feature_remote ${TM_TERMINAL_SITE} org.eclipse.tm.terminal.view.rse.feature.feature.group 4.3.0
 
 echo -e "\nYour build environment is successfully created."
 echo -e "\nPlease execute the following command to build the plugins and their documentation."
