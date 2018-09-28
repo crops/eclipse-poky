@@ -266,7 +266,7 @@ else
 fi
 
 #Update Site - always use updates from upstream
-UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
+UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.8"
 
 # Features are organized by simrel or their respective update sites. Except CDT
 # which might be installed from it's update site to get the latest features and
