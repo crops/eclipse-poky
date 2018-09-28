@@ -257,19 +257,47 @@ then
         MAIN_SITE="http://download.eclipse.org/releases/photon"
         TM_SITE="http://download.eclipse.org/tm/updates/3.7.100/repository/"
         TM_TERMINAL_SITE="http://download.eclipse.org/tm/terminal/updates/4.4milestones/20180611/"
+        CDT_SITE="http://download.eclipse.org/tools/cdt/releases/9.5/"
 else
         MAIN_SITE="http://downloads.yoctoproject.org/eclipse-full/releases/photon/"
         TM_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/updates/3.7.100/repository/"
         TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/terminal/updates/4.4milestones/20180611/"
+        CDT_SITE="http://downloads.yoctoproject.org/eclipse-full/tools/cdt/releases/9.5/"
 fi
 
 #Update Site - always use updates from upstream
 UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
 
+# Features are organized by simrel or their respective update sites. Except CDT
+# which might be installed from it's update site to get the latest features and
+# bug fixes, most other features which eclipse-yocto do not directly depend on
+# should be installed from simrel whenever possible so that the feature's
+# dependencies can be automatically resolved.
+
+# It is also worth pointing out that the installation order do not matter when
+# all features are installed from simrel, however features which are installed
+# from it's update site would require it's dependencies to be installed first.
+
+# Note that for CDT, only either one of the features from simrel or update site
+# can be installed, so be sure to only uncomment one of the following groups of
+# lines below to avoid p2 error which complains about newer version of the IU
+# cannot be installed, as describe here:
+#
+#   http://wiki.eclipse.org/Equinox/p2/FAQ#Why_am_I_getting_dependency_satisfaction_errors_when_I_update_my_feature.3F
+#
+# Alternatively, an approach which might be more similar to using the Eclipse
+# Update Manager would be to implement the ability to invoke p2 to uninstall
+# the prior version.
+
 # CDT features from simrel
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group 9.5.0
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group 9.5.0
-update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group 9.5.0
+# Uncomment this to install from simrel
+#update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group 9.5.0
+#update_feature_remote ${MAIN_SITE} org.eclipse.cdt.launch.remote.feature.group 9.5.0
+#update_feature_remote ${MAIN_SITE} org.eclipse.cdt.autotools.feature.group 9.5.0
+
+# PTP features from simrel
+# This is needed for installing CDT from it's update site.
+update_feature_remote ${MAIN_SITE} org.eclipse.remote.feature.group 3.0.0
 
 # TM Terminal features from simrel
 update_feature_remote ${MAIN_SITE} org.eclipse.tm.terminal.feature.feature.group 4.4.0
@@ -281,6 +309,12 @@ update_feature_remote ${MAIN_SITE} org.eclipse.tracecompass.lttng2.ust.feature.g
 # RSE features from update site
 update_feature_remote ${TM_SITE} org.eclipse.rse.sdk.feature.group 3.7.3
 update_feature_remote ${TM_SITE} org.eclipse.rse.terminals.feature.group 3.8.0
+
+# CDT features from update site
+# Uncomment this to install from update site
+update_feature_remote ${CDT_SITE} org.eclipse.cdt.sdk.feature.group 9.5.2
+update_feature_remote ${CDT_SITE} org.eclipse.cdt.launch.remote.feature.group 9.5.2
+update_feature_remote ${CDT_SITE} org.eclipse.cdt.autotools.feature.group 9.5.2
 
 # TM Terminal features from update site
 update_feature_remote ${TM_TERMINAL_SITE} org.eclipse.tm.terminal.view.rse.feature.feature.group 4.3.0
