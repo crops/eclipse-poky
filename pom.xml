@@ -44,6 +44,7 @@
 	<modules>
 
 		<module>releng/org.yocto.sdk.releng</module>
+		<module>releng/org.yocto.sdk.repo</module>
 		<module>plugins/org.yocto.sdk.ide</module>
 		<module>plugins/org.yocto.sdk.ide.doc.user</module>
 		<module>plugins/org.yocto.cmake.managedbuilder</module>
