@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+	<category-def name="main" label="Yocto Project Main Features"/>
+
+	<feature url="features/org.yocto.sdk_0.0.0.qualifier.jar" id="org.yocto.sdk" version="0.0.0">
+		<category name="main"/>
+	</feature>
+
+</site>
