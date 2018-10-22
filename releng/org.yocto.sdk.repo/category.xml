@@ -6,4 +6,7 @@
 		<category name="main"/>
 	</feature>
 
+	<feature url="features/org.yocto.doc_0.0.0.qualifier.jar" id="org.yocto.doc" version="0.0.0">
+		<category name="main"/>
+	</feature>
 </site>
