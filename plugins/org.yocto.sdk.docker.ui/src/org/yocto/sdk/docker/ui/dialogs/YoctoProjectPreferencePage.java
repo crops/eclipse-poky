@@ -277,19 +277,31 @@ public class YoctoProjectPreferencePage extends PreferencePage implements IWorkb
 			setMessage(null, IMessageProvider.NONE);
 		} else {
 
-			// This disables the apply button
-			setValid(false);
+			if (YoctoProjectWorkspacePreferences.getWorkspaceProfiles().length == 0) {
+				// Allow creating new profiles only when no profiles are defined.
+				setValid(true);
 
-			// Don't allow creating or renaming profiles with invalid
-			// preferences as the apply button has been disabled hence
-			// unapplied changes could be lost
-			profileComboFieldEditor.setCanCreateNewProfile(false);
-			profileComboFieldEditor.setCanRenameProfile(false);
+				profileComboFieldEditor.setCanCreateNewProfile(true);
+
+				setMessage(errorMessage, IMessageProvider.WARNING);
+			}else {
+				//disable the apply button
+				setValid(false);
+
+				profileComboFieldEditor.setCanCreateNewProfile(false);
+
+				setMessage(errorMessage, IMessageProvider.ERROR);
+			}
+
+            // Don't allow renaming profiles with invalid
+            // preferences as the apply button has been disabled hence
+            // unapplied changes could be lost
+            profileComboFieldEditor.setCanRenameProfile(false);
+
 			// Removing invalid profile preference is always allowed
 			// TODO: optionally sanity check to make sure it is not in use
 			profileComboFieldEditor.setCanDeleteProfile(true);
 
-			setMessage(errorMessage, IMessageProvider.ERROR);
 		}
 	}
 

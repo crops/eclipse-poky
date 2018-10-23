@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.yocto.sdk.docker.ui.editors;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
+import org.yocto.sdk.core.preference.YoctoProjectProfilePreferences;
 import org.yocto.sdk.core.preference.YoctoProjectWorkspacePreferences;
 
 public class YoctoProjectProfileComboFieldEditor extends FieldEditor {
@@ -238,6 +240,12 @@ public class YoctoProjectProfileComboFieldEditor extends FieldEditor {
 			fireValueChanged(NEW, null, newProfile);
 			fireValueChanged(SELECT, oldSelectionIndex, newSelectionIndex);
 
+			try {
+				YoctoProjectProfilePreferences.getPreferenceStore(newProfile).save();
+			} catch (IOException e) {
+				throw new RuntimeException(Messages.YoctoProjectProfileComboFieldEditor_CannotSaveProfile, e);
+			}
+
 			refreshButtons();
 		}
 	}
@@ -269,10 +277,19 @@ public class YoctoProjectProfileComboFieldEditor extends FieldEditor {
 		int newSelectionIndex = newValues.size() > 0 ? 0 : -1;
 		this.combo.select(newSelectionIndex);
 
+		try {
+			YoctoProjectWorkspacePreferences.setWorkspaceProfiles(profiles);
+			YoctoProjectWorkspacePreferences.getWorkspacePreferenceStore().save();
+		} catch (IOException e) {
+			throw new RuntimeException(Messages.YoctoProjectProfileComboFieldEditor_CannotSaveProfile, e);
+		}
+
+
 		fireValueChanged(REMOVE, removedProfile, null);
 		fireValueChanged(SELECT, oldSelectionIndex, newSelectionIndex);
 
 		refreshButtons();
+
 	}
 
 	void handleRenameButtonPressed() {
@@ -319,6 +336,12 @@ public class YoctoProjectProfileComboFieldEditor extends FieldEditor {
 			this.combo.setItems(newValues.toArray(new String[] {}));
 			this.combo.select(selectionIndex);
 			fireValueChanged(RENAME, oldProfile, newProfile);
+
+			try {
+				YoctoProjectProfilePreferences.getPreferenceStore(newProfile).save();
+			} catch (IOException e) {
+				throw new RuntimeException(Messages.YoctoProjectProfileComboFieldEditor_CannotSaveProfile, e);
+			}
 
 			refreshButtons();
 		}
