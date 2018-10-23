@@ -71,6 +71,9 @@
 		<module>plugins/org.yocto.sdk.ui</module>
 		<module>plugins/org.yocto.sdk.docker.launcher</module>
 		<module>plugins/org.yocto.sdk.docker.ui</module>
+		<module>features/org.yocto.sdk2</module>
+		<module>features/org.yocto.sdk2.autotools</module>
+		<module>features/org.yocto.sdk2.cmake</module>
 <!--
 		<module>releng/org.yocto.sdk.target.ui.tests</module>
 -->
