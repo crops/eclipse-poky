@@ -2,6 +2,8 @@
 <site>
 	<category-def name="main" label="Yocto Project Main Features"/>
 
+	<category-def name="optional" label="Yocto Project Optional Features"/>
+
 	<feature url="features/org.yocto.sdk_0.0.0.qualifier.jar" id="org.yocto.sdk" version="0.0.0">
 		<category name="main"/>
 	</feature>
@@ -9,4 +11,17 @@
 	<feature url="features/org.yocto.doc_0.0.0.qualifier.jar" id="org.yocto.doc" version="0.0.0">
 		<category name="main"/>
 	</feature>
+
+	<feature url="features/org.yocto.sdk2_0.0.0.qualifier.jar" id="org.yocto.sdk2" version="0.0.0">
+		<category name="optional"/>
+	</feature>
+
+	<feature url="features/org.yocto.sdk2.autotools_0.0.0.qualifier.jar" id="org.yocto.sdk2.autotools" version="0.0.0">
+		<category name="optional"/>
+	</feature>
+
+	<feature url="features/org.yocto.sdk2.cmake_0.0.0.qualifier.jar" id="org.yocto.sdk2.cmake" version="0.0.0">
+		<category name="optional"/>
+	</feature>
+
 </site>
