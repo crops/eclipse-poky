@@ -3,8 +3,8 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.sdk.cmake.ui</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>Yocto Project CMake UI</name>
-  <description>Yocto Project CMake UI support</description>
+  <name>Yocto Project SDK CMake UI</name>
+  <description>Yocto Project SDK CMake UI support</description>
   <parent>
 	<groupId>org.yocto</groupId>
 	<artifactId>eclipse-yocto-parent</artifactId>

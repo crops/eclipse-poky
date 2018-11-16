@@ -3,8 +3,8 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.sdk.autotools.core</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>Yocto Project Autotools Core</name>
-  <description>Yocto Project GNU Autotools Toolchain support</description>
+  <name>Yocto Project SDK Autotools Core</name>
+  <description>Yocto Project SDK Autotools Toolchain support</description>
   <parent>
 	<groupId>org.yocto</groupId>
 	<artifactId>eclipse-yocto-parent</artifactId>

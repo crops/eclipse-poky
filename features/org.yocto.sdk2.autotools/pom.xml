@@ -3,7 +3,7 @@
   <groupId>org.yocto.features</groupId>
   <artifactId>org.yocto.sdk2.autotools</artifactId>
   <packaging>eclipse-feature</packaging>
-  <name>Yocto Project SDK Autotools Support - Experimental</name>
+  <name>Yocto Project SDK Autotools Support - Experimental (Feature)</name>
   <description>Yocto Project SDK Autotools Support (Experimental) feature group</description>
   <parent>
 	<groupId>org.yocto</groupId>

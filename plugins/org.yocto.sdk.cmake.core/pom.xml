@@ -3,8 +3,8 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.sdk.cmake.core</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>Yocto Project CMake Core</name>
-  <description>Yocto Project CMake Toolchain support</description>
+  <name>Yocto Project SDK CMake Core</name>
+  <description>Yocto Project SDK CMake Toolchain support</description>
   <parent>
 	<groupId>org.yocto</groupId>
 	<artifactId>eclipse-yocto-parent</artifactId>

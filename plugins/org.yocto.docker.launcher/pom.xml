@@ -3,8 +3,8 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.docker.launcher</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>Docker Launcher</name>
-  <description>Docker Launcher plugin</description>
+  <name>Yocto Project Docker Launcher</name>
+  <description>Staging area for upstream Docker Launcher plugin bug fixes and enhancements</description>
   <parent>
 	<groupId>org.yocto</groupId>
 	<artifactId>eclipse-yocto-parent</artifactId>

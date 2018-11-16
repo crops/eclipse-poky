@@ -3,8 +3,8 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.ui</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>UI</name>
-  <description>UI plugin</description>
+  <name>Yocto Project UI</name>
+  <description>Staging area for upstream Eclipse JFace UI plugins bug fixes and enhancements</description>
   <parent>
 	<groupId>org.yocto</groupId>
 	<artifactId>eclipse-yocto-parent</artifactId>

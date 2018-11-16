@@ -3,8 +3,8 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.sdk.docker.launcher</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>Yocto Project Docker Launcher</name>
-  <description>Yocto Project Docker Launcher for CROPS containers</description>
+  <name>Yocto Project SDK Docker Launcher</name>
+  <description>Docker Launcher extension for using Yocto Project SDK with CROPS containers</description>
   <parent>
 	<groupId>org.yocto</groupId>
 	<artifactId>eclipse-yocto-parent</artifactId>

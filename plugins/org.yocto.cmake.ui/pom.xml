@@ -3,7 +3,7 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.cmake.ui</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>CMake UI</name>
+  <name>Yocto Project CMake UI</name>
   <description>CMake build system support UI for Managed Build System</description>
   <parent>
 	<groupId>org.yocto</groupId>

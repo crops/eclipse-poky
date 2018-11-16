@@ -3,8 +3,8 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.sdk.docker.ui</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>Yocto Project Docker UI</name>
-  <description>Yocto Project Docker UI for CROPS containers</description>
+  <name>Yocto Project SDK Docker UI</name>
+  <description>Yocto Project SDK Docker UI for CROPS containers</description>
   <parent>
 	<groupId>org.yocto</groupId>
 	<artifactId>eclipse-yocto-parent</artifactId>

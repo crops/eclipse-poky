@@ -3,7 +3,7 @@
   <groupId>org.yocto</groupId>
   <artifactId>org.yocto.cmake.core</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>CMake Core</name>
+  <name>Yocto Project CMake Core</name>
   <description>CMake build system support for Managed Build System</description>
   <parent>
 	<groupId>org.yocto</groupId>
