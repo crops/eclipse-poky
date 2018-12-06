@@ -263,8 +263,13 @@ else
         TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/terminal/marketplace"
 fi
 
-#Update Site - always use updates from upstream
-UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
+#Update Site - We have a full mirror of eclipse now, so default to that
+if [[ "$1" = "--upstream" ]]
+then
+        UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
+else
+        UPDATE_SITE="http://downloads.yoctoproject.org/eclipse-full/eclipse/updates/4.7/"
+fi
 
 # CDT features from simrel
 update_feature_remote ${MAIN_SITE} org.eclipse.cdt.sdk.feature.group 9.4.3
