@@ -250,14 +250,19 @@ then
         TM_SITE="http://download.eclipse.org/tm/updates/4.0/GA"
         TM_TERMINAL_SITE="http://download.eclipse.org/tm/terminal/marketplace"
 else
-        MAIN_SITE="http://downloads.yoctoproject.org/eclipse/neon/"
-        DEPRECATED_SITE="http://downloads.yoctoproject.org/eclipse/mars"
-        TM_SITE="http://downloads.yoctoproject.org/eclipse/tm/updates/4.0/"
-        TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse/tm/terminal/marketplace"
+        MAIN_SITE="http://downloads.yoctoproject.org/eclipse-full/releases/neon/"
+        DEPRECATED_SITE="http://downloads.yoctoproject.org/eclipse-full/releases/mars/"
+        TM_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/updates/4.0/"
+        TM_TERMINAL_SITE="http://downloads.yoctoproject.org/eclipse-full/tm/terminal/marketplace/"
 fi
 
-#Update Site - always use updates from upstream
-UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.6"
+#Update Site - We have a full mirror of eclipse now, so default to that
+if [[ "$1" = "--upstream" ]]
+then
+        UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.6"
+else
+        UPDATE_SITE="http://downloads.yoctoproject.org/eclipse-full/eclipse/updates/4.6/"
+fi
 
 #CDT related
 echo -e "\nPlease wait. Installing CDT.SDK.FEATURE.GROUP"
