@@ -116,7 +116,7 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.105.3.v20170228-0512.jar ]; then
 
   if [[ "$1" = "--upstream" ]]
   then
-        wget "http://download.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
+        wget "http://archive.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   else
         wget "http://downloads.yoctoproject.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   fi
