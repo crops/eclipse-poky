@@ -97,6 +97,11 @@ ep_date="-201703010400"
 P2_disabled=false
 P2_no_dropins=false
 
+# Always use P2 mirrors by default unless we're troubleshooting build
+# related issues.
+P2_MIRRORS=${P2_MIRRORS:=1}
+
+
 if [ ! -f eclipse/plugins/org.eclipse.swt_3.105.3.v20170228-0512.jar ]; then
 
   pushd .
@@ -135,6 +140,22 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.105.3.v20170228-0512.jar ]; then
     fi
     ln -s eclipse-${ep_ver}-${ep_arch}/eclipse eclipse
   fi
+
+  # Disable P2 mirrors as needed, the following Eclipse wiki page
+  # suggests adding -vmargs -Declipse.p2.mirrors=false at the end of
+  # the Java command line, in our case this means when the P2 director
+  # being invoked for feature installation:
+  #
+  #   https://wiki.eclipse.org/Equinox/p2/p2.mirrorsURL#Avoiding_mirrors.2C_even_when_using_p2.mirrorsURL
+  #
+  # Unfortunate this doesn't seem to work, so instead we modify the
+  # generated config.ini to force P2 to not use mirrors. This should be
+  # fine for as long as the eclipse installation directory which
+  # contains the modified config.ini is only used for building the
+  # plugins.
+
+  [ "$P2_MIRRORS" == "1" ] || echo "eclipse.p2.mirrors=false" >> eclipse/configuration/config.ini
+
 fi
 
 if [ ! -f eclipse/startup.jar ]; then
