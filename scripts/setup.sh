@@ -209,6 +209,9 @@ check_local_version()
   return 0
 }
 
+# Don't enable P2 debug traces by default
+P2_INSTALL_DEBUG=${P2_INSTALL_DEBUG:=0}
+
 # install a feature with version requirement [min, max]
 #$1: reporsitory url
 #$2: featureId
@@ -233,8 +236,11 @@ update_feature_remote()
   fi
 
   [ "x$installIU" = "x" ] && err_exit 1 "Can NOT find candidates of $2 version($3, $4) at $1!"
+  [ "$P2_INSTALL_DEBUG" == "1" ] && DEBUG_OPTS="-debug ./debug.ini"
+
   installIU="$2/$installIU"
   java ${PROXY_PARAM} -jar ${LAUNCHER} \
+    $DEBUG_OPTS \
     -application org.eclipse.equinox.p2.director \
     -destination ./eclipse \
     -profile SDKProfile \
