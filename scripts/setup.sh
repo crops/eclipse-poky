@@ -8,26 +8,44 @@ help ()
 {
   echo -e "\nThis script sets up the Yocto Project Eclipse plugins build environment"
   echo -e "All files are downloaded from the Yocto Project mirror by default\n"
-  echo -e "Usage: $0 [--upstream]\n";
+  echo -e "Usage: $0 [-u|--upstream] [-q|--quiet]\n";
   echo "Options:"
   echo -e "--upstream - download from the upstream Eclipse repository\n"
+  echo -e "--quiet - suppress installation trace\n"
   echo -e "Example: $0 --upstream\n";
   exit 1;
 }
 
-while getopts ":h" opt; do
-  case $opt in
-    h)
-      help
-      ;;
-  esac
-done
-
 err_exit()
 {
-  echo "[FAILED $1]$2"
+  echo "[FAILED $1] $2"
   exit $1
 }
+
+OPTS="$@"
+GETOPT=`getopt -o huq --long help,upstream,quiet -n 'setup.sh' -- $OPTS`
+STATUS=$?
+
+[ $STATUS -eq 0 ] || err_exit $STATUS "Problem parsing options: $OPTS"
+
+eval set -- "$GETOPT"
+
+# By default, do not download Eclipse archives or features from
+# upstream mirrors
+USE_UPSTREAM=0
+
+# Enable P2 debug traces by default
+P2_INSTALL_TRACE=1
+
+while true; do
+  case $1 in
+    -h|--help) help; shift;;
+    -u|--upstream) USE_UPSTREAM=1; shift;;
+    -q|--quiet) P2_INSTALL_TRACE=0; shift;;
+    --) shift; break;;
+    *) break;;
+  esac
+done
 
 uname_s=`uname -s`
 uname_m=`uname -m`
@@ -97,10 +115,6 @@ ep_date="-201803300640"
 P2_disabled=false
 P2_no_dropins=false
 
-# Always use P2 mirrors by default unless we're troubleshooting build
-# related issues.
-P2_MIRRORS=${P2_MIRRORS:=1}
-
 
 if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180329-0507.jar ]; then
 
@@ -119,7 +133,7 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180329-0507.jar ]; then
   # Eclipse SDK: Need the SDK so we can link into docs
   echo -e "\nPlease wait. Downloading Eclipse SDK ${ep_rel}${ep_ver}${ep_date} \n"
 
-  if [[ "$1" = "--upstream" ]]
+  if [ $USE_UPSTREAM -eq 1 ]
   then
         wget "http://archive.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   else
@@ -141,10 +155,11 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180329-0507.jar ]; then
     ln -s eclipse-${ep_ver}-${ep_arch}/eclipse eclipse
   fi
 
-  # Disable P2 mirrors as needed, the following Eclipse wiki page
-  # suggests adding -vmargs -Declipse.p2.mirrors=false at the end of
-  # the Java command line, in our case this means when the P2 director
-  # being invoked for feature installation:
+  # Disable P2 mirrors if we're not using upstream URLs to download
+  # Eclipse artifacts and features. The following wiki page suggests
+  # adding -vmargs -Declipse.p2.mirrors=false at the end of the Java
+  # command line, in our case this means when the P2 director being
+  # invoked for feature installation:
   #
   #   https://wiki.eclipse.org/Equinox/p2/p2.mirrorsURL#Avoiding_mirrors.2C_even_when_using_p2.mirrorsURL
   #
@@ -154,7 +169,7 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.106.3.v20180329-0507.jar ]; then
   # contains the modified config.ini is only used for building the
   # plugins.
 
-  [ "$P2_MIRRORS" == "1" ] || echo "eclipse.p2.mirrors=false" >> eclipse/configuration/config.ini
+  [ $USE_UPSTREAM -eq 0 ] && echo "eclipse.p2.mirrors=false" >> eclipse/configuration/config.ini
 
 fi
 
@@ -230,9 +245,6 @@ check_local_version()
   return 0
 }
 
-# Enable P2 debug traces by default
-P2_INSTALL_TRACE=1
-
 # install a feature with version requirement [min, max]
 #$1: reporsitory url
 #$2: featureId
@@ -279,7 +291,7 @@ update_feature_remote()
 }
 
 #Main Site
-if [[ "$1" = "--upstream" ]]
+if [ $USE_UPSTREAM -eq 1 ]
 then
         MAIN_SITE="http://download.eclipse.org/releases/oxygen"
         TM_SITE="http://download.eclipse.org/tm/updates/4.0"
@@ -291,7 +303,7 @@ else
 fi
 
 #Update Site - We have a full mirror of eclipse now, so default to that
-if [[ "$1" = "--upstream" ]]
+if [ $USE_UPSTREAM -eq 1 ]
 then
         UPDATE_SITE="http://download.eclipse.org/eclipse/updates/4.7"
 else
