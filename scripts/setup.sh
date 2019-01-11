@@ -269,7 +269,17 @@ update_feature_remote()
   fi
 
   [ "x$installIU" = "x" ] && err_exit 1 "Can NOT find candidates of $2 version($3, $4) at $1!"
-  [ "$P2_INSTALL_TRACE" == "1" ] && TRACE_OPTS="-debug ./trace.ini"
+
+  TRACE_INI=`pwd`/trace.ini
+
+  if [ "$P2_INSTALL_TRACE" == "1" ]; then
+    echo "org.eclipse.equinox.p2.core/debug=true" > $TRACE_INI
+    echo "org.eclipse.equinox.p2.core/artifacts/mirrors=true" >> $TRACE_INI
+    TRACE_OPTS="-debug $TRACE_INI"
+  else
+    rm -f $TRACE_INI
+    TRACE_OPTS=
+  fi
 
   installIU="$2/$installIU"
   java ${PROXY_PARAM} -jar ${LAUNCHER} \
