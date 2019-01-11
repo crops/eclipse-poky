@@ -137,6 +137,32 @@ if [ ! -f eclipse/plugins/org.eclipse.swt_3.107.0.v20180611-0422.jar ]; then
   then
         wget "http://download.eclipse.org/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   else
+
+        #
+        # The eclipse-full mirror on:
+        #
+        #   https://downloads.yoctoproject.org/eclipse-full/eclipse/downloads/drops4/...
+        #
+        # is mirrored from upstream:
+        #
+        #   https://download.eclipse.org/eclipse/downloads/drops4/...
+        #
+        # although the upstream appears to only host the lastest 3
+        # Eclipse releases. On the other hand, the eclipse partial
+        # mirror on:
+        #
+        #   https://downloads.yoctoproject.org/eclipse/downloads/drops4/...
+        #
+        # is manually managed where files with extension matching
+        # *linux-gtk-x86_64.tar.gz will be copied from the full mirror
+        # to the partial mirror so that the partial mirror such that
+        # the eclipse archives that's been mirrored would always be
+        # cached in the partial mirror even after it has been removed
+        # from the full mirror. For more details, see:
+        #
+        #   https://bugzilla.yoctoproject.org/show_bug.cgi?id=13101#c17
+        #
+
         wget "http://downloads.yoctoproject.org/eclipse-full/eclipse/downloads/drops4/${ep_rel}${ep_ver}${ep_date}/eclipse-SDK-${ep_ver}-${ep_arch}.tar.gz"
   fi
 
